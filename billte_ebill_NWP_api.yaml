@@ -357,15 +357,6 @@ paths:
             See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
           schema:
             $ref: '#/definitions/Problem'
-#securityDefinitions:
-#  oauth2_cg:
-#    type: oauth2
-#    description: OAuth2 based authentication with authorization code grant.
-#    flow: accessCode
-#    scopes:
-#      default-biller: default scope for biller
-#    tokenUrl: 'https://api.mynwp.com/oauth/v1/token'
-#    authorizationUrl: 'https://api.mynwp.com/oauth/v1/authorize'
 parameters:
   path_billerPid:
     name: billerPid
@@ -373,9 +364,9 @@ parameters:
     type: string
     description: |
       biller PID
-      **Maximal length**: `17`
-      **Example**: `"41NN00BBBBBBBBBPP"`
-      **Pattern**: `41[0-9]{15}`
+      **Maximal length**: '17'
+      **Example**: '"41NN00BBBBBBBBBPP"'
+      **Pattern**: '41[0-9]{15}'
     required: true
     maxLength: 17
     pattern: '41[0-9]{15}'
@@ -385,9 +376,9 @@ parameters:
     type: string
     description: |
       business case id
-      **Maximal length**: `39`
-      **Example**: `"NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9"`
-      **Pattern**: `NWPBCID[0-9A-Z]{32}`
+      **Maximal length**: '39'
+      **Example**: '"NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9"'
+      **Pattern**: 'NWPBCID[0-9A-Z]{32}'
     required: true
     pattern: 'NWPBCID[0-9A-Z]{32}'
     maxLength: 39
@@ -399,9 +390,9 @@ parameters:
     pattern: 'NWPEVID[0-9A-Z]{32}'
     description: |
       Id of the last received event. If omitted, the result starts with the oldest available event.
-      **Example**: `"NWPEVID82A65938766547EBBBA39BA6F7B07F24"`
-      **Maximal length**: `39`
-      **Pattern**: `"NWPEVID[0-9A-Z]{32}"`
+      **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+      **Maximal length**: '39'
+      **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
   query_limitEvents:
     name: limit
     in: query
@@ -419,8 +410,8 @@ parameters:
     required: true
     description: |
       ID which will unambiguously identify this request to the API.
-      **Minimal length**: `1`
-      **Maximal length**: `36`
+      **Minimal length**: '1'
+      **Maximal length**: '36'
   header_authorization:
     name: Authorization
     in: header
@@ -437,8 +428,8 @@ parameters:
     required: false
     description: |
       Filename for the business case PDF. This is only used for analytical purposes and support. The filename is not visible for the bill recipient.
-      **Minimal length**: `1`
-      **Maximal length**: `99`
+      **Minimal length**: '1'
+      **Maximal length**: '99'
   header_xBusinessCaseFormat:
     name: X-BCFORMAT
     in: header
@@ -817,8 +808,8 @@ definitions:
   AmountValue:
     description: |
       The amount value. Take care when using JavaScript libraries to parse this value - it should be treated as a financial amount and therefore not as a floating point number but rather using a precise decimal representation (like BigDecimal in Java).
-      **Maximum value**: `99'999'999.99`
-      **Maximal length**: `10`
+      **Maximum value**: '99'999'999.99'
+      **Maximal length**: '10'
     type: number
     example: 99.99
   CurrencyCode:
@@ -1124,6 +1115,13 @@ definitions:
         type: string
         description: the version of the software partner api
         example: 1.0.23
+  BusinessCaseType:
+    type: string
+    enum:
+      - Bill
+      - Reminder
+      - CreditNote
+      - Advice
   CreateBusinessCaseRequest:
     type: object
     required:
@@ -1131,6 +1129,7 @@ definitions:
       - biller
       - content
       - contentType
+      - businessCaseType
       - dueDate
       - fileIdentifier
       - totalAmount
@@ -1151,6 +1150,8 @@ definitions:
         type: string
         example: pdf
         description: contentType
+      businessCaseType:
+        $ref: '#/definitions/BusinessCaseType'
       dueDate:
         type: string
         example: '2022-05-05T18:46:19Z'
