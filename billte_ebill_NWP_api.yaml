@@ -1,0 +1,1509 @@
+swagger: '2.0'
+info:
+  description: |
+    The application programming interface for software partners (Software Partner API) allows communication with an eBill Network Partner.
+    The eBill service comprises of electronic bills, reminders, credit notes and advices which are summarized under the term "business case". Business cases are delivered from software partners via network partners to the SIX eBill infrastructure and can be received online by bill recipients.
+
+    Documentation and Open API licence of the Software Partner API can be found on https://ebill-swp.org
+
+    ### General Note
+
+    The Working Group eBill-SWP-API reserves the right to amend this documentation as required.
+
+    This documentation has been compiled with the greatest care, but may nevertheless contain errors or inaccuracies. Working Group eBill-SWP-API cannot assume any legal responsibility or any liability for erroneous information or its consequences.
+
+    If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website.
+
+  version: 1.0.0
+  title: Billte eBill SWP API
+  contact:
+    name: 'Software Partner API'
+    url: 'https://billte.ch'
+host: api.ebill.billte.ch
+basePath: /swp/v1
+tags:
+  - name: Billers
+    description: All operations that are associated with a biller are located within the biller resource, including the creation of business cases.
+  - name: Events
+    description: |
+      **Notification Events**
+      The event resource allows the software partner to retrieve changes for the event type 'Subscription status changes'.
+  - name: Sectors
+    description: |
+      **Industry Sector**
+      Industry sectors are valid system wide. Each biller will reference one or several industry sectors.
+  - name: Healthcheck
+    description: |
+      **System Healthcheck**
+      This allows to check the basic state of the system (can it be reached, does authentication and auhorization work, does it respond). As some infrastructures block certain HTTP methods by default, the healthcheck allows to test if all required methods (GET, POST) work across all layers.
+schemes:
+  - https
+paths:
+  '/billers/authenticate':
+    post:
+      tags:
+      - Billers
+      summary: Get authentication token to biller
+      description: |
+        Returns an authentication token for the biller to be used in other APIs.
+      operationId: getAuthenticationTokenForBiller
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/BillerAuthenticationRequest'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Biller Found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BillerAuthenticationResponse'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
+            for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/BillerAuthenticationError'
+  '/billers/bill-recipients/search':
+    parameters:
+      - $ref: '#/parameters/header_authorization'
+    post:
+      tags:
+        - Billers
+      summary: Search for bill recipients for this biller
+      description: |
+        Returns a list of one or more bill recipients.
+
+        The response will only list a bill recipient if he allows bills to be
+        posted by the biller or allows bills to be posted in general. It will always return the billRecipientId and optionally any other provided parameter.
+
+        The call will return an empty list if no matching bill recipient is
+        found or the biller is not allowed to send bills to the bill recipient.
+      operationId: searchBillRecipientsForBiller
+      parameters:
+        - in: body
+          name: body
+          description: Parameters for the search, at least one of the parameters is required
+          required: true
+          schema:
+            $ref: '#/definitions/BillRecipientsForBillerSearchRequest'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Bill recipients found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BillRecipientsForBillerSearchResponse'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
+            for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  '/billers/business-cases':
+    parameters:
+      - $ref: '#/parameters/header_authorization'
+    post:
+      tags:
+        - Billers
+      summary: Create business case
+      operationId: createBusinessCase
+      description: |
+        The creation of a business case in PDF/A-3b format works with a simple
+        POST request where the PDF is the binary payload of the request. Note
+        that only one PDF can be submitted at a time.
+
+        Validation of the submitted data will take place immediately and the
+        response either confirms the successful creation of the business case on
+        the NWP or contains the error details of the validation.
+
+      consumes:
+        - application/pdf
+      parameters:
+        - in: body
+          name: body
+          description: PDF as binary data with attached file for structured data
+          required: true
+          schema:
+            $ref: '#/definitions/CreateBusinessCaseRequest'
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Business case created
+          schema:
+            $ref: '#/definitions/BusinessCaseId'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
+            for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  '/billers/{billerPid}/business-cases/{businessCaseId}':
+    parameters:
+      - $ref: '#/parameters/path_billerPid'
+      - $ref: '#/parameters/path_businessCaseId'
+    get:
+      tags:
+        - Billers
+      summary: Get business case
+      description: |
+        Depending on the accept header, this operation either returns a JSON business case object or the original PDF.
+        The returned JSON object contains one of the business case subtypes:
+        Bill, InstalmentBill, Reminder, CreditNote or Advice.
+      operationId: getBusinessCase
+      produces:
+        - application/json
+        - application/pdf
+      responses:
+        '200':
+          description: Business case found
+          schema:
+            $ref: '#/definitions/BusinessCase'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
+            for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  /events/business-case-status-changed:
+    parameters:
+      - $ref: '#/parameters/query_lastEventId'
+      - $ref: '#/parameters/query_limitEvents'
+      - $ref: '#/parameters/header_authorization'
+    get:
+      tags:
+        -  Events
+      summary: Find events for business cases which changed status
+      description: |
+        Events for status changes of bills, advices, credit notes and reminders
+        which belong to any billerPid registered with the requesting SWP.
+      operationId: findBusinessCaseStatusChangedEvents
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Business case status changed events found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BusinessCaseStatusChangedEvent'
+        default:
+          description: |
+            See section Error Handling of the Network Partner API documentation
+            for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  /events/instalment-status-changed:
+    parameters:
+      - $ref: '#/parameters/query_lastEventId'
+      - $ref: '#/parameters/query_limitEvents'
+      - $ref: '#/parameters/header_authorization'
+    get:
+      tags:
+        - Events
+      summary: Find events for instalments which changed status
+      description: |
+        Events for status changes of instalment bills only which belong to any
+        billerPid registered with the requesting SWP.
+      operationId: findInstalmentStatusChangedEvents
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Instalment status changed events found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/InstalmentStatusChangedEvent'
+        default:
+          description: |
+            See section Error Handling of the Network Partner API documentation
+            for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  /events/bill-recipient-email-address-changed:
+    parameters:
+      - $ref: '#/parameters/query_lastEventId'
+      - $ref: '#/parameters/query_limitEvents'
+      - $ref: '#/parameters/header_authorization'
+    get:
+      tags:
+        - Events
+      summary: Find events for bill recipients email address changes
+      description: |
+        This event is triggered after any billerPid registered with the requesting SWP has submitted a business case with an outdated, so called historically available email address. It notifies about the changed email address of a bill recipient, which has been adjusted in eBill.
+        An email address is considered to be historically available if it was present up to 15 months prior to the submission time.
+        The billers are able to submit business cases with historically available email addresses of a bill recipient. However, latest 15 months after the email address changed, the billers are required to submit the business cases with the currently valid email address of the bill
+        recipient.
+      operationId: findBillRecipientEmailAddressChangedEvent
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Bill recipient email address changed events found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BillRecipientEmailAddressChangedEvent'
+        default:
+          description: |
+            See section Error Handling of the Network Partner API documentation for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  /events/bill-recipient-subscription-status-changed:
+    parameters:
+      - $ref: '#/parameters/query_lastEventId'
+      - $ref: '#/parameters/query_limitEvents'
+      - $ref: '#/parameters/header_authorization'
+    get:
+      tags:
+        - Events
+      summary: Find events for bill recipient subscriptions which changed status
+      description: |
+        Events for status changes on bill recipient subscriptions to any billerPid registered with the requesting SWP, regardless if subscriptions have been done without registration form (event from infrastructure) or with registration form (no event from infrastructure).
+      operationId: findBillRecipientSubscriptionStatusChangedEvents
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Bill recipient subscription changed events found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/BillRecipientSubscriptionStatusChangedEvent'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+  /sectors:
+    parameters:
+      - $ref: '#/parameters/header_authorization'
+    get:
+      tags:
+        - Sectors
+      summary: 'Find Sectors'
+      description: 'Get the industry sector list of the eBill infrastructure. The sectors are more or less static and can therefore be cached.'
+      operationId: findSectors
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 'Sectors found'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Sector'
+        'default':
+          description: 'See section Error Handling of the Network Partner API documentation for further details about errors and error handling.'
+          schema:
+            $ref: '#/definitions/Problem'
+  /healthcheck:
+    parameters:
+      - $ref: '#/parameters/header_authorization'
+    get:
+      tags:
+        - Healthcheck
+      summary: Health check using GET method
+      description: Returns a status message of the system.
+      operationId: healthCheckForGet
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Healthcheck successful
+          schema:
+            $ref: '#/definitions/HealthCheckResponse'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+    post:
+      tags:
+        - Healthcheck
+      summary: Health check using POST method
+      description: Returns the request body. This operation will not modify the system.
+      operationId: healthCheckForPost
+      parameters:
+        - in: body
+          name: body
+          description: Any message which is expected in the response
+          required: true
+          schema:
+            $ref: '#/definitions/HealthCheckRequest'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Healthcheck successful
+          schema:
+            $ref: '#/definitions/HealthCheckResponse'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
+          schema:
+            $ref: '#/definitions/Problem'
+#securityDefinitions:
+#  oauth2_cg:
+#    type: oauth2
+#    description: OAuth2 based authentication with authorization code grant.
+#    flow: accessCode
+#    scopes:
+#      default-biller: default scope for biller
+#    tokenUrl: 'https://api.mynwp.com/oauth/v1/token'
+#    authorizationUrl: 'https://api.mynwp.com/oauth/v1/authorize'
+parameters:
+  path_billerPid:
+    name: billerPid
+    in: path
+    type: string
+    description: |
+      biller PID
+      **Maximal length**: `17`
+      **Example**: `"41NN00BBBBBBBBBPP"`
+      **Pattern**: `41[0-9]{15}`
+    required: true
+    maxLength: 17
+    pattern: '41[0-9]{15}'
+  path_businessCaseId:
+    name: businessCaseId
+    in: path
+    type: string
+    description: |
+      business case id
+      **Maximal length**: `39`
+      **Example**: `"NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9"`
+      **Pattern**: `NWPBCID[0-9A-Z]{32}`
+    required: true
+    pattern: 'NWPBCID[0-9A-Z]{32}'
+    maxLength: 39
+  query_lastEventId:
+    name: lastEventId
+    in: query
+    type: string
+    maxLength: 39
+    pattern: 'NWPEVID[0-9A-Z]{32}'
+    description: |
+      Id of the last received event. If omitted, the result starts with the oldest available event.
+      **Example**: `"NWPEVID82A65938766547EBBBA39BA6F7B07F24"`
+      **Maximal length**: `39`
+      **Pattern**: `"NWPEVID[0-9A-Z]{32}"`
+  query_limitEvents:
+    name: limit
+    in: query
+    type: integer
+    description: |
+      Maximum number of events one wants to receive (technical maximum is 10000, no more will be returned at once and you have to fetch again to check if there are more)
+    maximum: 10000
+    default: 1000
+  header_xCorrelationId:
+    name: X-CORRELATION-ID
+    in: header
+    type: string
+    minLength: 1
+    maxLength: 36
+    required: true
+    description: |
+      ID which will unambiguously identify this request to the API.
+      **Minimal length**: `1`
+      **Maximal length**: `36`
+  header_authorization:
+    name: Authorization
+    in: header
+    type: string
+    required: true
+    description: |
+      Access-Token with the prefix "Bearer".
+  header_xFilename:
+    name: X-FILENAME
+    in: header
+    type: string
+    minLength: 1
+    maxLength: 99
+    required: false
+    description: |
+      Filename for the business case PDF. This is only used for analytical purposes and support. The filename is not visible for the bill recipient.
+      **Minimal length**: `1`
+      **Maximal length**: `99`
+  header_xBusinessCaseFormat:
+    name: X-BCFORMAT
+    in: header
+    type: string
+    required: false
+    description: Format of the business case.
+    enum:
+      - zugferd.EN16931
+      - zugferd.EXTENDED
+      - zugferd.BasicWL
+      - fscmxml
+      - yellowbill
+      - qrbill
+  header_xBusinessCaseFunction:
+    name: X-BCFUNCTION
+    in: header
+    type: string
+    required: false
+    description: Function of the business case.
+    enum:
+      - bill
+      - creditnote
+      - advice
+      - reminder
+responses:
+  BadRequest:
+    description: bad request
+    schema:
+      $ref: '#/definitions/Problem'
+  Unauthorized:
+    description: unauthorized
+    schema:
+      $ref: '#/definitions/Problem'
+  Forbidden:
+    description: forbidden
+    schema:
+      $ref: '#/definitions/Problem'
+  NotFound:
+    description: the specified resource was not found
+    schema:
+      $ref: '#/definitions/Problem'
+definitions:
+  Address:
+    type: object
+    required:
+      - streetName
+      - postalCode
+      - city
+      - countryCode
+    properties:
+      streetName:
+        type: string
+        description: street name
+        example: Neustadtstrasse
+        minLength: 1
+        maxLength: 70
+      buildingNumber:
+        type: string
+        description: building number
+        example: 20a
+        minLength: 1
+        maxLength: 16
+      postalCode:
+        type: string
+        description: postal code
+        example: '6025'
+        minLength: 1
+        maxLength: 9
+      city:
+        type: string
+        description: city name
+        example: Neudorf
+        minLength: 1
+        maxLength: 35
+      countryCode:
+        type: string
+        description: in format ISO 3166-1 alpha 2
+        example: CH
+        maxLength: 2
+        pattern: '[A-Z]{2}'
+  BillerAuthenticationRequest:
+    type: object
+    required:
+      - billerPid
+      - billerSecret
+    properties:
+      billerPid:
+        type: string
+        description: 'Biller PiD provided by the system'
+        minLength: 17
+        maxLength: 17
+        pattern: '([0=9])*'
+        example: '41NN00BBBBBBBBBPP'
+      billerSecret:
+        type: string
+        description: 'Biller secret key provided by the system'
+        minLength: 36
+        maxLength: 36
+        example: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+  BillerAuthenticationResponse:
+    type: object
+    required:
+      - type
+      - billerPid
+      - token
+      - expiresIn
+    properties:
+      type:
+        type: string
+        description: 'User Type'
+        minLength: 1
+        maxLength: 10
+        example: 'BILLER'
+      billerPid:
+        type: string
+        description: 'Biller PiD provided by the system'
+        minLength: 17
+        maxLength: 17
+        pattern: '([0=9])*'
+        example: '41NN00BBBBBBBBBPP'
+      token:
+        type: string
+        description: 'Access Token'
+        minLength: 1
+        maxLength: 300
+        example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...'
+      expiresIn:
+        type: number
+        description: 'Expiration Time for access token in milliseconds'
+        example: '3600'
+  BillerAuthenticationError:
+    type: object
+    required:
+      - type
+      - billerPid
+      - error
+      - errorCode
+    properties:
+      type:
+        type: string
+        description: 'User Type'
+        minLength: 1
+        maxLength: 10
+        example: 'BILLER'
+      billerPid:
+        type: string
+        description: 'Biller PiD provided by the system'
+        minLength: 17
+        maxLength: 17
+        pattern: '([0=9])*'
+        example: '41NN00BBBBBBBBBPP'
+      error:
+        type: string
+        description: 'Cause for not issuing token'
+        minLength: 1
+        maxLength: 300
+        example: 'Biller not found!'
+      errorCode:
+        type: number
+        description: 'Error code for the error'
+        example: '404'
+  BillRecipientsForBillerSearchRequest:
+    type: object
+    required:
+      - billerPid
+    properties:
+      billerPid:
+        type: string
+        description: 'Biller PiD provided by the system'
+        minLength: 17
+        maxLength: 17
+        pattern: '([0=9])*'
+        example: '41NN00BBBBBBBBBPP'
+      emailAddress:
+        type: string
+        description: 'email address of the bill recipient'
+        example: 'peter@muster.ch'
+        minLength: 1
+        maxLength: 256
+        format: email
+      billRecipientId:
+        type: string
+        description: 'id of the bill recipient'
+        example: '41010560425610173'
+        minLength: 1
+        maxLength: 17
+        pattern: '([0-9])*'
+      enterpriseIdentificationNumber:
+        type: string
+        description: |
+          Swiss enterprise identification number (UID) without dashes, dots or extension.
+          Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
+        maxLength: 12
+        pattern: 'CHE[0-9]{9}'
+        example: 'CHE123456789'
+  BillRecipientsForBillerSearchResponse:
+    type: object
+    required:
+      - billRecipientId
+    properties:
+      emailAddress:
+        type: string
+        description: 'email address of the bill recipient'
+        example: 'peter@muster.ch'
+        minLength: 1
+        maxLength: 256
+        format: email
+      billRecipientId:
+        type: string
+        description: 'id of the bill recipient'
+        example: '41010560425610173'
+        minLength: 1
+        maxLength: 17
+        pattern: '([0-9])*'
+      enterpriseIdentificationNumber:
+        type: string
+        description: |
+          Swiss enterprise identification number (UID) without dashes, dots or extension.
+          Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
+        maxLength: 12
+        pattern: 'CHE[0-9]{9}'
+        example: 'CHE123456789'
+  BillRecipientSubscription:
+    type: object
+    required:
+      - billerPid
+      - billRecipient
+    properties:
+      billerPid:
+        type: string
+        description: biller PID
+        maxLength: 17
+        pattern: '41[0-9]{15}'
+        example: '41100012345678901'
+      billRecipient:
+        $ref: '#/definitions/BillRecipient'
+      accountNumber:
+        type: string
+        maxLength: 21
+        description: |
+          Account number of the biller (e.g. iban), if provided from the financial institution
+      referenceStructured:
+        type: string
+        description: |
+          ESR or QR or creditor reference number, if provided from the financial institution.
+        maxLength: 27
+        example: '123456123456789012345678901'
+        pattern: '([a-zA-Z0-9])*'
+  BillRecipient:
+    type: object
+    required:
+      - billRecipientId
+      - type
+      - name
+      - correspondenceLanguage
+      - address
+    properties:
+      emailAddress:
+        type: string
+        description: email address of the bill recipient
+        example: peter@muster.ch
+        minLength: 1
+        maxLength: 256
+        format: email
+      billRecipientId:
+        type: string
+        description: id of the bill recipient
+        example: '41010560425610173'
+        minLength: 1
+        maxLength: 17
+        pattern: '([0-9])*'
+      enterpriseIdentificationNumber:
+        type: string
+        description: |
+          Swiss enterprise identification number (UID) without dashes, dots or extension.
+          Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
+        maxLength: 12
+        pattern: 'CHE[0-9]{9}'
+        example: CHE123456789
+      type:
+        type: string
+        description: the type of the bill recipient
+        enum:
+          - PRIVATE
+          - COMPANY
+      name:
+        type: string
+        description: |
+          last name, if private bill recipient
+          company name, if company bill recipient
+        example: 'for private bill recipient: Muster, for company name: Muster AG'
+        minLength: 1
+        maxLength: 70
+      firstName:
+        type: string
+        description: |
+          first name, if private bill recipient
+          empty, if company bill recipient
+        example: Peter
+        maxLength: 35
+      correspondenceLanguage:
+        type: string
+        description: language for correspondence with this bill recipient ISO-639-2/B
+        minLength: 1
+        maxLength: 3
+        example: ger
+      address:
+        $ref: '#/definitions/Address'
+  BusinessCase:
+    discriminator: type
+    required:
+      - id
+      - status
+    type: object
+    description: the business case object on the NWP
+    properties:
+      id:
+        description: |
+          A unique id for this business case on the NWP. Property must not be given when creating a new business case.
+        type: string
+        maxLength: 39
+        pattern: 'NWPBCID[0-9A-Z]{32}'
+        example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+      status:
+        type: string
+        description: the status of the business case
+        enum:
+          - NWP_PENDING
+          - OPEN
+          - APPROVED
+          - REJECTED
+          - COMPLETED
+  BusinessCaseId:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        description: |
+          A unique id for business cases on the NWP. Property must not be given when creating a new business case.
+        type: string
+        maxLength: 39
+        pattern: 'NWPBCID[0-9A-Z]{32}'
+        example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+  Event:
+    type: object
+    required:
+      - eventId
+      - timestamp
+    description: contains common fields for all events
+    properties:
+      eventId:
+        type: string
+        description: event id
+        example: NWPEVID82A65938766547EBBBA39BA6F7B07F24
+        maxLength: 39
+        pattern: 'NWPEVID[0-9A-Z]{32}'
+      timestamp:
+        type: string
+        description: timestamp of the event
+        minLength: 1
+        format: date-time
+        example: '2019-01-01T10:00:00.000Z'
+  ApprovalAmountWithCurrency:
+    description: |
+      Amount provided by status changed events if the new status is APPROVED. The value is always greater than zero.
+    type: object
+    required:
+      - value
+      - currencyCode
+    properties:
+      value:
+        $ref: '#/definitions/AmountValue'
+      currencyCode:
+        $ref: '#/definitions/CurrencyCode'
+  AmountValue:
+    description: |
+      The amount value. Take care when using JavaScript libraries to parse this value - it should be treated as a financial amount and therefore not as a floating point number but rather using a precise decimal representation (like BigDecimal in Java).
+      **Maximum value**: `99'999'999.99`
+      **Maximal length**: `10`
+    type: number
+    example: 99.99
+  CurrencyCode:
+    description: |
+      The amount currency code according to ISO-4217.
+    type: string
+    example: 'CHF'
+    maxLength: 3
+    pattern: '[A-Z]{3}'
+  BusinessCaseStatusChangedEvent:
+    type: object
+    required:
+      - billerPid
+      - businessCaseId
+      - newStatus
+    description: |
+      An Event describing the status change of a business case. These events are sent for bills, reminders, advices and credit notes. The approved amount is only provided for the status APPROVED.
+    allOf:
+      - $ref: '#/definitions/Event'
+      - properties:
+          billerPid:
+            type: string
+            description: biller PID
+            maxLength: 17
+            pattern: '41[0-9]{15}'
+            example: '41100012345678901'
+          businessCaseId:
+            type: string
+            description: business case id
+            maxLength: 39
+            pattern: 'NWPBCID[0-9A-Z]{32}'
+            example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+          newStatus:
+            type: string
+            description: the new status of the business case
+            enum:
+              - NWP_PENDING
+              - OPEN
+              - APPROVED
+              - REJECTED
+              - COMPLETED
+          approvedAmount:
+            $ref: '#/definitions/ApprovalAmountWithCurrency'
+  InstalmentStatusChangedEvent:
+    type: object
+    required:
+      - billerPid
+      - businessCaseId
+      - externalInstalmentId
+      - externalPaymentByInstalmentsId
+      - newStatus
+    description: |
+      An Event describing the status change of an instalment. These events are only sent for instalment bills. The approved amount is only provided for the status APPROVED.
+    allOf:
+      - $ref: '#/definitions/Event'
+      - properties:
+          billerPid:
+            type: string
+            description: biller PID
+            maxLength: 17
+            pattern: '41[0-9]{15}'
+            example: '41100012345678901'
+          businessCaseId:
+            type: string
+            description: 'business case id'
+            maxLength: 39
+            pattern: 'NWPBCID[0-9A-Z]{32}'
+            example: 'NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9'
+          externalPaymentByInstalmentsId:
+            type: string
+            description: 'external id of the respective paymentByInstalment'
+            minLength: 1
+            maxLength: 36
+            example: '298031-2999'
+          externalInstalmentId:
+            type: string
+            description: 'external id of the instalment'
+            minLength: 1
+            maxLength: 36
+            example: '298031-2999-ACX01'
+          newStatus:
+            type: string
+            description: 'the new status of the instalment'
+            enum:
+              - NWP_PENDING
+              - OPEN
+              - APPROVED
+              - REJECTED
+              - COMPLETED
+          approvedAmount:
+            $ref: '#/definitions/ApprovalAmountWithCurrency'
+  BillRecipientSubscriptionStatusChangedEvent:
+    type: object
+    required:
+      - newStatus
+    description: |
+      An Event describing the status change of a bill recipient subscription.
+      Additional properties may be filled according the user input on the biller\'s registration form.
+    allOf:
+      - $ref: '#/definitions/Event'
+      - $ref: '#/definitions/BillRecipientSubscription'
+      - properties:
+          newStatus:
+            type: string
+            description: |
+              The new status of the bill recipient subscription, currently only
+              REQUESTED and INACTIVE are used, see <<Subscriptions and
+              Subscription Cancellations>> for further information.
+            enum:
+              - INACTIVE
+              - REQUESTED
+              - ACTIVE
+      - additionalProperties: true
+  BillRecipientEmailAddressChangedEvent:
+    type: object
+    required:
+      - oldEmailAddress
+      - newEmailAddress
+      - triggeredBy
+    description: 'An Event describing the change of the email address of a bill recipient.'
+    allOf:
+      - $ref: '#/definitions/Event'
+      - properties:
+          oldEmailAddress:
+            type: string
+            description: 'the old email address of the bill recipient which has been used in the submission of a business case'
+            example: 'peter@muster.ch'
+            minLength: 1
+            maxLength: 256
+            format: email
+          newEmailAddress:
+            type: string
+            description: 'the new email address of the bill recipient'
+            example: 'peter_new@muster.ch'
+            minLength: 1
+            maxLength: 256
+            format: email
+          triggeredBy:
+            type: object
+            required:
+              - businessCaseId
+              - billerPid
+            properties:
+              businessCaseId:
+                type: string
+                description: 'business case id'
+                maxLength: 39
+                pattern: 'NWPBCID[0-9A-Z]{32}'
+                example: 'NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9'
+              billerPid:
+                type: string
+                description: biller PID
+                maxLength: 17
+                pattern: '41[0-9]{15}'
+                example: '41100012345678901'
+  Sector:
+    type: object
+    properties:
+      id:
+        description: A unique id for this sector.
+        type: string
+        example: 'SCID0000000000'
+        maxLength: 14
+        pattern: 'SCID[0-9]{10}'
+      localizedData:
+        type: object
+        properties:
+          ger:
+            $ref: '#/definitions/LocalizedSectorData'
+          fre:
+            $ref: '#/definitions/LocalizedSectorData'
+          ita:
+            $ref: '#/definitions/LocalizedSectorData'
+          eng:
+            $ref: '#/definitions/LocalizedSectorData'
+  LocalizedSectorData:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        description: 'name of the sector'
+        minLength: 1
+        maxLength: 36
+        example: 'Transport'
+  Problem:
+    type: object
+    properties:
+      type:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the problem type.
+          We may provide human-readable documentation for the problem type in the future, when the URI is dereferenced.
+          For now consult the Software Partner API documentation for further information.
+          The URI consists of the /problems endpoint and the documented problem type, see example.
+        default: 'about:blank'
+        example: /problems/REQUEST_BODY_VALIDATION_FAILED
+      title:
+        type: string
+        description: A short, human readable summary of the problem type.
+        example: Payload has missing or invalid values
+      status:
+        type: integer
+        format: int32
+        description: |
+          The HTTP status code generated by the origin server for this occurrence of the problem.
+        minimum: 100
+        maximum: 600
+        exclusiveMaximum: true
+        example: 400
+      detail:
+        type: string
+        description: |
+          A human readable explanation specific to this occurrence of the problem.
+        example: |
+          The submitted request contains invalid or missing data which can not be processed.
+      instance:
+        type: string
+        format: uri
+        description: |
+          An absolute URI that identifies the specific occurrence of the problem.
+          It may or may not yield further information if dereferenced.
+        example: |
+          /swp/v1/biller/errors/NWPBCID0090000001/provided-X-CORRELATION-ID
+      technicalReason:
+        type: string
+        description: |
+          The Technical Description/Reason for engineers might contain addition system information on the problem.
+        example: Some field validations failed
+      fieldErrors:
+        type: array
+        items:
+          type: object
+          properties:
+            fieldName:
+              type: string
+              description: the name of the field with the error
+              example: localizedData.ger.address.city
+            message:
+              type: string
+              description: the message describing the error
+              example: size must be between 1 and 35
+            rejectedValue:
+              type: string
+              description: the provided value which was rejected if available
+              example: Very Long Invalid City Name Which Is Rejected
+  HealthCheckRequest:
+    type: object
+    required:
+      - message
+    properties:
+      message:
+        type: string
+        description: expected response message from health check
+        example: any string
+        minLength: 1
+        maxLength: 100
+  HealthCheckResponse:
+    type: object
+    required:
+      - message
+      - requestDateTime
+      - receivedHeaders
+      - environmentStage
+      - applicationVersion
+      - apiVersion
+    properties:
+      message:
+        type: string
+        description: response message from health check
+        example: The healthcheck GET resp. POST request was successfully received and processed
+        maxLength: 100
+      requestDateTime:
+        type: string
+        description: |
+          according to RFC3339, section 5.6 in ISO 8601 with timezone and milliseconds
+        format: date-time
+        example: '2018-10-03T16:03:09.101+02:00'
+      receivedHeaders:
+        type: array
+        items:
+          type: object
+          properties:
+            headerName:
+              type: string
+              description: the name of the provided header
+              example: X-CORRELATION-ID
+            headerValue:
+              type: string
+              description: As received
+              example: 9bcd4351-4b7b-4017-9b63-9613414c6ff1
+      environmentStage:
+        type: string
+        description: the instance which the request was sent to
+        example: XE
+      applicationVersion:
+        type: string
+        description: the version of the server application at network partner
+        example: 1.4.3.0-desire-20180927091004161-71-5e3ca91
+      apiVersion:
+        type: string
+        description: the version of the software partner api
+        example: 1.0.23
+  CreateBusinessCaseRequest:
+    type: object
+    required:
+      - billRecipient
+      - biller
+      - content
+      - contentType
+      - dueDate
+      - fileIdentifier
+      - totalAmount
+    properties:
+      biller:
+        example: biller
+        description: biller data
+        $ref: '#/definitions/Biller'
+      billRecipient:
+        example: billRecipient
+        description: billRecipient data
+        $ref: '#/definitions/BillRecipient'
+      content:
+        type: string
+        example: PDF encoded in base64 string
+        description: content
+      contentType:
+        type: string
+        example: pdf
+        description: contentType
+      dueDate:
+        type: string
+        example: '2022-05-05T18:46:19Z'
+        description: dueDate
+      fileIdentifier:
+        type: string
+        example: testInvoice
+        description: Name of the PDF file
+      payableAmountCanBeModified:
+        type: boolean
+        example: true
+        description: payableAmountCanBeModified
+      referenceNumber:
+        type: string
+        example: 'Bill2021-01-15T07:20:49.047Z123'
+        description: referenceNumber
+      referencedBill:
+        example: referencedBill
+        description: referencedBill
+        $ref: '#/definitions/ReferenceBill'
+      singlePayment:
+        example: singlePayment
+        description: singlePayment
+        $ref: '#/definitions/SinglePayment'
+      totalAmount:
+        example: biller
+        description: biller data
+        $ref: '#/definitions/TotalAmount'
+      workflow:
+        example: biller
+        description: Information about the workflow. Auxiliary data that can be used for pre-registering a reminder in bookkeeping.
+        $ref: '#/definitions/WorkFlow'
+    title: CreateBusinessCaseRequest
+  EbillResponse:
+    type: object
+    properties:
+      billerId:
+        type: string
+        example: BID00012345
+        description: biller id of biller associated with invoice
+      businessCaseDate:
+        type: string
+        example: '2021-01-15'
+        description: businessCaseDate of invoice
+      businessCaseId:
+        type: string
+      id:
+        type: string
+        example: BCID8FC1AE666B65449EAFEA65AD6473B9A3
+        description: id of business case
+      referenceBill:
+        example: referenceBill
+        description: referenceBill
+        $ref: '#/definitions/ReferenceBill'
+      referenceNumber:
+        type: string
+        example: 'Bill2021-01-15T07:20:49.047Z123'
+        description: referenceNumber of invoice
+      status:
+        type: string
+        example: OPEN
+        description: status of invoice
+      totalAmount:
+        example: totalAmount
+        description: totalAmount
+        $ref: '#/definitions/TotalAmount'
+      type:
+        type: string
+        example: Bill
+        description: type of invoice
+    title: EbillResponse
+  Esr:
+    type: object
+    required:
+      - esrParticipantNumber
+      - referenceStructured
+    properties:
+      esrParticipantNumber:
+        type: string
+        example: 010001628
+        description: Credit account of the invoice issuer
+      referenceStructured:
+        type: string
+        example: abc1234cefgh56
+        description: 'Reference number, structured payment reference.'
+    title: Esr
+  Fre:
+    type: object
+    properties:
+      address:
+        $ref: '#/definitions/Address'
+      displayName:
+        type: string
+      logo:
+        $ref: '#/definitions/Logo'
+      website:
+        type: string
+    title: Fre
+  Generic:
+    type: object
+    required:
+      - iban
+      - referenceType
+    properties:
+      iban:
+        type: string
+        example: CH9300762011623852957
+        description: Credit account of the invoice issuer
+      referenceStructured:
+        type: string
+        example: abc1234cefgh56
+        description: 'Reference number, structured payment reference.'
+      referenceType:
+        type: string
+        example: NON
+        description: Reference type of the structured reference.
+      referenceUnstructured:
+        type: string
+        example: Unstructured message
+        description: referenceUnstructured
+    title: Generic
+  Ger:
+    type: object
+    properties:
+      address:
+        $ref: '#/definitions/Address'
+      displayName:
+        type: string
+      logo:
+        $ref: '#/definitions/Logo'
+      website:
+        type: string
+    title: Ger
+  Ita:
+    type: object
+    properties:
+      address:
+        $ref: '#/definitions/Address'
+      displayName:
+        type: string
+      logo:
+        $ref: '#/definitions/Logo'
+      website:
+        type: string
+    title: Ita
+  LocalizedData:
+    type: object
+    properties:
+      defaultLanguage:
+        type: string
+      fre:
+        $ref: '#/definitions/Fre'
+      ger:
+        $ref: '#/definitions/Ger'
+      ita:
+        $ref: '#/definitions/Ita'
+    title: LocalizedData
+  Logo:
+    type: object
+    properties:
+      assetId:
+        type: string
+      name:
+        type: string
+    title: Logo
+
+  AccountAndReference:
+    type: object
+    properties:
+      esr:
+        example: esr
+        description: esr
+        $ref: '#/definitions/Esr'
+      generic:
+        example: generic
+        description: generic
+        $ref: '#/definitions/Generic'
+    title: AccountAndReference
+  PaymentInformation:
+    type: object
+    required:
+      - accountAndReference
+    properties:
+      accountAndReference:
+        example: accountAndReference
+        description: accountAndReference
+        $ref: '#/definitions/AccountAndReference'
+    title: PaymentInformation
+  PostalAddress:
+    type: object
+    required:
+      - buildingNumber
+      - city
+      - countryCode
+      - postalCode
+      - street
+    properties:
+      buildingNumber:
+        type: string
+        example: '01'
+        description: buliding number of biller
+      city:
+        type: string
+        example: Adliswil
+        description: city
+      countryCode:
+        type: string
+        example: CH
+        description: countryCode
+      postalCode:
+        type: string
+        example: 8134
+        description: postalCode
+      street:
+        type: string
+        example: Soodmattenstrasse
+        description: street name
+    title: PostalAddress
+  ReferenceBill:
+    type: object
+    properties:
+      referenceNumber:
+        type: string
+        example: BCID8FC1AE666B65449EAFEA65AD64731234
+        description: referenceNumber
+    title: ReferenceBill
+  SinglePayment:
+    type: object
+    required:
+      - paymentInformation
+    properties:
+      paymentInformation:
+        example: paymentInformation
+        description: paymentInformation
+        $ref: '#/definitions/PaymentInformation'
+    title: SinglePayment
+
+  ApprovedAmount:
+    type: object
+    properties:
+      currencyCode:
+        type: string
+      value:
+        type: number
+        format: double
+    title: ApprovedAmount
+  BillRecipientSubscriptionFormField:
+    type: object
+    properties:
+      technicalId:
+        type: string
+      value:
+        type: string
+    title: BillRecipientSubscriptionFormField
+  RecipientSubscriptionEvent:
+    type: object
+    required:
+      - eventId
+    properties:
+      accountNumber:
+        type: string
+      billRecipient:
+        $ref: '#/definitions/BillRecipient'
+      billRecipientSubscriptionFormFields:
+        type: array
+        items:
+          $ref: '#/definitions/BillRecipientSubscriptionFormField'
+      billerId:
+        type: string
+      eventId:
+        type: string
+        example: 41010560425610180
+        description: 'event id '
+      newStatus:
+        type: string
+      referenceStructured:
+        type: string
+      timestamp:
+        type: string
+    title: RecipientSubscriptionEvent
+  Biller:
+    type: object
+    required:
+      - billerPid
+      - legalName
+      - postalAddress
+    properties:
+      billerPid:
+        type: string
+        description: 'Biller PiD provided by the system'
+        minLength: 17
+        maxLength: 17
+        pattern: '([0=9])*'
+        example: '41NN00BBBBBBBBBPP'
+      legalName:
+        type: string
+        example: legalName
+        description: legal name of biller
+      postalAddress:
+        example: postalAddress
+        description: postalAddress
+        $ref: '#/definitions/PostalAddress'
+    title: Biller
+  TotalAmount:
+    type: object
+    required:
+      - currencyCode
+      - value
+    properties:
+      currencyCode:
+        type: string
+        example: CHF
+        description: currencyCode
+      value:
+        type: string
+        example: 10
+        description: amount
+    title: TotalAmount
+  WorkFlow:
+    type: object
+    required:
+      - vatEnterpriseIdentificationNumbers
+      - netAmount
+      - amountPaid
+      - vatRates
+    properties:
+      vatEnterpriseIdentificationNumbers:
+        type: array
+        items:
+          type: string
+        example: ["str1", "str2", "str3"]
+        description: 'Value Added Tax Enterprise Identification Numbers (VAT-UIDs) of the invoice issuer'
+      deliveryDateStart:
+        type: string
+        example: 'YYYY-MM-DD'
+        description: 'Start date of the service provision, in case it is different than deliveryDateEnd'
+      deliveryDateEnd:
+        type: string
+        example: 'YYYY-MM-DD'
+        description: 'Delivery date or end date of the service provision'
+      netAmount:
+        description: 'Total invoice amount without VAT (e.g. CHF 1095.80)'
+        $ref: '#/definitions/TotalAmount'
+      amountPaid:
+        description: 'Sum of the amount that was paid by the invoice recipient in advance (without VAT-relevant advance invoice). The outstanding total invoice amount to be paid corresponds to the element "totalAmount"'
+        $ref: '#/definitions/TotalAmount'
+      vatRates:
+        type: array
+        items:
+          type: string
+        description: 'VAT information per VAT rate'
+      caseReferenceForBillRecipient:
+        type: string
+        description: 'Association reference to be used by the invoice recipient to allocate the business case in his bookkeeping'
+    title: WorkFlow
+
