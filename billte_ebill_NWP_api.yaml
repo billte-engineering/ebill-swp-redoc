@@ -1177,13 +1177,26 @@ definitions:
         description: singlePayment
         $ref: '#/definitions/SinglePayment'
       totalAmount:
-        example: biller
         description: biller data
         $ref: '#/definitions/TotalAmount'
       workflow:
-        example: biller
-        description: Information about the workflow. Auxiliary data that can be used for pre-registering a reminder in bookkeeping.
+        description: "Information about the workflow.
+                      Auxiliary data that can be used for pre-registering a reminder in bookkeeping."
         $ref: '#/definitions/WorkFlow'
+      paymentsByInstalments:
+        description: "Possibility to offer payment of the invoice in instalments.
+                      Instalment invoices can be submitted as multi-group-invoices or single-group-invoices.
+                      Multi-groups-  Invoices with several instalment groups to choose from. The invoice
+                      recipient can decide, with which instalment option the invoice will be paid. One of
+                      the instalments groups can contain a total instalment to be used for the payment
+                      of the entire invoice (isTotalPaymentOption, can only be set to `true` in one
+                      instalment group).
+                      Single-groups- Invoice with only one instalment group. The invoice recipient can
+                      only pay with this instalment option"
+        type: array
+        items:
+          $ref: '#/definitions/PaymentByInstalments'
+
     title: CreateBusinessCaseRequest
   EbillResponse:
     type: object
@@ -1340,6 +1353,52 @@ definitions:
         description: accountAndReference
         $ref: '#/definitions/AccountAndReference'
     title: PaymentInformation
+  PaymentByInstalments:
+    type: object
+    description: 'An instalment group can be chosen for payment. Following, all single instalments,
+                  that are included in the instalment group can be approved one by one. The
+                  maximum allowed number of instalment groups is 99. The instalment group that
+                  is marked as the total instalment (isTotalPaymentOption = `true`) is initially shown
+                  to the invoice recipient as the chosen option. If there is no total instalment option
+                  (isTotalPaymentOption = `false`) the invoice recipient sees automatically the first
+                  instalment group as chosen.'
+    required:
+     - instalments
+    properties:
+      externalPaymentByInstalmentsId:
+        type: string
+        description: 'Unique reference of the instalment group. It is assigned by the invoice issuer and must be unique for the entire business case.'
+      description:
+        type: string
+        description: 'Description of the instalment group.'
+      isTotalAmountHidden:
+        type: boolean
+        description: 'If `true` - then the total amount of the invoice is not permitted to be presented to the invoice recipient.'
+      isTotalPaymentOption:
+        type: boolean
+        description: 'If `true` - then the instalment of the instalment group is considered as the total instalment of the invoice i.e. the instalment with which the invoice issuer enables the total invoice amount to be paid all at once. isTotalPaymentOption can only be set to `true` in one instalment group. It is recommended to provide a total instalment option.'
+      instalments:
+        type: array
+        items:
+          $ref: '#/definitions/Instalment'
+    title: PaymentByInstalments
+  Instalment:
+    type: object
+    required:
+      - externalInstalmentId
+      - paymentInformation
+    properties:
+      externalInstalmentId:
+        type: string
+        description: 'Unique reference of the instalment. It is assigned by the invoice issuer and must be unique for the entire business case. This reference is used so that the invoice issuer knows exactly which instalment was approved or denied'
+      description:
+        type: string
+        description: 'Description of the instalment.'
+      paymentInformation:
+        $ref: '#/definitions/PaymentInformation'
+        description: 'Payment information about the instalment.'
+    title: Instalment
+
   PostalAddress:
     type: object
     required:
