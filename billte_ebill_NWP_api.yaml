@@ -132,7 +132,7 @@ paths:
       parameters:
         - in: body
           name: body
-          description: PDF as binary data with attached file for structured data
+          description: PDF as binary data
           required: true
           schema:
             $ref: '#/definitions/CreateBusinessCaseRequest'
