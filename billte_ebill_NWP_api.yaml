@@ -1348,11 +1348,25 @@ definitions:
     type: object
     required:
       - accountAndReference
+      - amount
+      - dueDate
     properties:
       accountAndReference:
         example: accountAndReference
         description: accountAndReference
         $ref: '#/definitions/AccountAndReference'
+      amount:
+        example: totalAmount
+        description: totalAmount
+        $ref: '#/definitions/TotalAmount'
+      dueDate:
+        type: string
+        example: '2022-05-05'
+        description: dueDate
+      payableAmountCanBeModified:
+        type: boolean
+        example: true
+        description: payableAmountCanBeModified
     title: PaymentInformation
   PaymentByInstalments:
     type: object
