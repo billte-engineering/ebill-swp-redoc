@@ -1131,7 +1131,6 @@ definitions:
       - content
       - contentType
       - businessCaseType
-      - dueDate
       - fileIdentifier
       - totalAmount
     properties:
