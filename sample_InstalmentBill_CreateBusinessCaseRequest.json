@@ -1,0 +1,98 @@
+{
+  "biller": {
+    "billerPid": "NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9",
+    "legalName": "",
+    "postalAddress": {
+      "buildingNumber": "",
+      "city": "",
+      "countryCode": "",
+      "postalCode": "",
+      "street": ""
+    }
+  },
+  "billRecipient": {
+    "emailAddress": "",
+    "billRecipientId": "",
+    "enterpriseIdentificationNumber": "",
+    "type": "",
+    "name": "",
+    "firstName": "",
+    "correspondenceLanguage": "",
+    "address": {
+      "buildingNumber": "",
+      "city": "",
+      "countryCode": "",
+      "postalCode": "",
+      "street": ""
+    }
+  },
+  "content": "Base64 encoded PDF",
+  "contentType": "PDF",
+  "businessCaseType": "InstalmentBill",
+  "fileIdentifier": "invoiceFileName",
+  "payableAmountCanBeModified": false,
+  "referenceNumber": "",
+  "dueDate": "2021-09-31",
+  "totalAmount": {
+    "currencyCode": "",
+    "value": ""
+  },
+  "paymentByInstalments": [
+    {
+      "externalPaymentByInstalmentsId":"",
+      "description":"",
+      "isTotalAmountHidden": false,
+      "isTotalPaymentOption": false,
+      "instalments": [
+        {
+          "externalInstalmentId": "",
+          "description": "",
+          "paymentInformation": {
+            "accountAndReference": {
+              "iban": "",
+              "referenceType": ""
+            }
+          }
+        },
+        {
+          "externalInstalmentId": "",
+          "description": "",
+          "paymentInformation": {
+            "accountAndReference": {
+              "iban": "",
+              "referenceType": ""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "externalPaymentByInstalmentsId":"",
+      "description":"",
+      "isTotalAmountHidden": false,
+      "isTotalPaymentOption": false,
+      "instalments": [
+        {
+          "externalInstalmentId": "",
+          "description": "",
+          "paymentInformation": {
+            "accountAndReference": {
+              "iban": "",
+              "referenceType": ""
+            }
+          }
+        },
+        {
+          "externalInstalmentId": "",
+          "description": "",
+          "paymentInformation": {
+            "accountAndReference": {
+              "iban": "",
+              "referenceType": ""
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
