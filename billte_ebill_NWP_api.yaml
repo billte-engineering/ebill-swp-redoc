@@ -652,6 +652,7 @@ definitions:
 host: api.ebill.billte.ch
 info:
   contact: {name: Software Partner API, url: 'https://billte.ch'}
+
   description: 'The application programming interface for software partners (Software
     Partner API) allows communication with an eBill Network Partner.
 
@@ -664,6 +665,8 @@ info:
     Documentation and Open API licence of the Software Partner API can be found on
     https://ebill-swp.org
 
+
+    Examples and extra information - https://github.com/billte-engineering/ebill-swp-redoc.
 
     ### General Note
 
@@ -785,7 +788,7 @@ paths:
 
             '
           schema: {$ref: '#/definitions/BillerAuthenticationError'}
-      summary: Get authentication token to biller
+      summary: Authenticate Biller
       tags: [Billers]
   /billers/bill-recipients/search:
     parameters:
