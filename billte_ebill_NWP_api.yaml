@@ -277,7 +277,7 @@ definitions:
       businessCaseType: {$ref: '#/definitions/BusinessCaseType'}
       content: {description: content, example: PDF encoded in base64 string, type: string}
       contentType: {description: contentType, example: pdf, type: string}
-      dueDate: {description: dueDate, example: '2022-05-05T18:46:19Z', type: string}
+#      dueDate: {description: dueDate, example: '2022-05-05T18:46:19Z', type: string}
       fileIdentifier: {description: Name of the PDF file, example: testInvoice, type: string}
       payableAmountCanBeModified: {description: payableAmountCanBeModified, example: true,
         type: boolean}
