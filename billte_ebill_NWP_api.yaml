@@ -63,16 +63,8 @@ definitions:
           from the VAT UID (Mehrwertsteuer UID).
 
           ', example: CHE123456789, maxLength: 12, pattern: 'CHE[0-9]{9}', type: string}
-      firstName: {description: 'first name, if private bill recipient
-
-          empty, if company bill recipient
-
-          ', example: Peter, maxLength: 35, type: string}
-      name: {description: 'last name, if private bill recipient
-
-          company name, if company bill recipient
-
-          ', example: 'for private bill recipient: Muster, for company name: Muster
+      name: {description: 'First and last name of the invoice recipient. Alternatively company name.',
+      example: 'for private bill recipient: Muster, for company name: Muster
           AG', maxLength: 70, minLength: 1, type: string}
       type:
         description: the type of the bill recipient
@@ -277,7 +269,7 @@ definitions:
       businessCaseType: {$ref: '#/definitions/BusinessCaseType'}
       content: {description: content, example: PDF encoded in base64 string, type: string}
       contentType: {description: contentType, example: pdf, type: string}
-      dueDate: {description: dueDate, example: '2022-05-05T18:46:19Z', type: string}
+#      dueDate: {description: dueDate, example: '2022-05-05T18:46:19Z', type: string}
       fileIdentifier: {description: Name of the PDF file, example: testInvoice, type: string}
       payableAmountCanBeModified: {description: payableAmountCanBeModified, example: true,
         type: boolean}
