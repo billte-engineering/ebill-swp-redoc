@@ -274,15 +274,15 @@ definitions:
       payableAmountCanBeModified: {description: payableAmountCanBeModified, example: true,
         type: boolean}
       paymentsByInstalments:
-        description: Possibility to offer payment of the invoice in instalments. Instalment
+        description: "Possibility to offer payment of the invoice in instalments. Instalment
           invoices can be submitted as multi-group-invoices or single-group-invoices.
           Multi-groups-  Invoices with several instalment groups to choose from. The
-          invoice recipient can decide, with which instalment option the invoice will
+          invoice recipient can decide with which instalment option the invoice will
           be paid. One of the instalments groups can contain a total instalment to
           be used for the payment of the entire invoice (isTotalPaymentOption, can
           only be set to `true` in one instalment group). Single-groups- Invoice with
           only one instalment group. The invoice recipient can only pay with this
-          instalment option
+          instalment option"
         items: {$ref: '#/definitions/PaymentByInstalments'}
         type: array
       referenceNumber: {description: referenceNumber, example: 'Bill2021-01-15T07:20:49.047Z123',
@@ -467,13 +467,13 @@ definitions:
     title: Logo
     type: object
   PaymentByInstalments:
-    description: An instalment group can be chosen for payment. Following, all single
+    description: "An instalment group can be chosen for payment. Following, all single
       instalments, that are included in the instalment group can be approved one by
       one. The maximum allowed number of instalment groups is 99. The instalment group
       that is marked as the total instalment (isTotalPaymentOption = `true`) is initially
       shown to the invoice recipient as the chosen option. If there is no total instalment
       option (isTotalPaymentOption = `false`) the invoice recipient sees automatically
-      the first instalment group as chosen.
+      the first instalment group as chosen."
     properties:
       description: {description: Description of the instalment group., type: string}
       externalPaymentByInstalmentsId: {description: Unique reference of the instalment
@@ -641,9 +641,9 @@ definitions:
     required: [vatEnterpriseIdentificationNumbers, netAmount, amountPaid, vatRates]
     title: WorkFlow
     type: object
-host: api.ebill.billte.ch
+host: stage-api.ebill.billte.ch
 info:
-  contact: {name: Software Partner API, url: 'https://billte.ch'}
+  contact: {name: Software Partner API, url: 'https://stage-api.ebill.billte.ch'}
 
   description: 'The application programming interface for software partners (Software
     Partner API) allows communication with an eBill Network Partner.
