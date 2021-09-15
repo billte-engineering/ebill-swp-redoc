@@ -8,15 +8,15 @@ definitions:
     type: object
   Address:
     properties:
-      buildingNumber: {description: building number, example: 20a, maxLength: 16,
+      buildingNumber: {description: Building number, example: 20a, maxLength: 16,
         minLength: 1, type: string}
-      city: {description: city name, example: Neudorf, maxLength: 35, minLength: 1,
+      city: {description: City, example: Neudorf, maxLength: 35, minLength: 1,
         type: string}
-      countryCode: {description: in format ISO 3166-1 alpha 2, example: CH, maxLength: 2,
+      countryCode: {description: Country; two-letter ISO country code according to ISO 3166-1., example: CH, maxLength: 2,
         pattern: '[A-Z]{2}', type: string}
-      postalCode: {description: postal code, example: '6025', maxLength: 9, minLength: 1,
+      postalCode: {description: Postal code, example: '6025', maxLength: 9, minLength: 1,
         type: string}
-      streetName: {description: street name, example: Neustadtstrasse, maxLength: 70,
+      streetName: {description: Street name, example: Neustadtstrasse, maxLength: 70,
         minLength: 1, type: string}
     required: [streetName, postalCode, city, countryCode]
     type: object
@@ -30,6 +30,7 @@ definitions:
       **Maximal length**: ''10''
 
       ', example: 99.99, type: number}
+#  TotalAmount: { description: 'The total amount (amount + currency code) of the business case, which is presented to the invoice recipient.'}
   ApprovalAmountWithCurrency:
     description: 'Amount provided by status changed events if the new status is APPROVED.
       The value is always greater than zero.
@@ -49,20 +50,18 @@ definitions:
   BillRecipient:
     properties:
       address: {$ref: '#/definitions/Address'}
-      billRecipientId: {description: id of the bill recipient, example: '41010560425610173',
+      billRecipientId: {description: 'Alternative unique identifier of the invoice recipient (also known as "PID"). It is recommended to use the Email Address (emailAddress) and not the billRecipientId., example: 41010560425610173',
         maxLength: 17, minLength: 1, pattern: '([0-9])*', type: string}
       correspondenceLanguage: {description: language for correspondence with this
           bill recipient ISO-639-2/B, example: ger, maxLength: 3, minLength: 1, type: string}
-      emailAddress: {description: email address of the bill recipient, example: peter@muster.ch,
+      emailAddress: {description: 'Email address of the invoice recipient. Email address is valid if it is specified in the current master data of the infrastructure and,
+                      in case it is marked as "historic", it has not been marked as "historic" for more than 15 months.,
+                     example: peter@muster.ch',
         format: email, maxLength: 256, minLength: 1, type: string}
-      enterpriseIdentificationNumber: {description: 'Swiss enterprise identification
-          number (UID) without dashes, dots or extension.
+      enterpriseIdentificationNumber: {description: 'Enterprise Identification Number (UID) for companies as invoice recipients (in the context eBill for Business).
+      UID is valid, if it is specified in the current master data of the infrastructure.
 
-          Note that this has to contain the swiss enterprise identification number
-          (UID) from the commercial register (Handelsregister) which may be different
-          from the VAT UID (Mehrwertsteuer UID).
-
-          ', example: CHE123456789, maxLength: 12, pattern: 'CHE[0-9]{9}', type: string}
+          ', exaReferenceBillmple: CHE123456789, maxLength: 12, pattern: 'CHE[0-9]{9}', type: string}
       name: {description: 'First and last name of the invoice recipient. Alternatively company name.',
       example: 'for private bill recipient: Muster, for company name: Muster
           AG', maxLength: 70, minLength: 1, type: string}
@@ -176,9 +175,10 @@ definitions:
     type: object
   Biller:
     properties:
-      billerPid: {description: Biller PiD provided by the system, example: 41NN00BBBBBBBBBPP,
-        maxLength: 17, minLength: 17, pattern: '([0=9])*', type: string}
-      legalName: {description: legal name of biller, example: legalName, type: string}
+      billerPid: {description: biller PID, example: '41100012345678901', maxLength: 17,
+                  pattern: '41[0-9]{15}', type: string}
+      legalName: {description: Legal name of the invoice issuer. This name is also displayed in the invoice overview in the eBill customer portal.,
+                  example: legalName, type: string}
       postalAddress: {$ref: '#/definitions/PostalAddress', description: postalAddress,
         example: postalAddress}
     required: [billerPid, legalName, postalAddress]
@@ -271,7 +271,9 @@ definitions:
       contentType: {description: contentType, example: pdf, type: string}
 #      dueDate: {description: dueDate, example: '2022-05-05T18:46:19Z', type: string}
       fileIdentifier: {description: Name of the PDF file, example: testInvoice, type: string}
-      payableAmountCanBeModified: {description: payableAmountCanBeModified, example: true,
+      payableAmountCanBeModified: {description: If "true", then the provided invoice amount is permitted to be altered.
+                                    If the invoice amount is not provided, the value must be set to "true".
+        , example: true,
         type: boolean}
       paymentsByInstalments:
         description: Possibility to offer payment of the invoice in instalments. Instalment
@@ -285,7 +287,12 @@ definitions:
           instalment option
         items: {$ref: '#/definitions/PaymentByInstalments'}
         type: array
-      referenceNumber: {description: referenceNumber, example: 'Bill2021-01-15T07:20:49.047Z123',
+      referenceNumber: {description: 'Reference number/invoice number of the referenced business case. If the referenced invoice is found,
+                         it will be substituted with the new credit note, notification, or invoice.
+                         In case of a reminder, the referenced invoice will not be substituted; at time of approval,
+                         the invoice recipient decides whether to pay the original invoice or the reminder.
+                         If the referenced invoice is not found, a new business case is created.'
+        , example: 'Bill2021-01-15T07:20:49.047Z123',
         type: string}
       referencedBill: {$ref: '#/definitions/ReferenceBill', description: referencedBill,
         example: referencedBill}
@@ -322,9 +329,10 @@ definitions:
     type: object
   Esr:
     properties:
-      esrParticipantNumber: {description: Credit account of the invoice issuer, example: 010001628,
+      esrParticipantNumber: {description: 'Credit account of the invoice issuer (ESR-participant number). 9 characters, numeric value, unhyphenated. Composition: VV999999P - VV = ESR code (01 for ESR in CHF or 03 for ESR in EUR) - 999999 = serial number: if number has less than 6 digits, it must be filled with zeros on the left side; must be bigger than 000000. - P = check digit according to Modulus 10 recursive. Example: 010001628' ,
+                             example: 010001628,
         type: string}
-      referenceStructured: {description: 'Reference number, structured payment reference.',
+      referenceStructured: {description: 'ESR reference number (including check digit)',
         example: abc1234cefgh56, type: string}
     required: [esrParticipantNumber, referenceStructured]
     title: Esr
@@ -350,11 +358,19 @@ definitions:
     properties:
       iban: {description: Credit account of the invoice issuer, example: CH9300762011623852957,
         type: string}
-      referenceStructured: {description: 'Reference number, structured payment reference.',
+      referenceStructured: {description: 'Reference number, structured payment reference. Note: the reference is either a QR reference, creditor reference (ISO 11649) or
+                                          an IPI reference. QR Reference: 27 characters, numerical; check digit computation with Modulus 10 recursive (27th position of the reference).
+                                          Creditor Reference (ISO 11649): up to 25 characters, alphanumeric. IPI Reference: 20 characters, alphanumeric;
+                                          check digit computation with Modulus 97-10 (ISO 7064) (Note: the IPI receipt was eliminated by 31.03.2020)
+                                          When using QR-IBAN, this element must be filled with the QR Reference. When using IBAN and referenceType SCOR, this element must be filled with the Creditor Reference.
+                                          When using IBAN and referenceType IPI, this element must be filled with the IPI Reference. When using IBAN and referenceType NON, this element is not permitted to be filled.',
         example: abc1234cefgh56, type: string}
-      referenceType: {description: Reference type of the structured reference., example: NON,
+      referenceType: {description: 'Reference type of the structured reference. Following values are permitted: QRR - QR Reference SCOR -
+                                    Creditor Reference (ISO 11649) NON - without reference IPI - IPI Reference (Note: the IPI receipt was eliminated by 31.03.2020)
+                                     When using the QR-IBAN, the code QRR must be included. When using the IBAN, either the code SCOR, IPI or NON must be included.'
+        , example: NON,
         type: string}
-      referenceUnstructured: {description: referenceUnstructured, example: Unstructured
+      referenceUnstructured: {description: Unstructured message, example: Unstructured
           message, type: string}
     required: [iban, referenceType]
     title: Generic
@@ -497,8 +513,10 @@ definitions:
       accountAndReference: {$ref: '#/definitions/AccountAndReference', description: accountAndReference,
         example: accountAndReference}
       amount: {$ref: '#/definitions/TotalAmount', description: totalAmount, example: totalAmount}
-      dueDate: {description: dueDate, example: '2022-05-05', type: string}
-      payableAmountCanBeModified: {description: payableAmountCanBeModified, example: true,
+      dueDate: {description: 'At time of submission, cannot be set to more than 3 years in the future (1095 days). At time of submission, cannot be older than 90 days.'
+        , example: '2022-05-05', type: string}
+      payableAmountCanBeModified: {description: 'If "true", then the provided invoice amount is permitted to be altered.
+                                                  If the invoice amount is not provided, the value must be set to "true".', example: true,
         type: boolean}
     required: [accountAndReference, amount, dueDate]
     title: PaymentInformation
@@ -513,6 +531,7 @@ definitions:
     required: [buildingNumber, city, countryCode, postalCode, street]
     title: PostalAddress
     type: object
+
   Problem:
     properties:
       detail: {description: 'A human readable explanation specific to this occurrence
@@ -583,8 +602,13 @@ definitions:
     type: object
   ReferenceBill:
     properties:
-      referenceNumber: {description: referenceNumber, example: BCID8FC1AE666B65449EAFEA65AD64731234,
-        type: string}
+      referenceNumber: {description: "Reference number/invoice number of the referenced business case.
+                        If the referenced invoice is found, it will be substituted with the new credit note, notification, or invoice.
+                        In case of a reminder, the referenced invoice will not be substituted; at time of approval,
+                        the invoice recipient decides whether to pay the original invoice or the reminder.
+                        If the referenced invoice is not found, a new business case is created.",
+                        example: BCID8FC1AE666B65449EAFEA65AD64731234,
+        type: string }
     title: ReferenceBill
     type: object
   Sector:
@@ -608,8 +632,13 @@ definitions:
     type: object
   TotalAmount:
     properties:
-      currencyCode: {description: currencyCode, example: CHF, type: string}
-      value: {description: amount, example: 10, type: string}
+      currencyCode: {description: 'Currency code according to ISO 4217
+                       When using QR-IBAN or ESR-participant number, only CHF and EUR are allowed.'
+        , example: CHF, type: string}
+      value: {description: "Betrag - max. 99'999'999.99 bei Rechnungen, Ratenrechnungen, Mahnungen, und Gutschriften - min. - 99'999'999.99, max 99'999'999.99 bei Avisierungen (advice)
+                            Betrag muss grösser 0 sein für Rechnungen, Ratenrechnungen und Mahnungen. - Betrag muss ≥ 0 sein für Gutschriften. - Wird für Rechnungen oder Raten einer Ratenrechnung eine IBAN bzw. QR-IBAN verwendet,
+                            muss der Betrag nicht geliefert werden (Kompatibilität QR-Rechnung)."
+        , example: 10, type: string}
     required: [currencyCode, value]
     title: TotalAmount
     type: object
@@ -629,8 +658,7 @@ definitions:
       netAmount: {$ref: '#/definitions/TotalAmount', description: Total invoice amount
           without VAT (e.g. CHF 1095.80)}
       vatEnterpriseIdentificationNumbers:
-        description: Value Added Tax Enterprise Identification Numbers (VAT-UIDs)
-          of the invoice issuer
+        description: VAT-UID of the invoice issuer. Presentation without punctuation (e.g. CHE123456789MWST).
         example: [str1, str2, str3]
         items: {type: string}
         type: array
