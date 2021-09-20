@@ -152,10 +152,10 @@ definitions:
         type: string
       addressLine2:
         description: 'Unstructured address line 2'
-        type: string  
+        type: string
       countryCode:
         description: 'Country; two-letter ISO country code according to ISO 3166-1.'
-        type: string  
+        type: string
   BillRecipientEmailAddressChangedEvent:
     allOf:
       - $ref: '#/definitions/Event'
@@ -1165,13 +1165,8 @@ definitions:
         type: string
       value:
         description: >-
-          Betrag - max. 99'999'999.99 bei Rechnungen, Ratenrechnungen,
-          Mahnungen, und Gutschriften - min. - 99'999'999.99, max 99'999'999.99
-          bei Avisierungen (advice) Betrag muss grösser 0 sein für Rechnungen,
-          Ratenrechnungen und Mahnungen. - Betrag muss ≥ 0 sein für
-          Gutschriften. - Wird für Rechnungen oder Raten einer Ratenrechnung
-          eine IBAN bzw. QR-IBAN verwendet, muss der Betrag nicht geliefert
-          werden (Kompatibilität QR-Rechnung).
+          Maximum amount 99'999'999.99 for invoices, instalment invoices, reminders and credit notes. Minimal amount - 99'999'999.99 to maximum amount 99'999'999.99 for advice notes. Amount must be greater than 0 for invoices, instalment invoices and reminders. Amount must be ≥ 0 for credit notes.
+          If an IBAN or QR-IBAN is used for invoices or instalments of an instalment invoice, the amount does not have to be supplied (compatibility QR invoice).
         example: 10
         type: string
     required:
