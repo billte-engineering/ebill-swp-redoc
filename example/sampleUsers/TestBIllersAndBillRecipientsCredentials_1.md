@@ -6,6 +6,7 @@
  Biller Pid : 41140018132460243
  Legal Name : Test company legal name 1
  IBAN : CH2789144985732791922
+ Biller Secret Key : 0c1d2cdd-3943-4a95-9f3c-a28769cb012d
 ```
 
 ```json
