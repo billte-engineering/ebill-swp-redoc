@@ -686,7 +686,17 @@ definitions:
   Generic:
     properties:
       iban:
-        description: Credit account of the invoice issuer
+        description: 'Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO 13616-1.
+                      Corresponds to the following element
+                      The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and
+                      21 alphanumeric characters.
+
+                      Example: `CH9300762011623852957`,`LI21088100002324013AA` .
+
+                      Must contain country code CH or LI, otherwise the business case will be denied.
+
+                      Must be matching with a credit account that is specified in the infrastructure in the
+                      master data of the invoice issuer, otherwise the business case will be denied.'
         example: CH9300762011623852957
         type: string
       referenceStructured:
@@ -1165,7 +1175,7 @@ definitions:
         type: string
       value:
         description: >-
-          Maximum amount 99'999'999.99 for invoices, instalment invoices, reminders and credit notes. Minimal amount - 99'999'999.99 to maximum amount 99'999'999.99 for advice notes. Amount must be greater than 0 for invoices, instalment invoices and reminders. Amount must be ≥ 0 for credit notes.
+          Maximum amount `99'999'999.99` for invoices, instalment invoices, reminders and credit notes. Minimal amount `-99'999'999.99` to maximum amount `99'999'999.99` for advice notes. Amount must be greater than `0` for invoices, instalment invoices and reminders. Amount must be ≥ `0 for credit notes.
           If an IBAN or QR-IBAN is used for invoices or instalments of an instalment invoice, the amount does not have to be supplied (compatibility QR invoice).
         example: 10
         type: string
