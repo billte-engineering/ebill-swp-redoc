@@ -6,7 +6,7 @@
 ```
 ##Request Parameters
 
-| Parameter 	| Type 	| Required 	| Description 	|
+ Parameter 	| Type 	| Required 	| Description 	|
  |---	|---	|---	|---	|
  | billRecipient 	| Object 	| true 	| In bill recipient<br>```{ emailAddress:String},{name:String}``` 	|
  | biller 	| Object 	| true 	| Biller object contains   <br>     ``` {billerPid:String,```<br>    ```"legalName":"String",```<br>    ```"postalAddress":Object``` <br>```}``` <br><br>Postal Address Contains<br>```{buildingNumber:String,"city":"String"},"countryCode":"String","postalCode":"String","street":"String"}``` 	|
