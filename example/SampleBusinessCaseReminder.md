@@ -96,31 +96,30 @@ rate<br><br><br>      <br><br> <br><br><br><br>             <br><br>  |
 
 ```json
 {
-  "billRecipient": {
-    "name": "ACME-P Recipient",
-    "billRecipientId": "41012285450749679",
-    "address": {
-      "structuredAddress": {
-        "street": "Soodmattenstrasse",
-        "buildingNumber": "07",
-        "postalCode": "8134",
-        "city": "Adliswil",
-        "countryCode": "CH"
-      }
-    }
-  },
-  "biller": {
-    "billerPid": "41140064115286381",
-    "legalName": "Andrea",
-    "enterpriseIdentificationNumber": "CHE212722556",
-    "postalAddress": {
-      "streetName": "Soodmattenstrasse",
-      "buildingNumber": "07",
-      "postalCode": "8134",
-      "city": "Adliswil",
-      "countryCode": "CH"
-    }
-  },
+    "billRecipient": {
+         "name": "Private Recipient Test 1",
+         "billRecipientId": "41012280648521306",
+         "address": {
+             "structuredAddress": {
+                 "street": "Soodmattenstrasse",
+                 "buildingNumber": "07",
+                 "postalCode": "8134",
+                 "city": "Adliswil",
+                 "countryCode": "CH"
+             }
+         }
+     },
+     "biller": {
+         "billerPid": "41140018132460243",
+         "legalName": "Test company legal name 1",
+         "postalAddress": {
+             "street": "Oberstrasse",
+             "buildingNumber": "41",
+             "postalCode": "8000",
+             "city": "Zürich",
+             "countryCode": "CH"
+         }
+     },
   "referencedBill": {
     "referenceNumber": "456cahiavajyav"
   },
