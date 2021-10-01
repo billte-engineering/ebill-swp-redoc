@@ -525,27 +525,33 @@ definitions:
         $ref: '#/definitions/Biller'
         description: biller data
         example: biller
+      businessCaseDate:
+        description:
+          "Date of the business case.</br>
+          At time of submission, cannot be older than `90` days. </br>
+          At time of submission, cannot be in the future.</br>
+          Default value is taken to be date of submission of Business Case"
+        example: '2022-05-05'
+        type: string
       businessCaseType:
         $ref: '#/definitions/BusinessCaseType'
       content:
-        description: Invoice PDF file encoded in base64 String
+        description: Business Case PDF file encoded in base64 String
         example: PDF encoded in base64 String
         type: string
       fileIdentifier:
-        description: Name for the Invoice PDF file
+        description: Name for the Business Case PDF file
         example: testInvoice
         type: string
       paymentsByInstalments:
-        description: >-
-          Possibility to offer payment of the invoice in instalments. Instalment
-          invoices can be submitted as multi-group-invoices or
-          single-group-invoices. Multi-groups-  Invoices with several instalment
-          groups to choose from. The invoice recipient can decide with which
-          instalment option the invoice will be paid. One of the instalments
-          groups can contain a total instalment to be used for the payment of
-          the entire invoice (isTotalPaymentOption, can only be set to `true` in
-          one instalment group). Single-groups- Invoice with only one instalment
-          group. The invoice recipient can only pay with this instalment option
+        description:
+          "Possibility to offer payment of the invoice in instalments. </br>
+          Instalment invoices can be submitted as <b>multi-group-invoices</b> or <b>single-group-invoices</b>.</br></br>
+          <b>Multi-Groups</b> -  Invoices with several instalment groups to choose from. </br>
+          The invoice recipient can decide with which instalment option the invoice will be paid. One of the instalments
+          groups can contain a total instalment to be used for the payment of the entire invoice (isTotalPaymentOption, can only be set to `true` in one instalment group).</br></br>
+          <b>Single-groups</b> - Invoice with only one instalment group.</br>
+          The invoice recipient can only pay with this instalment option"
         items:
           $ref: '#/definitions/PaymentByInstalments'
         type: array
