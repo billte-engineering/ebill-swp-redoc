@@ -498,10 +498,10 @@ definitions:
               - REJECTED
               - COMPLETED
             type: string
-    description: >
-      An Event describing the status change of a business case. These events are
+    description:
+      "An Event describing the status change of a business case. These events are
       sent for bills, reminders, advices and credit notes. The approved amount
-      is only provided for the status APPROVED.
+      is only provided for the status `APPROVED`."
     required:
       - billerPid
       - businessCaseId
@@ -556,15 +556,14 @@ definitions:
           $ref: '#/definitions/PaymentByInstalments'
         type: array
       referenceNumber:
-        description: >-
-          Reference number/invoice number of the referenced business case. If
-          the referenced invoice is found, it will be substituted with the new
-          credit note, notification, or invoice. In case of a reminder, the
-          referenced invoice will not be substituted; at time of approval, the
+        description:
+          "Reference number of the referenced business case.</br>
+          If the referenced invoice is found, it will be substituted with the new credit note, notification, or invoice.</br>
+          In case of a reminder, the referenced invoice will not be substituted; at time of approval, the
           invoice recipient decides whether to pay the original invoice or the
-          reminder. If the referenced invoice is not found, a new business case
-          is created.
-        example: Bill2021-01-15T07:20:49.047Z123
+          reminder.
+          </br> If the referenced invoice is not found, a new business case is created."
+        example: "101403020210803153141402094"
         type: string
       referencedBill:
         $ref: '#/definitions/ReferenceBill'
@@ -579,9 +578,9 @@ definitions:
         description: biller data
       workflow:
         $ref: '#/definitions/WorkFlow'
-        description: >-
-          Information about the workflow. Auxiliary data that can be used for
-          pre-registering a reminder in bookkeeping.
+        description:
+          "Information about the workflow. Auxiliary data that can be used for
+          pre-registering a reminder in bookkeeping."
     required:
       - billRecipient
       - biller
@@ -692,12 +691,10 @@ definitions:
   Generic:
     properties:
       iban:
-        description: 'Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO 13616-1.
-                      Corresponds to the following element
-                      The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and
-                      21 alphanumeric characters.
+        description: 'Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO13616-1.</br>
+                      The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and 21 alphanumeric characters.</br>
 
-                      Example: `CH9300762011623852957`,`LI21088100002324013AA` .
+                      Example: `CH9300762011623852957`,`LI21088100002324013AA` . </br>
 
                       Must contain country code CH or LI, otherwise the business case will be denied.
 
@@ -981,7 +978,7 @@ definitions:
           At time of submission, cannot be set to more than 3 years in the
           future (1095 days). At time of submission, cannot be older than 90
           days.
-        example: '2022-05-05'
+        example: '202"2-05-05'
         type: string
       payableAmountCanBeModified:
         description: >-
