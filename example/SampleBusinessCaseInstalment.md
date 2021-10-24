@@ -4,7 +4,7 @@
  Method :        POST
  Auth required : YES(Bearer token)
 ```
-##Request Parameters
+## Request Parameters
 
 | Parameter 	| Type 	| Required 	| Description 	|
 |---	|---	|---	|---	|
