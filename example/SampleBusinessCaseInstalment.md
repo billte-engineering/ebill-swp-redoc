@@ -1,6 +1,6 @@
 # Create Business Case For Installment Type
 ```http request
- URL:           https://api.ebill.billte.ch/swp/v1/billers/business-cases
+ URL:            https://api.ebill.billte.ch/swp/v1/billers/business-cases
  Method :        POST
  Auth required : YES(Bearer token)
 ```
