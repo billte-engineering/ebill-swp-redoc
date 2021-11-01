@@ -7,6 +7,7 @@
 
 **In this example biller (Test company legal name 1) is sending a business case of Instalment of amount 150
 to payer(Private Recipient Test 1)**
+
 # Request Parameters
 
 | Parameter 	| Type 	| Required 	| Description 	|
@@ -25,6 +26,7 @@ to payer(Private Recipient Test 1)**
 #Sample Request
 
 ### Request for installment
+
 ###Example 1
 ```json
 {

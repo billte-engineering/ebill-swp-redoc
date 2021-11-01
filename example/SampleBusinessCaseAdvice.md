@@ -6,6 +6,7 @@
 ```
 **In this example biller (Test company legal name 1) is sending a business case of Advice of amount 150
 to payer(Private Recipient Test 1)**
+
 #Request Parameters
 
 | Parameter 	| Type 	| Required 	| Description 	|
