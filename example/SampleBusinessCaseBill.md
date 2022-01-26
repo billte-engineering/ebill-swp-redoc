@@ -72,7 +72,7 @@ to payer(Private Recipient Test 1)**
 
 ***Success Response***
 
-HTTP Status Codes for success->200
+HTTP Status Codes for success -> 200
 ```json
 {
     "type": "Bill",
@@ -89,7 +89,7 @@ HTTP Status Codes for success->200
 ```
 ***Failed Response***
 
-HTTP Status Codes for success->400
+HTTP Status Codes for success -> 400
  For Bad Request:
 ```json
 {
