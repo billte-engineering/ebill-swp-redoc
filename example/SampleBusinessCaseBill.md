@@ -8,7 +8,7 @@
 **In this example biller (Test company legal name 1) is sending a business case of Bill of amount 150
 to payer(Private Recipient Test 1)**
 
-#Request Parameters
+## Request Parameters
 
 | Parameter 	| Type 	| Required 	| Description 	|
 |---	|---	|---	|---	|
@@ -68,7 +68,7 @@ to payer(Private Recipient Test 1)**
     "fileIdentifier": "Invoice filename"
 }
 ```
-#Response
+## Response
 
 ***Success Response***
 
