@@ -1434,7 +1434,7 @@ paths:
       summary: Authenticate Biller
       tags:
         - Billers
-  /billers/bill-recipients/search:
+  /billers/bill-recipient/search:
     parameters:
       - $ref: '#/parameters/header_authorization'
     post:
