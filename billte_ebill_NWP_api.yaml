@@ -1458,7 +1458,7 @@ paths:
         - description: >-
             Parameters for the search, at least one of the parameters is
             required in addition to the mandatory "billerPid". It is recommended to use "billRecipientId" 
-            if possible since it is a permenant id of each recipient in the SIX infrastructure.
+            since it is a permenant id of each recipient in the SIX infrastructure.
           in: body
           name: body
           required: true
