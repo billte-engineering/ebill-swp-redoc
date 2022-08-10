@@ -1,12 +1,14 @@
 # Create Business Case For Reminder Type
 
-```http request
+```
  URL:           https://api.ebill.billte.ch/swp/v1/billers/business-cases
  Method :        POST
  Auth required : YES(Bearer token)
 ```
+**In this example biller (Test company legal name 1) is sending a business case of Reminder of amount 150
+to payer(Private Recipient Test 1)**
 
-## Request Parameters
+# Request Parameters
 
 | Parameter  | Type  | Required  | Description  |
  |---	|---	|---	|---	|
@@ -18,18 +20,18 @@
 | payableAmountCanBeModified  | Boolean  | false  | If the invoice amount is not provided, the value must be set to "true".  |
 | referenceNumber  | String  | false  | Must be unique for the invoice issuer.  |
 | referencedBill  | Object  | true  | **In referencedBill object contains
-properties**:<br>  ```referenenceNumber```<br>        type:String<br>        Required:true<br>         Defination: <br>           Must be unique for the invoice issuer.  |
+properties**:<br>  ```referenenceNumber```<br>        type:String<br>        Required:true<br>         Definition: <br>           Must be unique for the invoice issuer.  |
 | singlePayment  | Object  | true  | Information about the payment<br><br>```{"paymentInformation":Object}```<br><br>**
 
 In payment information object contains properties**:<br><br>    :**
 properties**:<br><br>1.      ```accountandReference```<br>         type:Object<br>         Required:true<br>
-2      ```amount```<br>         type:Object<br>         Required:true<br>         Defination:<br>
+2      ```amount```<br>         type:Object<br>         Required:true<br>         Definition:<br>
 The amount of the business case (amount incl. VAT + currency code, e.g. CHF 1183.46).<br>           Must be matching
 with the total amount (totalAmount), if business case is an<br>invoice or a reminder.<br>3     ```dueDate```<br>
-type:String<br>         Required:true<br>         Defination:            <br>            At time of submission, cannot
+type:String<br>         Required:true<br>         Definition:            <br>            At time of submission, cannot
 be set to more than 3 years in the future (1095 days).<br>            At time of submission, cannot be older than 90
 days.<br><br>4     ```payableAmountCanBeModified```<br>         type:String<br>         Required:false<br>
-Defination:<br>           If "true", then the provided invoice amount is permitted to be altered.<br>           If the
+Definition:<br>           If "true", then the provided invoice amount is permitted to be altered.<br>           If the
 invoice amount is not provided, the value must be set to "true".<br><br><br><br>       :**
 accountandReference contains properties**:<br><br>               **
 properties**:<br> <br>1.1               ```esr```<br>                   type:Object<br> <br><br>
@@ -41,58 +43,58 @@ For Generic:
 corresponding specifications apply.<br><br><br>                                     **
 esr contains properties**:<br><br>                  1.1.1    ```esrParticipantNumber```     <br>
 type:String<br>                                  Required:true<br>
-Defination:`<br><br>                                          ```Credit account of the invoice issuer (ESR-participant number). 9 characters,```<br>                                           ```numeric value, unhyphenated.```<br>```Composition: VV999999P<br>- VV = ESR code (01 for ESR in CHF or 03 for ESR in EUR)<br>- 999999 = serial number: if number has less than 6 digits, it must be filled with<br>zeros on the left side; must be bigger than 000000.<br>- P = check digit according to Modulus 10 recursive.```<br><br><br>```Example: 010001628<br>Must be matching with a credit account that is specified in the infrastructure in the<br>master data of the invoice issuer, otherwise the business case will be denied.<br>If ESR code = 01, the currency code must be CHF.<br>If ESR code = 03, the currency code must be EUR.```<br><br><br><br><br><br>       <br>
+Definition:`<br><br>                                          ```Credit account of the invoice issuer (ESR-participant number). 9 characters,```<br>                                           ```numeric value, unhyphenated.```<br>```Composition: VV999999P<br>- VV = ESR code (01 for ESR in CHF or 03 for ESR in EUR)<br>- 999999 = serial number: if number has less than 6 digits, it must be filled with<br>zeros on the left side; must be bigger than 000000.<br>- P = check digit according to Modulus 10 recursive.```<br><br><br>```Example: 010001628<br>Must be matching with a credit account that is specified in the infrastructure in the<br>master data of the invoice issuer, otherwise the business case will be denied.<br>If ESR code = 01, the currency code must be CHF.<br>If ESR code = 03, the currency code must be EUR.```<br><br><br><br><br><br>       <br>
 1.1.2 ```referenceStructured```<br>                              type:String<br>                              Required:
-true<br>                            Defination:<br><br>```ESR reference number (including check digit)```<br><br><br>**
+true<br>                            Definition:<br><br>```ESR reference number (including check digit)```<br><br><br>**
 generic contains properties**<br><br>1.2.1 ```iban```<br>                type:String<br>                  Required:
 true<br>
-Defination:<br>```Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO 13616-1.```<br>```The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and```<br>```21 alphanumeric characters```<br><br>```Example: CH9300762011623852957```<br>                 ```LI21088100002324013AA```<br><br>```Must contain country code CH or LI, otherwise the business case will be denied.```<br>```Must be matching with a credit account that is specified in the infrastructure in the```<br>```master data of the invoice issuer, otherwise the business case will be denied.```<br><br>
+Definition:<br>```Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO 13616-1.```<br>```The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and```<br>```21 alphanumeric characters```<br><br>```Example: CH9300762011623852957```<br>                 ```LI21088100002324013AA```<br><br>```Must contain country code CH or LI, otherwise the business case will be denied.```<br>```Must be matching with a credit account that is specified in the infrastructure in the```<br>```master data of the invoice issuer, otherwise the business case will be denied.```<br><br>
 1.2.3 ```referenceStructured```<br>      type:String<br>        Required:false<br>
-Defination:<br>```Reference number, structured payment reference.```<br>```Note: the reference is either a QR reference, creditor reference (ISO 11649) or anIPI reference.```<br>```QR Reference: 27 characters, numerical; check digit computation with Modulus 10recursive (27th position of the reference).Creditor Reference (ISO 11649): up to 25 characters, alphanumeric.IPI Reference: 20 characters, alphanumeric; check digit computation with Modulus97-10 (ISO 7064) (Note: the IPI receipt was eliminated by 31.03.2020)When using QR-IBAN, this element must be filled with the QR Reference.```<br>```When using IBAN and referenceType SCOR, this element must be filled with the```<br>```Creditor Reference.```<br>```When using IBAN and referenceType IPI, this element must be filled with the IPI```<br>```Reference.```<br>```When using IBAN and referenceType NON, this element is not permitted to be```<br>```filled.```<br><br>
+Definition:<br>```Reference number, structured payment reference.```<br>```Note: the reference is either a QR reference, creditor reference (ISO 11649) or anIPI reference.```<br>```QR Reference: 27 characters, numerical; check digit computation with Modulus 10recursive (27th position of the reference).Creditor Reference (ISO 11649): up to 25 characters, alphanumeric.IPI Reference: 20 characters, alphanumeric; check digit computation with Modulus97-10 (ISO 7064) (Note: the IPI receipt was eliminated by 31.03.2020)When using QR-IBAN, this element must be filled with the QR Reference.```<br>```When using IBAN and referenceType SCOR, this element must be filled with the```<br>```Creditor Reference.```<br>```When using IBAN and referenceType IPI, this element must be filled with the IPI```<br>```Reference.```<br>```When using IBAN and referenceType NON, this element is not permitted to be```<br>```filled.```<br><br>
 1.2.4 ```referenceType```<br>        type:String<br>         Required:true<br>
-Defination:<br>```Reference type of the structured reference.```<br>```Following values are permitted:```<br>```QRR - QR Reference```<br>```SCOR - Creditor Reference (ISO 11649)```<br>```NON - without reference```<br>```IPI - IPI Reference (Note: the IPI receipt was eliminated by 31.03.2020)```<br>```When using the QR-IBAN, the code QRR must be included.```<br>```When using the IBAN, either the code SCOR, IPI or NON must be included.```<br><br>
-1.2.5 ```referenceUnstructured```<br>     type:String<br>       Required:false<br>       Defination:Unstructured
+Definition:<br>```Reference type of the structured reference.```<br>```Following values are permitted:```<br>```QRR - QR Reference```<br>```SCOR - Creditor Reference (ISO 11649)```<br>```NON - without reference```<br>```IPI - IPI Reference (Note: the IPI receipt was eliminated by 31.03.2020)```<br>```When using the QR-IBAN, the code QRR must be included.```<br>```When using the IBAN, either the code SCOR, IPI or NON must be included.```<br><br>
+1.2.5 ```referenceUnstructured```<br>     type:String<br>       Required:false<br>       Definition:Unstructured
 message<br><br><br><br>2 :**
 amount contains properties**:<br>         <br>        **
-properties**:<br><br>       2.1 ```currency```:<br>                type:String<br>                Defination:<br> <br>
+properties**:<br><br>       2.1 ```currency```:<br>                type:String<br>                Definition:<br> <br>
 Currency code according to ISO 4217<br>                 When using QR-IBAN or ESR-participant number, only CHF and EUR
 are<br>                 allowed.<br><br>    <br>         2.2 ```value```<br>                  type:String<br>
-Defination:<br>                       <br>                    Amount (max. 99'999'999.99). Field does not have to be
+Definition:<br>                       <br>                    Amount (max. 99'999'999.99). Field does not have to be
 provided when using<br>                    IBAN or QR-IBAN (compatibility with QR-bill).<br>                    If
 amount is existing, it must be > 0.<br><br>                  <br>              <br><br><br><br><br><br><br><br> <br><br>
 | | totalAmount | Object | true | ```Total amount``` object contains properties:<br>   <br><br>
-1 ```currency```:<br>                type:String<br>                Defination:<br> <br>                 Currency code
+1 ```currency```:<br>                type:String<br>                Definition:<br> <br>                 Currency code
 according to ISO 4217<br>                 When using QR-IBAN or ESR-participant number, only CHF and EUR are<br>
 allowed.<br><br>    <br>         2 ```value```:<br>                  type:String<br>
-Defination:<br>                       <br>                    Amount (max. 99'999'999.99). Field does not have to be
+Definition:<br>                       <br>                    Amount (max. 99'999'999.99). Field does not have to be
 provided when using<br>                    IBAN or QR-IBAN (compatibility with QR-bill).<br>                    If
 amount is existing, it must be > 0. | | workflow | Object | false | Information about the workflow. Auxiliary data that
 can be used for pre-registering<br>an invoice in bookkeeping.<br> <br>   ***
 worlflow object contains properties***:<br>         1: amountPaid<br>             type:Object<br>             Required:
-true<br>              Defination:<br>             Sum of the amount that was paid by the invoice recipient in advance (
+true<br>              Definition:<br>             Sum of the amount that was paid by the invoice recipient in advance (
 without<br>              VAT-relevant advance invoice). The outstanding total invoice amount to be paid.<br>
 corresponds to the element "totalAmount".<br><br>                ```amountPaid contains Properties```:<br>
-1.1 ```currencyCode```<br>                             Required:true<br>                             Defination:
+1.1 ```currencyCode```<br>                             Required:true<br>                             Definition:
 Currency code according to ISO 4217<br>                    1.2 ```value```<br>                             Required:
-true<br>                             Defination: Give Amount<br><br>         2: caseReferenceForBillRecipient<br>
-Required:false<br>               type:String<br>               Defination:                Association reference to be
+true<br>                             Definition: Give Amount<br><br>         2: caseReferenceForBillRecipient<br>
+Required:false<br>               type:String<br>               Definition:                Association reference to be
 used by the invoice recipient to allocate the business<br>                case in his bookkeeping.<br>         3:
-deliveryDateEnd<br>               Required:false<br>               type:String<br>               Defination:<br>
+deliveryDateEnd<br>               Required:false<br>               type:String<br>               Definition:<br>
 Delivery date or end date of the service provision<br>                   4:   deliveryDateStart<br>
-Required:false<br>               type:String<br>               Defination:<br>                Start date of the service
+Required:false<br>               type:String<br>               Definition:<br>                Start date of the service
 provision, in case it is different than deliveryDateEnd<br><br><br>           5: netAmount<br>             type:
-Object<br>             Required:true<br>              Defination:<br>                   Total invoice amount without
+Object<br>             Required:true<br>              Definition:<br>                   Total invoice amount without
 VAT (e.g. CHF 1095.80)<br><br>  <br>  <br>            ```netAmount contains Properties```:<br>
-1.1 ```currencyCode```<br>                             Required:true<br>                             Defination:
+1.1 ```currencyCode```<br>                             Required:true<br>                             Definition:
 Currency code according to ISO 4217<br>                    1.2 ```value```<br>                             Required:
-true<br>                             Defination: Invoice amount without VAT<br>         6:
+true<br>                             Definition: Invoice amount without VAT<br>         6:
 vatEnterpriseIdentificationNumbers<br>               Required:true<br>               type:Array of strings<br>
-Defination:<br>                Value Added Tax Enterprise Identification Numbers (VAT-UIDs) of the invoice
+Definition:<br>                Value Added Tax Enterprise Identification Numbers (VAT-UIDs) of the invoice
 issuer<br><br>         7:   vatEnterpriseIdentificationNumbers<br>               Required:true<br>               type:
-Array of strings<br>               Defination:<br>                VAT information per VAT
+Array of strings<br>               Definition:<br>                VAT information per VAT
 rate<br><br><br>      <br><br> <br><br><br><br>             <br><br>  |
 
-### Sample Request
+# Sample Request
 
 ```json
 {
@@ -149,7 +151,7 @@ rate<br><br><br>      <br><br> <br><br><br><br>             <br><br>  |
     "deliveryDateStart": "",
     "netAmount": {
       "currencyCode": "CHF",
-      "value": "148.0"
+      "value": "150.0"
     },
     "vatEnterpriseIdentificationNumbers": [
       1,
@@ -164,7 +166,7 @@ rate<br><br><br>      <br><br> <br><br><br><br>             <br><br>  |
 }
 ```
 
-### Response
+# Response
 
 ***Success Response***
 
@@ -182,13 +184,14 @@ HTTP Status Codes for success->200
   "businessCaseDate": "2021-09-17",
   "status": "OPEN",
   "totalAmount": {
-    "value": 140.8,
+    "value": 150,
     "currencyCode": "CHF"
   }
 }
 ```
 
 ***Failed Response***
+
 HTTP Status Codes for success->400 For Bad Request:
 
 ```json

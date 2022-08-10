@@ -3,21 +3,21 @@
 ## Biller  (Staging)
 
 ```
- Biller Pid : 41140018132460243
- Legal Name : Test company legal name 1
- IBAN : CH2789144985732791922
- Biller Secret Key : 0c1d2cdd-3943-4a95-9f3c-a28769cb012d
+ Biller Pid : 41140064552882481
+ Legal Name : ACME-G
+ IBAN : CH7889144655299359858
+ Biller Secret Key : 9a0ee253-08af-4e17-98c6-0ebbbc56f6eb
 ```
 
 ```json
 {
-  "billerPid": "41140018132460243",
-  "legalName": "Test company legal name 1",
+  "billerPid": "41140064552882481",
+  "legalName": "ACME-G",
   "postalAddress": {
-    "street": "Oberstrasse",
-    "buildingNumber": "41",
-    "postalCode": "8000",
-    "city": "Zürich",
+    "street": "Soodmattenstrasse",
+    "buildingNumber": "4",
+    "postalCode": "8134",
+    "city": "Adliswil",
     "countryCode": "CH"
   }
 }
@@ -26,15 +26,15 @@
 ## Bill Recipient (Staging)
 
 ```
-  Bill Recipient Id : 41012280648521306
-  Name : Private Recipient Test 1
+  Bill Recipient Id : 41012103770365435
+  Name : ACME-R-F-N ACME-R-L-N
 ```
 
 ### Sample JSON
 
 ```json
 {
-  "name": "Private Recipient Test 1",
-  "billRecipientId": "41012280648521306"
+  "name": "ACME-R-F-N ACME-R-L-N",
+  "billRecipientId": "41012103770365435"
 }
 ```

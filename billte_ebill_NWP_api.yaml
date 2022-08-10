@@ -540,7 +540,8 @@ definitions:
         example: PDF encoded in base64 String
         type: string
       fileIdentifier:
-        description: Name for the Business Case PDF file
+        description: Name for the Business Case PDF file.<br>
+          <b>Example:</b> "invoice-123456789", For a PDF document "invoice-123456789.pdf"
         example: testInvoice
         type: string
       paymentsByInstalments:
@@ -984,7 +985,9 @@ definitions:
         description: >-
           If `true`, then the provided invoice amount is permitted to be
           altered. If the invoice amount is not provided, the value must be set
+          to `true`. If no value is provided, the eBill infrastructure will automatically set
           to `true`.
+
         example: true
         type: boolean
     required:
@@ -1258,11 +1261,28 @@ info:
     Examples and extra information -
     https://github.com/billte-engineering/ebill-swp-redoc.
 
+
+    Examples include:
+
+
+    * submitting an invoice
+
+    * submitting a reminder
+
+    * submitting an installment
+
+    * submitting payableAmount
+
+
+
+
+
+
     ### General Note
 
 
-    The Working Group eBill-SWP-API reserves the right to amend this
-    documentation as required.
+    These APIs are based on the work of the Working Group eBill-SWP-API. Biller is a
+    member of the group and an active contributer.
 
 
     This documentation has been compiled with the greatest care, but may
@@ -1273,7 +1293,7 @@ info:
 
     If you notice any errors in this documentation or have any suggestions for
     improvements, we would be grateful to receive your feedback; please open an
-    issue on our website.
+    issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
 
     ### Environments
 
@@ -1426,7 +1446,7 @@ paths:
       summary: Authenticate Biller
       tags:
         - Billers
-  /billers/bill-recipients/search:
+  /billers/bill-recipient/search:
     parameters:
       - $ref: '#/parameters/header_authorization'
     post:
@@ -1436,9 +1456,8 @@ paths:
         Returns a list of one or more bill recipients.
 
 
-        The response will only list a bill recipient if he allows bills to be
-
-        posted by the biller or allows bills to be posted in general. It will
+        The response will only list a bill recipient if he allows bills in his online banking
+        to be posted by the biller or allows bills to be posted in general. It will
         always return the billRecipientId and optionally any other provided
         parameter.
 
@@ -1450,7 +1469,8 @@ paths:
       parameters:
         - description: >-
             Parameters for the search, at least one of the parameters is
-            required
+            required in addition to the mandatory "billerPid". It is recommended to use "billRecipientId"
+            since it is a permenant id of each recipient in the SIX infrastructure.
           in: body
           name: body
           required: true
