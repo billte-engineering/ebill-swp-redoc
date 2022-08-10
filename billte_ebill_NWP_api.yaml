@@ -1240,7 +1240,7 @@ host: stage-api.ebill.billte.ch
 info:
   contact:
     name: Software Partner API
-    url: https://stage-api.ebill.billte.ch
+    url: https://guard-api.ebill.billte.ch
   description: >
     The application programming interface for software partners (Software
     Partner API) allows communication with an eBill Network Partner.
@@ -1274,6 +1274,18 @@ info:
     If you notice any errors in this documentation or have any suggestions for
     improvements, we would be grateful to receive your feedback; please open an
     issue on our website.
+
+    ### Environments
+
+    + #### Production environment [code:P]
+    <br> `baseUrl` : https://guard-api.ebill.billte.ch
+
+    + #### Stable staging environment [code:XP]
+    <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
+
+    + #### Unstable staging environment [code:XE]
+    <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
+
   title: Billte eBill SWP API
   version: 1.0.0
 parameters:
