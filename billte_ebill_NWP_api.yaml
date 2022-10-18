@@ -1239,7 +1239,7 @@ definitions:
       - vatRates
     title: WorkFlow
     type: object
-host: stage-api.ebill.billte.ch
+host: guard-api.ebill.billte.ch
 info:
   contact:
     name: Software Partner API
