@@ -996,7 +996,6 @@ definitions:
           altered. If the invoice amount is not provided, the value must be set
           to `true`. If no value is provided, the eBill infrastructure will automatically set
           to `true`.
-
         example: true
         type: boolean
     required:
@@ -1443,9 +1442,7 @@ paths:
         '200':
           description: Biller Found
           schema:
-            items:
-              $ref: '#/definitions/BillerAuthenticationResponse'
-            type: array
+            $ref: '#/definitions/BillerAuthenticationResponse'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation
@@ -1491,9 +1488,7 @@ paths:
         '200':
           description: Bill recipients found
           schema:
-            items:
-              $ref: '#/definitions/BillRecipientsForBillerSearchResponse'
-            type: array
+            $ref: '#/definitions/BillRecipientsForBillerSearchResponse'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation
