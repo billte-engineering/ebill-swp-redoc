@@ -326,6 +326,15 @@ definitions:
         maxLength: 12
         pattern: CHE[0-9]{9}
         type: string
+      submissionStatus:
+          description: >
+            Defines if the biller can submit a business-case for the provided id in the request (=`ALLOWED`)
+            or if the id is either not known to the eBill infrastructure or the submission is not allowed (=`NOT_ALLOWED`).
+          enum:
+            - ALLOWED
+            - NOT_ALLOWED
+          example: ALLOWED
+          type: string
     required:
       - billRecipientId
     type: object
