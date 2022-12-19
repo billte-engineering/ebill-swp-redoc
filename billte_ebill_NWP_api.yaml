@@ -527,11 +527,10 @@ definitions:
         example: biller
       businessCaseDate:
         description:
-          "Date of the business case.</br>
+          "Date of the business case in TZ format.</br>
           At time of submission, cannot be older than `90` days. </br>
-          At time of submission, cannot be in the future.</br>
-          Default value is taken to be date of submission of Business Case"
-        example: '2022-05-05'
+          At time of submission, cannot be in the future."
+        example: '2022-11-29T09:53:31.814795Z'
         type: string
       businessCaseType:
         $ref: '#/definitions/BusinessCaseType'
@@ -584,6 +583,7 @@ definitions:
           pre-registering a reminder in bookkeeping."
     required:
       - billRecipient
+      - businessCaseDate
       - biller
       - content
       - contentType
