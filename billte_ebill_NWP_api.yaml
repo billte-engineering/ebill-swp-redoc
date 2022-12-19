@@ -529,7 +529,7 @@ definitions:
         description:
           "Date of the business case in TZ format.</br>
           At time of submission, cannot be older than `90` days. </br>
-          At time of submission, cannot be in the future."
+          At time of submission, cannot be in the future. <b>Example: </b>'2022-11-29T09:53:31.814795Z'"
         example: '2022-11-29T09:53:31.814795Z'
         type: string
       businessCaseType:
