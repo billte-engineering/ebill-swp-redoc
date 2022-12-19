@@ -570,6 +570,9 @@ definitions:
         description: referencedBill
         example: referencedBill
       singlePayment:
+        description:
+          "Single payment is the most used option. It is mandatory unless paymentByInstallments has been selected.</br>
+          It carries the mandatory information on the submitted business case (i.e. invoice)."
         $ref: '#/definitions/SinglePayment'
         description: singlePayment
         example: singlePayment
