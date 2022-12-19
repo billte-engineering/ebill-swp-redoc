@@ -92,12 +92,6 @@ definitions:
         minLength: 1
         pattern: ([0-9])*
         type: string
-      correspondenceLanguage:
-        description: language for correspondence with this bill recipient ISO-639-2/B
-        example: ger
-        maxLength: 3
-        minLength: 1
-        type: string
       emailAddress:
         description: >-
           Email address of the invoice recipient. Email address is valid if it
