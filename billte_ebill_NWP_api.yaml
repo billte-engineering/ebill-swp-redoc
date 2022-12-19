@@ -85,9 +85,9 @@ definitions:
         $ref: '#/definitions/BillRecipientAddress'
       billRecipientId:
         description: >-
-          Alternative unique identifier of the invoice recipient (also known as
-          "PID"). It is recommended to use the Email Address (emailAddress) and
-          not the billRecipientId., example: 41010560425610173
+          Unique identifier of the invoice recipient (also known as
+          "PID"). In some cases (look-up functionality activated by the recipient) it is possible to use the email address (see emailAddress) instead of
+          the billRecipientId. Example: 41010560425610173
         maxLength: 17
         minLength: 1
         pattern: ([0-9])*
@@ -127,10 +127,7 @@ definitions:
         type: string
     required:
       - billRecipientId
-      - type
       - name
-      - correspondenceLanguage
-      - address
     type: object
   BillRecipientAddress:
     type: object
