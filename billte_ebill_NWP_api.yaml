@@ -543,10 +543,6 @@ definitions:
           <b>Example:</b> "invoice-123456789", For a PDF document "invoice-123456789.pdf"
         example: testInvoice
         type: string
-      singlePayment:
-        $ref: '#/definitions/SinglePayment'
-        description: singlePayment
-        example: singlePayment
       paymentsByInstalments:
         description:
           "Possibility to offer payment of the invoice in instalments. </br>
