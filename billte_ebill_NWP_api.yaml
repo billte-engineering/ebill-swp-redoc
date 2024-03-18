@@ -1419,13 +1419,13 @@ parameters:
     pattern: NWPEVID[0-9A-Z]{32}
     type: string
   query_limitEvents:
-    default: 1000
+    default: 100
     description: >
-      Maximum number of events one wants to receive (technical maximum is 10000,
+      Maximum number of events one wants to receive (technical maximum is 1000,
       no more will be returned at once and you have to fetch again to check if
       there are more)
     in: query
-    maximum: 10000
+    maximum: 1000
     name: limit
     type: integer
 paths:
