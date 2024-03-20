@@ -469,6 +469,14 @@ definitions:
           - REJECTED
           - COMPLETED
         type: string
+      referenceNumber:
+        description: A business case reference given by the biller. Must be unique in combination with the billerId.
+        example: 2018-123456-22
+        type: string
+      totalAmount:
+        $ref: '#/definitions/TotalAmount'
+        description: totalAmount
+        example: totalAmount
     required:
       - id
       - status
@@ -1559,10 +1567,10 @@ paths:
       produces:
         - application/json
       responses:
-        '201':
+        '200':
           description: Business case created
           schema:
-            $ref: '#/definitions/BusinessCaseId'
+            $ref: '#/definitions/BusinessCase'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation
