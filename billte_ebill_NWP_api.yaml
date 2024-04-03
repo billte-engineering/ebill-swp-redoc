@@ -119,6 +119,13 @@ definitions:
         maxLength: 70
         minLength: 1
         type: string
+      firstName:
+        description: >-
+          first name, if private bill recipient
+          empty, if company bill recipient
+        example: 'Peter'
+        maxLength: 70
+        type: string
       type:
         description: the type of the bill recipient
         enum:
