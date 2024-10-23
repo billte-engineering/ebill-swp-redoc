@@ -80,6 +80,96 @@ definitions:
         type: number
     title: ApprovedAmount
     type: object
+  BillRecipientForEvent:
+    type: object
+    properties:
+      emailAddress:
+        type: string
+        description: "Email address of the bill recipient"
+        example: "peter@muster.ch"
+        minLength: 1
+        maxLength: 256
+      billRecipientId:
+        type: string
+        description: "ID of the bill recipient"
+        example: "41010560425610173"
+        minLength: 1
+        maxLength: 17
+        pattern: "^([0-9])*$"
+      enterpriseIdentificationNumber:
+        type: string
+        description: "Swiss enterprise identification number (UID) without dashes, dots, or extension"
+        example: "CHE123456789"
+        maxLength: 12
+        pattern: "^CHE[0-9]{9}$"
+      type:
+        type: string
+        description: "The type of the bill recipient"
+        enum: 
+          - PRIVATE
+          - COMPANY
+      name:
+        type: string
+        description: "Last name if private bill recipient, company name if company bill recipient"
+        example: "for private bill recipient: Muster, for company name: Muster AG"
+        minLength: 1
+        maxLength: 70
+        pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
+      firstName:
+        type: string
+        description: "First name if private bill recipient, empty if company bill recipient"
+        example: "Peter"
+        maxLength: 35
+        pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
+      correspondenceLanguage:
+        type: string
+        description: "Language for correspondence with this bill recipient (ISO-639-2/B)"
+        example: "ger"
+        minLength: 1
+        maxLength: 3
+      address:
+        type: object
+        description: "RecipientAddress details"
+        properties:
+          streetName:
+            type: string
+            description: "Street name"
+            example: "Neustadtstrasse"
+            minLength: 1
+            maxLength: 70
+            pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
+          postalCode:
+            type: string
+            description: "Postal code"
+            example: "6025"
+            minLength: 1
+            maxLength: 9
+            pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
+          city:
+            type: string
+            description: "City name"
+            example: "Neudorf"
+            minLength: 1
+            maxLength: 35
+            pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
+          countryCode:
+            type: string
+            description: "Country code (ISO 3166-1 alpha 2)"
+            example: "CH"
+            maxLength: 2
+            pattern: "^[A-Z]{2}$"
+        required:
+          - streetName
+          - postalCode
+          - city
+          - countryCode
+    required:
+      - billRecipientId
+      - type
+      - name
+      - correspondenceLanguage
+      - address
+  
   BillRecipient:
     properties:
       address:
@@ -212,7 +302,7 @@ definitions:
         maxLength: 21
         type: string
       billRecipient:
-        $ref: '#/definitions/BillRecipient'
+        $ref: '#/definitions/BillRecipientForEvent'
       billerPid:
         description: biller PID
         example: '41100012345678901'
