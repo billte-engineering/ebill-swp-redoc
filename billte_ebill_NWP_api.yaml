@@ -44,6 +44,7 @@ definitions:
       - postalCode
       - city
       - countryCode
+      - buildingNumber
     type: object
   AmountValue:
     description: >
@@ -157,7 +158,7 @@ definitions:
     required: 
       - addressLine1
       - addressLine2
-      - description
+      - countryCode
   BillRecipientEmailAddressChangedEvent:
     allOf:
       - $ref: '#/definitions/Event'
