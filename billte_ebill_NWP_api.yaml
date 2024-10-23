@@ -43,7 +43,6 @@ definitions:
     required:
       - postalCode
       - city
-      - countryCode
       - buildingNumber
     type: object
   AmountValue:
