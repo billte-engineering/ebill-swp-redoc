@@ -34,7 +34,7 @@ definitions:
         maxLength: 9
         minLength: 1
         type: string
-      streetName:
+      street:
         description: Street
         example: Soodmattenstrasse
         maxLength: 70
@@ -154,6 +154,10 @@ definitions:
       countryCode:
         description: 'Country; two-letter ISO country code according to ISO 3166-1.'
         type: string
+    required: 
+      - addressLine1
+      - addressLine2
+      - description
   BillRecipientEmailAddressChangedEvent:
     allOf:
       - $ref: '#/definitions/Event'
