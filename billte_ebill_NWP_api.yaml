@@ -543,11 +543,6 @@ definitions:
           the type of the business case
         example: Bill
         type: string
-      billerPid:
-        description: |
-          Biller PID
-        example: 41010560425610173
-        type: string
       businessCaseDate:
         description: |
           The business case date (ISO-8601 format), can not be more than 90 days in the past on the date it was created. Cannot be in the future
@@ -578,6 +573,11 @@ definitions:
         $ref: '#/definitions/TotalAmount'
         description: totalAmount
         example: totalAmount
+      billerPid:
+        description: |
+          Biller PID
+        example: 41010560425610173
+        type: string
     required:
       - id
       - status
