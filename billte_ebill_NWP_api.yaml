@@ -44,6 +44,7 @@ definitions:
       - postalCode
       - city
       - countryCode
+      - street
     type: object
   AmountValue:
     description: >
