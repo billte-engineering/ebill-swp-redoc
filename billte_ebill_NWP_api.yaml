@@ -337,7 +337,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BillRecipientSubscriptionStatusChangedEvent'
+                  $ref: '#/components/schemas/BillRecipientSubscriptionStatusChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
@@ -838,7 +838,6 @@ components:
     BillRecipientSubscription:
       required:
       - billRecipient
-      - billerPid
       type: object
       properties:
         accountNumber:
@@ -861,6 +860,29 @@ components:
           description: |
             ESR or QR or creditor reference number, if provided from the financial institution.
           example: "123456123456789012345678901"
+    BillRecipientSubscriptionForm:
+      type: object
+      description: 'Contains additional information regarding a bill recipient subscription. It contains the users input to the BillerSubscriptionForm.'
+      properties:
+        billRecipientSubscriptionFormFields:
+          type: array
+          items:
+            type: object
+            required:
+              - technicalId
+              - value
+            properties:
+              technicalId:
+                type: string
+                minLength: 1
+                maxLength: 35
+                description: 'The identifying token of this subscription form field. Corresponds to the property technicalId of BillerSubscriptionFormField.'
+                example: 'customerNumber'
+              value:
+                type: string
+                minLength: 1
+                maxLength: 256
+                description: 'The value of this subscription form field as entered by the user. If a pattern is defined, it has been checked against it.'
     BillRecipientSubscriptionFormField:
       title: BillRecipientSubscriptionFormField
       type: object
@@ -869,6 +891,22 @@ components:
           type: string
         value:
           type: string
+    BillRecipientSubscriptionStatusChangedEbillGuardianEvent:
+      required:
+      - billerPid
+      - events
+      type: object
+      properties:
+        billerPid:
+            maxLength: 17
+            pattern: "41[0-9]{15}"
+            type: string
+            description: biller PID
+            example: "41100012345678901"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillRecipientSubscriptionStatusChangedEvent"
     BillRecipientSubscriptionStatusChangedEvent:
       description: |
         An Event describing the status change of a bill recipient subscription.
@@ -876,6 +914,7 @@ components:
       allOf:
       - $ref: '#/components/schemas/Event'
       - $ref: '#/components/schemas/BillRecipientSubscription'
+      - $ref: '#/components/schemas/BillRecipientSubscriptionForm'
       - type: object
         properties:
           newStatus:
@@ -888,7 +927,11 @@ components:
             - INACTIVE
             - REQUESTED
             - ACTIVE
-      - type: object
+          allowedEbillDebitSubmissions:
+            type: array
+            description: 'Defines what kind of eBill Direct Debit submissions are allowed.'
+            items:
+              $ref: '#/components/schemas/AllowedEbillDebitSubmission'  
         additionalProperties: true
     BillRecipientsForBillerSearchRequestArray:
       required:
@@ -1452,6 +1495,23 @@ components:
           description: timestamp of the event
           format: date-time
           example: 2019-01-01T10:00:00Z
+      description: contains common fields for all events
+    EbillGuardianEvent:
+      required:
+      - billerPid
+      - events
+      type: object
+      properties:
+        billerPid:
+            maxLength: 17
+            pattern: "41[0-9]{15}"
+            type: string
+            description: biller PID
+            example: "41100012345678901"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
       description: contains common fields for all events
     Fre:
       title: Fre
