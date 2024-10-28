@@ -284,9 +284,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BillRecipientEmailAddressChangedEbillGuardianEvent'
+                $ref: '#/components/schemas/BillRecipientEmailAddressChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Network Partner API documentation for further details about errors and error handling.
@@ -335,9 +333,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BillRecipientSubscriptionStatusChangedEbillGuardianEvent'
+                $ref: '#/components/schemas/BillRecipientSubscriptionStatusChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
@@ -387,9 +383,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BusinessCaseStatusChangedEbillGuardianEvent'
+                $ref: '#/components/schemas/BusinessCaseStatusChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Network Partner API documentation
@@ -440,9 +434,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/InstalmentStatusChangedEbillGuardianEvent'
+                $ref: '#/components/schemas/InstalmentStatusChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Network Partner API documentation
