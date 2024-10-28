@@ -120,9 +120,7 @@ paths:
             schema:
               oneOf:
                 - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequest'
-                - type: array
-                  items:
-                    $ref: '#/components/schemas/BillRecipientsForBillerSearchRequest'
+                - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequestArray'
         required: true
       responses:
         "200":
@@ -892,6 +890,48 @@ components:
             - ACTIVE
       - type: object
         additionalProperties: true
+    BillRecipientsForBillerSearchRequestArray:
+      required:
+      - billerPid
+      - items
+      type: object
+      properties:
+        billerPid:
+          maxLength: 17
+          minLength: 17
+          pattern: "([0=9])*"
+          type: string
+          description: Biller PiD provided by the system
+          example: 41NN00BBBBBBBBBPP
+        items:
+          type: array
+          description: Array of bill recipient search requests
+          items:
+            type: object
+            properties:
+              billRecipientId:
+                type: string
+                description: ID of the bill recipient
+                example: "41010560425610173"
+                maxLength: 17
+                minLength: 1
+                pattern: "([0-9])*"
+              emailAddress:
+                type: string
+                description: Email address of the bill recipient
+                example: "peter@muster.ch"
+                maxLength: 256
+                minLength: 1
+                format: email
+              enterpriseIdentificationNumber:
+                type: string
+                description: |
+                  Swiss enterprise identification number (UID) without dashes, dots, or extensions.
+                  This should contain the Swiss enterprise identification number (UID) from the commercial register (Handelsregister),
+                  which may be different from the VAT UID (Mehrwertsteuer UID).
+                example: "CHE123456789"
+                maxLength: 12
+                pattern: "CHE[0-9]{9}"
     BillRecipientsForBillerSearchRequest:
       required:
       - billerPid
