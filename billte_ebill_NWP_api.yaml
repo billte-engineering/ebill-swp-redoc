@@ -442,7 +442,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/InstalmentStatusChangedEvent'
+                  $ref: '#/components/schemas/InstalmentStatusChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Network Partner API documentation
@@ -1656,6 +1656,22 @@ components:
             approved or denied
         paymentInformation:
           $ref: '#/components/schemas/PaymentInformation'
+    InstalmentStatusChangedEbillGuardianEvent:
+      required:
+      - billerPid
+      - events
+      type: object
+      properties:
+        billerPid:
+            maxLength: 17
+            pattern: "41[0-9]{15}"
+            type: string
+            description: biller PID
+            example: "41100012345678901"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstalmentStatusChangedEvent"
     InstalmentStatusChangedEvent:
       description: |
         An Event describing the status change of an instalment. These events are only sent for instalment bills. The approved amount is only provided for the status APPROVED.
@@ -1665,12 +1681,6 @@ components:
         properties:
           approvedAmount:
             $ref: '#/components/schemas/ApprovalAmountWithCurrency'
-          billerPid:
-            maxLength: 17
-            pattern: "41[0-9]{15}"
-            type: string
-            description: biller PID
-            example: "41100012345678901"
           businessCaseId:
             maxLength: 39
             pattern: "NWPBCID[0-9A-Z]{32}"
