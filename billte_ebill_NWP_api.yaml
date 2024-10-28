@@ -967,40 +967,150 @@ components:
             Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
           example: CHE123456789
     BillRecipientsForBillerSearchResponse:
-      required:
-      - billRecipientId
       type: object
+      required:
+        - items
       properties:
-        billRecipientId:
-          maxLength: 17
-          minLength: 1
-          pattern: "([0-9])*"
-          type: string
-          description: id of the bill recipient
-          example: "41010560425610173"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillRecipientsForBillerSearchResponseItem'
+          minItems: 1
+          maxItems: 100
+    BillRecipientsForBillerSearchResponseItem:
+      allOf:
+        - $ref: '#/components/schemas/BillRecipientIdentification'
+        - type: object
+          required:
+            - ebillSubmissionStatus
+            - ebillDebitProposalStatus
+          properties:
+            ebillSubmissionStatus:
+              type: string
+              description: 'Defines if the biller can submit a business-case for the provided bill recipient identification in the request (=ALLOWED) or if the bill recipient identification is either not known to the eBill infrastructure or the submission is not allowed (=NOT_ALLOWED).'
+              enum:
+                - ALLOWED
+                - NOT_ALLOWED
+            ebillDebitProposalStatus:
+              type: string
+              description: 'Defines if the biller can submit an eBill Direct Debit proposal for the provided bill recipient id in the request (=ALLOWED) or if the bill recipient is either not known to the eBill infrastructure or the submission of an eBill Direct Debit proposal is not allowed (=NOT_ALLOWED).'
+              enum:
+                - ALLOWED
+                - NOT_ALLOWED
+            allowedEbillDebitSubmissions:
+              type: array
+              description: 'Defines what kind of eBill Direct Debit submissions are allowed.'
+              items:
+                $ref: '#/components/schemas/AllowedEbillDebitSubmission'
+    BillRecipientIdentification:
+      type: object
+      description: 'Exactly one property must be set.'
+      properties:
         emailAddress:
-          maxLength: 256
-          minLength: 1
           type: string
-          description: email address of the bill recipient
+          description: 'email address of the bill recipient'
+          example: 'peter@muster.ch'
+          minLength: 1
+          maxLength: 256
           format: email
-          example: peter@muster.ch
+        billRecipientId:
+          type: string
+          description: 'id of the bill recipient'
+          example: '41010560425610173'
+          minLength: 1
+          maxLength: 17
+          pattern: '([0-9])*'
         enterpriseIdentificationNumber:
-          maxLength: 12
-          pattern: "CHE[0-9]{9}"
           type: string
           description: |
             Swiss enterprise identification number (UID) without dashes, dots or extension.
             Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
-          example: CHE123456789
-        submissionStatus:
+          maxLength: 12
+          pattern: 'CHE[0-9]{9}'
+          example: 'CHE123456789'
+    AllowedEbillDebitSubmission:
+      description: 'Defines the relevant information what type of eBill Direct Debit submission the biller is allowed to do.'
+      type: object
+      required:
+        - currencyCode
+        - chargebackMode
+      properties:
+        currencyCode:
+          $ref: '#/components/schemas/EbillDebitCurrenyCode'
+        chargebackMode:
+          $ref: '#/components/schemas/ChargebackMode'
+    EbillDebitProposal:
+      description: 'eBill Direct Debit proposal for the bill recipient.'
+      type: object
+      required:
+        - billRecipientIdentification
+        - currencyCode
+        - chargebackMode
+      properties:
+        id:
+          type: string
+          minLength: 36
+          maxLength: 36
+          description: 'A unique id for this eBill Direct Debit proposal. Property must not be given when creating a new object.'
+        billRecipientIdentification:
+          $ref: '#/components/schemas/BillRecipientIdentification'
+        currencyCode:
+          $ref: '#/components/schemas/EbillDebitCurrenyCode'
+        chargebackMode:
+          $ref: '#/components/schemas/ChargebackMode'
+    ChargebackMode:
+      type: string
+      description: 'If supported, the bill recipient can initiate a chargeback of the corresponding payment.'
+      enum:
+        - SUPPORTED
+        - NOT_SUPPORTED
+    EbillDebitCurrenyCode:
+      description: |
+        The amount currency code according to ISO-4217 used for eBill Direct Debit.
+      type: string
+      example: 'CHF'
+      maxLength: 3
+      pattern: 'CHF|EUR'
+    AccountNumber:
+      type: object
+      description: |
+        For the account number, either IBAN or ESR participant number has to be specified (not both).
+      properties:
+        esrParticipantNumber:
           type: string
           description: |
-            Defines if the biller can submit a business-case for the provided id in the request (=`ALLOWED`) or if the id is either not known to the eBill infrastructure or the submission is not allowed (=`NOT_ALLOWED`).
-          example: ALLOWED
-          enum:
-          - ALLOWED
-          - NOT_ALLOWED
+            ESR participant number, format according to the specifications:
+
+            - numerical value with mandatory 9 digits long (unhyphenated)
+
+            - structure: VV999999P
+            - VV = preceding digits, either 01 or 03
+
+            - 999999: reference number
+
+              where a reference number is only 6 digits long, additional zeros must be inserted on the left hand side
+
+              reference number should be greater than 000000
+
+            - P: check digit in accordance with Modulo 10, recursive
+
+          maxLength: 9
+          example: '010001628'
+          pattern: '[0-9]{9}'
+        iban:
+          type: string
+          description: |
+            credit account
+
+            - The requirements for IBAN usage are limited to the country codes CH and LI, otherwise the business case will be rejected.
+
+            - The IBAN should match an already existing credit account of the biller, otherwise the business case will be rejected.
+
+            - See also ISO-13616-1
+
+          maxLength: 21
+          example: 'CH100023000A109822346'
+          pattern: '(CH|LI)\d{7}[0-9A-Z]{12}'
     Biller:
       title: Biller
       required:
