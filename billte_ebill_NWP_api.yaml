@@ -98,9 +98,7 @@ paths:
         found or the biller is not allowed to send bills to the bill recipient.
 
         ### Note:
-        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.
-        - If a single object is provided, it will be treated as an array with one item.
-   
+        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.   
       operationId: searchBillRecipientsForBiller
       parameters:
       - name: Authorization
