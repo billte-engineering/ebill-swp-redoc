@@ -286,7 +286,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BillRecipientEmailAddressChangedEvent'
+                  $ref: '#/components/schemas/BillRecipientEmailAddressChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Network Partner API documentation for further details about errors and error handling.
@@ -796,11 +796,31 @@ components:
         countryCode:
           type: string
           description: Country; two-letter ISO country code according to ISO 3166-1.
+    BillRecipientEmailAddressChangedEbillGuardianEvent:
+      required:
+      - billerPid
+      - events
+      type: object
+      properties:
+        billerPid:
+            maxLength: 17
+            pattern: "41[0-9]{15}"
+            type: string
+            description: biller PID
+            example: "41100012345678901"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillRecipientEmailAddressChangedEvent"
     BillRecipientEmailAddressChangedEvent:
       description: An Event describing the change of the email address of a bill recipient.
       allOf:
       - $ref: '#/components/schemas/Event'
       - type: object
+        required:
+        - oldEmailAddress
+        - newEmailAddress
+        - triggeredBy
         properties:
           newEmailAddress:
             maxLength: 256
