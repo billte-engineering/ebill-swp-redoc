@@ -173,12 +173,12 @@ paths:
         description: |
           business case id
           **Maximal length**: '39'
-          **Example**: '"NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9"'
-          **Pattern**: 'NWPBCID[0-9A-Z]{32}'
+          **Example**: '"BCID0FB909852BBC4D06AD8336AAE87D7FC9"'
+          **Pattern**: 'BCID[0-9A-Z]{32}'
         required: true
         schema:
           maxLength: 39
-          pattern: "NWPBCID[0-9A-Z]{32}"
+          pattern: "BCID[0-9A-Z]{32}"
           type: string
       responses:
         "200":
@@ -843,10 +843,10 @@ components:
                 example: "41100012345678901"
               businessCaseId:
                 maxLength: 39
-                pattern: "NWPBCID[0-9A-Z]{32}"
+                pattern: "BCID[0-9A-Z]{32}"
                 type: string
                 description: business case id
-                example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+                example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
     BillRecipientSubscription:
       required:
       - billRecipient
@@ -1292,11 +1292,11 @@ components:
           example: 2023-12-22
         id:
           maxLength: 39
-          pattern: "NWPBCID[0-9A-Z]{32}"
+          pattern: "BCID[0-9A-Z]{32}"
           type: string
           description: |
             A unique id for this business case on the NWP. Property must not be given when creating a new business case.
-          example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+          example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
         status:
           type: string
           description: the status of the business case
@@ -1326,11 +1326,11 @@ components:
       properties:
         id:
           maxLength: 39
-          pattern: "NWPBCID[0-9A-Z]{32}"
+          pattern: "BCID[0-9A-Z]{32}"
           type: string
           description: |
             A unique id for business cases on the NWP. Property must not be given when creating a new business case.
-          example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+          example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
     BusinessCaseStatusChangedEbillGuardianEvent:
       required:
       - billerPid
@@ -1359,10 +1359,10 @@ components:
             $ref: '#/components/schemas/ApprovalAmountWithCurrency'
           businessCaseId:
             maxLength: 39
-            pattern: "NWPBCID[0-9A-Z]{32}"
+            pattern: "BCID[0-9A-Z]{32}"
             type: string
             description: business case id
-            example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+            example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
           newStatus:
             type: string
             description: the new status of the business case
@@ -1714,10 +1714,10 @@ components:
             $ref: '#/components/schemas/ApprovalAmountWithCurrency'
           businessCaseId:
             maxLength: 39
-            pattern: "NWPBCID[0-9A-Z]{32}"
+            pattern: "BCID[0-9A-Z]{32}"
             type: string
             description: business case id
-            example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+            example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
           externalInstalmentId:
             maxLength: 36
             minLength: 1
@@ -1905,7 +1905,7 @@ components:
             It may or may not yield further information if dereferenced.
           format: uri
           example: |
-            /swp/v1/biller/errors/NWPBCID0090000001/provided-X-CORRELATION-ID
+            /swp/v1/biller/errors/BCID0090000001/provided-X-CORRELATION-ID
         status:
           maximum: 600
           exclusiveMaximum: true
@@ -2165,12 +2165,12 @@ components:
       description: |
         business case id
         **Maximal length**: '39'
-        **Example**: '"NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9"'
-        **Pattern**: 'NWPBCID[0-9A-Z]{32}'
+        **Example**: '"BCID0FB909852BBC4D06AD8336AAE87D7FC9"'
+        **Pattern**: 'BCID[0-9A-Z]{32}'
       required: true
       schema:
         maxLength: 39
-        pattern: "NWPBCID[0-9A-Z]{32}"
+        pattern: "BCID[0-9A-Z]{32}"
         type: string
     query_lastEventId:
       name: lastEventId
