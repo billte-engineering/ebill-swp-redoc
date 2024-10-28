@@ -126,7 +126,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BillRecipientsForBillerSearchResponse'
+                oneOf:
+                  - $ref: '#/components/schemas/BillRecipientsForBillerSearchResponse'
+                  - $ref: '#/components/schemas/BillRecipientsForBillerSearchResponseItem'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation
