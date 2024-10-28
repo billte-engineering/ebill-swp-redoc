@@ -117,8 +117,8 @@ paths:
           application/json: 
             schema:
               oneOf:
-                - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequest'
                 - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequestArray'
+                - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequest'
         required: true
       responses:
         "200":
