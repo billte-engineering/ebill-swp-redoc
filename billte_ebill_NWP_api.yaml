@@ -1040,6 +1040,12 @@ components:
             $ref: '#/components/schemas/BillRecipientsForBillerSearchResponseItem'
           minItems: 1
           maxItems: 100
+        billerPid:
+          maxLength: 17
+          pattern: "41[0-9]{15}"
+          type: string
+          description: biller PID
+          example: "41100012345678901"
     BillRecipientsForBillerSearchResponseItem:
       allOf:
         - $ref: '#/components/schemas/BillRecipientIdentification'
