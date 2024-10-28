@@ -389,7 +389,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BusinessCaseStatusChangedEvent'
+                  $ref: '#/components/schemas/BusinessCaseStatusChangedEbillGuardianEvent'
         default:
           description: |
             See section Error Handling of the Network Partner API documentation
@@ -1313,6 +1313,22 @@ components:
           description: |
             A unique id for business cases on the NWP. Property must not be given when creating a new business case.
           example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+    BusinessCaseStatusChangedEbillGuardianEvent:
+      required:
+      - billerPid
+      - events
+      type: object
+      properties:
+        billerPid:
+            maxLength: 17
+            pattern: "41[0-9]{15}"
+            type: string
+            description: biller PID
+            example: "41100012345678901"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessCaseStatusChangedEvent"
     BusinessCaseStatusChangedEvent:
       description: "An Event describing the status change of a business case. These\
         \ events are sent for bills, reminders, advices and credit notes. The approved\
@@ -1323,12 +1339,6 @@ components:
         properties:
           approvedAmount:
             $ref: '#/components/schemas/ApprovalAmountWithCurrency'
-          billerPid:
-            maxLength: 17
-            pattern: "41[0-9]{15}"
-            type: string
-            description: biller PID
-            example: "41100012345678901"
           businessCaseId:
             maxLength: 39
             pattern: "NWPBCID[0-9A-Z]{32}"
@@ -1344,6 +1354,9 @@ components:
             - APPROVED
             - REJECTED
             - COMPLETED
+          externalDonationPurposeId:
+            type: string
+            description: 'optional field only to be used for donation inquiries to represent a potential selection of a donation purpose by the bill recipient, note the connection to the field externalDonationPurposeId from eBill business case specification'
     BusinessCaseType:
       type: string
       enum:
