@@ -256,12 +256,12 @@ paths:
         in: query
         description: |
           Id of the last received event. If omitted, the result starts with the oldest available event.
-          **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
           **Maximal length**: '39'
-          **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
+          **Pattern**: '"EVID[0-9A-Z]{32}"'
         schema:
           maxLength: 39
-          pattern: "NWPEVID[0-9A-Z]{32}"
+          pattern: "EVID[0-9A-Z]{32}"
           type: string
       - name: limit
         in: query
@@ -305,12 +305,12 @@ paths:
         in: query
         description: |
           Id of the last received event. If omitted, the result starts with the oldest available event.
-          **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
           **Maximal length**: '39'
-          **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
+          **Pattern**: '"EVID[0-9A-Z]{32}"'
         schema:
           maxLength: 39
-          pattern: "NWPEVID[0-9A-Z]{32}"
+          pattern: "EVID[0-9A-Z]{32}"
           type: string
       - name: limit
         in: query
@@ -355,12 +355,12 @@ paths:
         in: query
         description: |
           Id of the last received event. If omitted, the result starts with the oldest available event.
-          **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
           **Maximal length**: '39'
-          **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
+          **Pattern**: '"EVID[0-9A-Z]{32}"'
         schema:
           maxLength: 39
-          pattern: "NWPEVID[0-9A-Z]{32}"
+          pattern: "EVID[0-9A-Z]{32}"
           type: string
       - name: limit
         in: query
@@ -406,12 +406,12 @@ paths:
         in: query
         description: |
           Id of the last received event. If omitted, the result starts with the oldest available event.
-          **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
           **Maximal length**: '39'
-          **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
+          **Pattern**: '"EVID[0-9A-Z]{32}"'
         schema:
           maxLength: 39
-          pattern: "NWPEVID[0-9A-Z]{32}"
+          pattern: "EVID[0-9A-Z]{32}"
           type: string
       - name: limit
         in: query
@@ -1517,10 +1517,10 @@ components:
       properties:
         eventId:
           maxLength: 39
-          pattern: "NWPEVID[0-9A-Z]{32}"
+          pattern: "EVID[0-9A-Z]{32}"
           type: string
           description: event id
-          example: NWPEVID82A65938766547EBBBA39BA6F7B07F24
+          example: EVID82A65938766547EBBBA39BA6F7B07F24
         timestamp:
           type: string
           description: timestamp of the event
@@ -2177,12 +2177,12 @@ components:
       in: query
       description: |
         Id of the last received event. If omitted, the result starts with the oldest available event.
-        **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+        **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
         **Maximal length**: '39'
-        **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
+        **Pattern**: '"EVID[0-9A-Z]{32}"'
       schema:
         maxLength: 39
-        pattern: "NWPEVID[0-9A-Z]{32}"
+        pattern: "EVID[0-9A-Z]{32}"
         type: string
     query_limitEvents:
       name: limit
