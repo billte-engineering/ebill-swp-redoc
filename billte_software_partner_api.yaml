@@ -1,0 +1,250 @@
+openapi: 3.0.1
+info:
+  title: Billte AG Ebill Software Partner APIs
+  description: >
+    A set of APIs enabling software/network partners to provide their billers access to billing APIs.
+  version: 1.0.0
+  contact:
+    name: Software Partner API
+    url: https://guard-api.ebill.billte.ch
+
+servers:
+  - url: https://guard-api.ebill.billte.ch/swp/v2
+
+tags:
+  - name: Software Partner
+paths:
+  /biller:
+    post:
+      tags:
+        - Software Partner
+      summary: Onboard Biller
+      description: >
+        Onboard a biller for a software partner. 
+        
+        
+        The request body must be signed using the private key, and the signature along with company code should be included in the headers.
+      parameters:
+        - in: header
+          name: SwpCode
+          schema:
+            type: string
+          required: true
+          description: Company code of the software partner.
+        - in: header
+          name: Signature
+          schema:
+            type: string
+          required: true
+          description: Signed request payload signature.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBillerRequest'
+      responses:
+        "200":
+          description: Successfully Onboarded
+components:
+  schemas:
+    CreateBillerRequest:
+      type: object
+      required:
+        - iban
+        - legalName
+        - localizedData
+        - address
+        - sectorIds
+      properties:
+        iban:
+          type: string
+          pattern: '(CH|LI)\d{7}[0-9A-Z]{12}'
+          maxLength: 21
+          description: 'IBAN of the biller, provided from the financial institution.'
+          example: 'CH100023000A109822346'
+        extBillerId:
+          type: string
+          maxLength: 35
+          description: 'Software Partner ID of the biller, that can be used for tracking the status.'
+          example: '6a84f450-6d0e-4474-b643-905617d9b2cb'
+        email:
+          type: string
+          description: 'Email ID of biller'
+          example: 'example@billte.ch'
+        legalName:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'legal name of the company which is displayed in the invoice overview, the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          minLength: 1
+          maxLength: 70
+          example: 'Verlag Neuer'
+        enterpriseIdentificationNumber:
+          type: string
+          description: |
+            Swiss enterprise identification number (UID) without dashes, dots or extension.
+            Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
+          maxLength: 12
+          pattern: 'CHE[0-9]{9}'
+          example: 'CHE123456789'
+        localizedData:
+          type: object
+          required:
+            - defaultLanguage
+          properties:
+            defaultLanguage:
+              $ref: '#/components/schemas/DefaultLanguage'
+            ger:
+              $ref: '#/components/schemas/LocalizedBillerData'
+            fre:
+              $ref: '#/components/schemas/LocalizedBillerData'
+            ita:
+              $ref: '#/components/schemas/LocalizedBillerData'
+            eng:
+              $ref: '#/components/schemas/LocalizedBillerData'
+        sectorIds:
+          type: array
+          description: 'list of assigned sector ids to the biller'
+          items:
+            type: string
+            description: 'sector id'
+            example: 'SCID0000000000'
+            maxLength: 14
+            pattern: 'SCID[0-9]{10}'
+          minItems: 1
+          maxItems: 100
+        
+    DefaultLanguage:
+      type: string
+      description: |
+          From the provided localizedData, one has to be marked as the default language.
+          The eBill infrastructure will use this localizedData in case a user requests a language where no localizedData have been provided.
+      enum:
+          - ger
+          - fre
+          - ita
+          - eng
+          
+    LocalizedBillerData:
+      type: object
+      required:
+        - displayName
+        - address
+      properties:
+        displayName:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'display name which will be used for presentation in the biller overview, the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          minLength: 1
+          maxLength: 100
+          example: 'Neuers Neuste Nachrichten'
+        emailAddress:
+          type: string
+          description: 'Email address to contact the biller. It is recommended to provide a specific address for questions concerning eBill, if available.'
+          minLength: 1
+          maxLength: 256
+          example: 'nnn@nnn-verlag.info'
+          format: email
+        phone:
+          type: object
+          required:
+            - countryCode
+            - nationalNumber
+          properties:
+            countryCode:
+              type: integer
+              description: |
+                **Maximal length**: `6`
+              minLength: 1
+              maxLength: 6
+              maximum: 999999
+              example: 41
+            nationalNumber:
+              type: integer
+              description: |
+                **Maximal length**: `18`
+              format: int64
+              minLength: 1
+              maxLength: 18
+              example: 446681800
+          description: |
+            Phone number to contact the biller. It is recommended to provide a specific phone number for questions concerning eBill, if available.
+  
+            Both the countryCode and the nationalNumber are as defined in International Telecommunication Union (ITU) Recommendation E.164, without any leading zeros.
+        website:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'Website to contact the biller. It is recommended to provide a specific website for questions concerning eBill, if available. The pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          minLength: 1
+          maxLength: 1000
+          example: 'http://www.nnn-verlag.info'
+        address:
+          $ref: '#/components/schemas/BillerAddress'
+        logo:
+          type: object
+          description: |
+            Biller logos may be provided and will be scaled down to the necessary size.
+            Contains the reference to a logo as binary from the /biller/{billerId}/assets endpoint.
+  
+            For create/update: if assetId is empty, a new assetId will be returned, were the logo can be uploaded.
+          properties:
+            name:
+              type: string
+              pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+              minLength: 1
+              maxLength: 256
+              example: 'company-logo-de'
+              description: |
+                the name of the asset
+  
+                for create/update: will be taken as asset name if provided
+                the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues
+            assetId:
+              type: string
+              description: 'asset id'
+              maxLength: 14
+              example: 'ASID0000000001'
+              pattern: 'ASID[0-9]{10}'
+    BillerAddress:
+      type: object
+      required:
+        - streetName
+        - postalCode
+        - city
+        - countryCode
+        - buildingNumber
+      properties:
+        streetName:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'street name, the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          example: 'Neustadtstrasse'
+          minLength: 1
+          maxLength: 70
+        buildingNumber:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'building number, the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          example: "20a"
+          minLength: 1
+          maxLength: 16
+        postalCode:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'postal code, the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          example: '6025'
+          minLength: 1
+          maxLength: 9
+        city:
+          type: string
+          pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
+          description: 'city name, the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues'
+          example: 'Neudorf'
+          minLength: 1
+          maxLength: 35
+        countryCode:
+          type: string
+          description: 'in format ISO 3166-1 alpha 2'
+          example: 'CH'
+          maxLength: 2
+          pattern: '[A-Z]{2}'

@@ -1,0 +1,3911 @@
+diff --git a/billte_ebill_NWP_api.yaml b/billte_ebill_NWP_api.yaml
+index 1decaf42..fc8bec8a 100644
+--- a/billte_ebill_NWP_api.yaml
++++ b/billte_ebill_NWP_api.yaml
+@@ -1,1812 +1,2196 @@
+-basePath: /swp/v1
+-definitions:
+-  AccountAndReference:
+-    properties:
+-      esr:
+-        $ref: '#/definitions/Esr'
+-      generic:
+-        $ref: '#/definitions/Generic'
+-    title: AccountAndReference
+-    type: object
+-  Address:
+-    properties:
+-      buildingNumber:
+-        description: Building number
+-        example: 20a
+-        maxLength: 16
+-        minLength: 1
+-        type: string
+-      city:
+-        description: City
+-        example: Neudorf
+-        maxLength: 35
+-        minLength: 1
+-        type: string
+-      countryCode:
+-        description: Country; two-letter ISO country code according to ISO 3166-1.
+-        example: CH
+-        maxLength: 2
+-        pattern: '[A-Z]{2}'
+-        type: string
+-      postalCode:
+-        description: Postal code
+-        example: '6025'
+-        maxLength: 9
+-        minLength: 1
+-        type: string
+-      street:
+-        description: Street
+-        example: Neustadtstrasse
+-        maxLength: 70
+-        minLength: 1
+-        type: string
+-    required:
+-      - postalCode
+-      - city
+-      - countryCode
+-    type: object
+-  AmountValue:
+-    description: >
+-      The amount value. Take care when using JavaScript libraries to parse this
+-      value - it should be treated as a financial amount and therefore not as a
+-      floating point number but rather using a precise decimal representation
+-      (like BigDecimal in Java).
++openapi: 3.0.1
++info:
++  title: Billte eBill SWP API
++  description: |
++    The application programming interface for software partners (Software Partner API) allows communication with an eBill Network Partner.
++    The eBill service comprises of electronic bills, reminders, credit notes and advices which are summarized under the term "business case". Business cases are delivered from software partners via network partners to the SIX eBill infrastructure and can be received online by bill recipients.
+ 
+-      **Maximum value**: '99'999'999.99'
++    Documentation and Open API licence of the Software Partner API can be found on https://ebill-swp.org
+ 
+-      **Maximal length**: '10'
+-    example: 99.99
+-    type: number
+-  ApprovalAmountWithCurrency:
+-    description: >
+-      Amount provided by status changed events if the new status is APPROVED.
+-      The value is always greater than zero.
+-    properties:
+-      currencyCode:
+-        $ref: '#/definitions/CurrencyCode'
+-      value:
+-        $ref: '#/definitions/AmountValue'
+-    required:
+-      - value
++    Examples and extra information - https://github.com/billte-engineering/ebill-swp-redoc.
++
++    Examples include:
++
++    * submitting an invoice
++    * submitting a reminder
++    * submitting an installment
++    * submitting payableAmount
++
++
++
++
++
++    ### General Note
++
++    These APIs are based on the work of the Working Group eBill-SWP-API. Biller is a member of the group and an active contributer.
++
++    This documentation has been compiled with the greatest care, but may nevertheless contain errors or inaccuracies. Working Group eBill-SWP-API cannot assume any legal responsibility or any liability for erroneous information or its consequences.
++
++    If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
++    ### Environments
++    + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch
++    + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
++    + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
++  contact:
++    name: Software Partner API
++    url: https://guard-api.ebill.billte.ch
++  version: 1.0.0
++servers:
++- url: https://guard-api.ebill.billte.ch/swp/v1
++tags:
++- name: Billers
++  description: "All operations that are associated with a biller are located within\
++    \ the biller resource, including the creation of business cases."
++- name: Events
++  description: |
++    **Notification Events**
++    The event resource allows the software partner to retrieve changes for the event type 'Subscription status changes'.
++- name: Sectors
++  description: |
++    **Industry Sector**
++    Industry sectors are valid system wide. Each biller will reference one or several industry sectors.
++- name: Healthcheck
++  description: |
++    **System Healthcheck**
++    This allows to check the basic state of the system (can it be reached, does authentication and auhorization work, does it respond). As some infrastructures block certain HTTP methods by default, the healthcheck allows to test if all required methods (GET, POST) work across all layers.
++paths:
++  /billers/authenticate:
++    post:
++      tags:
++      - Billers
++      summary: Authenticate Biller
++      description: |
++        Returns an authentication token for the biller to be used in other APIs.
++      operationId: getAuthenticationTokenForBiller
++      requestBody:
++        content:
++          application/json:
++            schema:
++              $ref: '#/components/schemas/BillerAuthenticationRequest'
++        required: true
++      responses:
++        "200":
++          description: Biller Found
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BillerAuthenticationResponse'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BillerAuthenticationError'
++      x-codegen-request-body-name: body
++  /billers/bill-recipient/search:
++    post:
++      tags:
++      - Billers
++      summary: Search for bill recipients for this biller
++      description: |
++        Returns a list of one or more bill recipients.
++
++        The response will only list a bill recipient if he allows bills in his online banking to be posted by the biller or allows bills to be posted in general. It will always return the billRecipientId and optionally any other provided parameter.
++
++        The call will return an empty list if no matching bill recipient is
++        found or the biller is not allowed to send bills to the bill recipient.
++
++        ### Note:
++        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.   
++      operationId: searchBillRecipientsForBiller
++      parameters:
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      requestBody:
++        description: "Parameters for the search, at least one of the parameters is\
++          \ required in addition to the mandatory \"billerPid\". It is recommended\
++          \ to use \"billRecipientId\" since it is a permenant id of each recipient\
++          \ in the SIX infrastructure."
++        content:
++          application/json: 
++            schema:
++              oneOf:
++                - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequestArray'
++                - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequest'
++        required: true
++      responses:
++        "200":
++          description: Bill recipients found
++          content:
++            application/json:
++              schema:
++                oneOf:
++                  - $ref: '#/components/schemas/BillRecipientsForBillerSearchResponse'
++                  - $ref: '#/components/schemas/BillRecipientsForBillerSearchResponseItem'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++      x-codegen-request-body-name: body
++  /billers/business-cases:
++    get:
++      tags:
++      - Billers
++      summary: Get Business Case
++      description: |
++        Depending on the accept header, this operation either returns a JSON business case object or the original PDF.
++        The returned JSON object contains one of the business case subtypes -
++        Bill, InstalmentBill, Reminder, CreditNote or Advice.
++      operationId: getBusinessCase
++      parameters:
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      - name: billerPid
++        in: query
++        description: |
++          biller PID
++          **Maximal length**: '17'
++          **Example**: '"41NN00BBBBBBBBBPP"'
++          **Pattern**: '41[0-9]{15}'
++        required: true
++        schema:
++          maxLength: 17
++          pattern: "41[0-9]{15}"
++          type: string
++      - name: businessCaseId
++        in: query
++        description: |
++          business case id
++          **Maximal length**: '39'
++          **Example**: '"BCID0FB909852BBC4D06AD8336AAE87D7FC9"'
++          **Pattern**: 'BCID[0-9A-Z]{32}'
++        required: true
++        schema:
++          maxLength: 39
++          pattern: "BCID[0-9A-Z]{32}"
++          type: string
++      responses:
++        "200":
++          description: Business case found
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BusinessCase'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++    post:
++      tags:
++      - Billers
++      summary: Create business case
++      description: |
++        The creation of a business case in PDF/A-3b format works with a simple
++        POST request where the PDF is the binary payload of the request. Note
++        that only one PDF can be submitted at a time.
++
++        Validation of the submitted data will take place immediately and the
++        response either confirms the successful creation of the business case on
++        the NWP or contains the error details of the validation.
++      operationId: createBusinessCase
++      parameters:
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      requestBody:
++        description: Request body for the creation of business case. Required objects
++          depend on type of business case.
++        content:
++          application/pdf:
++            schema:
++              $ref: '#/components/schemas/CreateBusinessCaseRequest'
++        required: true
++      responses:
++        "200":
++          description: Business case created
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BusinessCase'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++      x-codegen-request-body-name: body
++  /events/bill-recipient-email-address-changed:
++    get:
++      tags:
++      - Events
++      summary: Find events for bill recipients email address changes
++      description: |
++        This event is triggered after any billerPid registered with the requesting SWP has submitted a business case with an outdated, so called historically available email address. It notifies about the changed email address of a bill recipient, which has been adjusted in eBill.
++        An email address is considered to be historically available if it was present up to 15 months prior to the submission time.
++        The billers are able to submit business cases with historically available email addresses of a bill recipient. However, latest 15 months after the email address changed, the billers are required to submit the business cases with the currently valid email address of the bill
++        recipient.
++      operationId: findBillRecipientEmailAddressChangedEvent
++      parameters:
++      - name: lastEventId
++        in: query
++        description: |
++          Id of the last received event. If omitted, the result starts with the oldest available event.
++          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
++          **Maximal length**: '39'
++          **Pattern**: '"EVID[0-9A-Z]{32}"'
++        schema:
++          maxLength: 39
++          pattern: "EVID[0-9A-Z]{32}"
++          type: string
++      - name: limit
++        in: query
++        description: |
++          Maximum number of events one wants to receive (technical maximum is 1000, no more will be returned at once and you have to fetch again to check if there are more)
++        schema:
++          maximum: 1000
++          type: integer
++          default: 100
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      responses:
++        "200":
++          description: Bill recipient email address changed events found
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BillRecipientEmailAddressChangedEbillGuardianEvent'
++        default:
++          description: |
++            See section Error Handling of the Network Partner API documentation for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++  /events/bill-recipient-subscription-status-changed:
++    get:
++      tags:
++      - Events
++      summary: Find events for bill recipient subscriptions which changed status
++      description: |
++        Events for status changes on bill recipient subscriptions to any billerPid registered with the requesting SWP, regardless if subscriptions have been done without registration form (event from infrastructure) or with registration form (no event from infrastructure).
++      operationId: findBillRecipientSubscriptionStatusChangedEvents
++      parameters:
++      - name: lastEventId
++        in: query
++        description: |
++          Id of the last received event. If omitted, the result starts with the oldest available event.
++          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
++          **Maximal length**: '39'
++          **Pattern**: '"EVID[0-9A-Z]{32}"'
++        schema:
++          maxLength: 39
++          pattern: "EVID[0-9A-Z]{32}"
++          type: string
++      - name: limit
++        in: query
++        description: |
++          Maximum number of events one wants to receive (technical maximum is 1000, no more will be returned at once and you have to fetch again to check if there are more)
++        schema:
++          maximum: 1000
++          type: integer
++          default: 100
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      responses:
++        "200":
++          description: Bill recipient subscription changed events found
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BillRecipientSubscriptionStatusChangedEbillGuardianEvent'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++  /events/business-case-status-changed:
++    get:
++      tags:
++      - Events
++      summary: Find events for business cases which changed status
++      description: |
++        Events for status changes of bills, advices, credit notes and reminders
++        which belong to any billerPid registered with the requesting SWP.
++      operationId: findBusinessCaseStatusChangedEvents
++      parameters:
++      - name: lastEventId
++        in: query
++        description: |
++          Id of the last received event. If omitted, the result starts with the oldest available event.
++          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
++          **Maximal length**: '39'
++          **Pattern**: '"EVID[0-9A-Z]{32}"'
++        schema:
++          maxLength: 39
++          pattern: "EVID[0-9A-Z]{32}"
++          type: string
++      - name: limit
++        in: query
++        description: |
++          Maximum number of events one wants to receive (technical maximum is 1000, no more will be returned at once and you have to fetch again to check if there are more)
++        schema:
++          maximum: 1000
++          type: integer
++          default: 100
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      responses:
++        "200":
++          description: Business case status changed events found
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/BusinessCaseStatusChangedEbillGuardianEvent'
++        default:
++          description: |
++            See section Error Handling of the Network Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++  /events/instalment-status-changed:
++    get:
++      tags:
++      - Events
++      summary: Find events for instalments which changed status
++      description: |
++        Events for status changes of instalment bills only which belong to any
++        billerPid registered with the requesting SWP.
++      operationId: findInstalmentStatusChangedEvents
++      parameters:
++      - name: lastEventId
++        in: query
++        description: |
++          Id of the last received event. If omitted, the result starts with the oldest available event.
++          **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
++          **Maximal length**: '39'
++          **Pattern**: '"EVID[0-9A-Z]{32}"'
++        schema:
++          maxLength: 39
++          pattern: "EVID[0-9A-Z]{32}"
++          type: string
++      - name: limit
++        in: query
++        description: |
++          Maximum number of events one wants to receive (technical maximum is 1000, no more will be returned at once and you have to fetch again to check if there are more)
++        schema:
++          maximum: 1000
++          type: integer
++          default: 100
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      responses:
++        "200":
++          description: Instalment status changed events found
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/InstalmentStatusChangedEbillGuardianEvent'
++        default:
++          description: |
++            See section Error Handling of the Network Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++  /healthcheck:
++    get:
++      tags:
++      - Healthcheck
++      summary: Health check using GET method
++      description: Returns a status message of the system.
++      operationId: healthCheckForGet
++      parameters:
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      responses:
++        "200":
++          description: Healthcheck successful
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/HealthCheckResponse'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++    post:
++      tags:
++      - Healthcheck
++      summary: Health check using POST method
++      description: Returns the request body. This operation will not modify the system.
++      operationId: healthCheckForPost
++      parameters:
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      requestBody:
++        description: Any message which is expected in the response
++        content:
++          application/json:
++            schema:
++              $ref: '#/components/schemas/HealthCheckRequest'
++        required: true
++      responses:
++        "200":
++          description: Healthcheck successful
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/HealthCheckResponse'
++        default:
++          description: |
++            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++      x-codegen-request-body-name: body
++  /sectors:
++    get:
++      tags:
++      - Sectors
++      summary: Find Sectors
++      description: Get the industry sector list of the eBill infrastructure. The sectors
++        are more or less static and can therefore be cached.
++      operationId: findSectors
++      parameters:
++      - name: Authorization
++        in: header
++        description: |
++          Access-Token with the prefix "Bearer".
++        required: true
++        schema:
++          type: string
++      responses:
++        "200":
++          description: Sectors found
++          content:
++            application/json:
++              schema:
++                type: array
++                items:
++                  $ref: '#/components/schemas/Sector'
++        default:
++          description: See section Error Handling of the Network Partner API documentation
++            for further details about errors and error handling.
++          content:
++            application/json:
++              schema:
++                $ref: '#/components/schemas/Problem'
++components:
++  schemas:
++    AccountAndReference:
++      title: AccountAndReference
++      type: object
++      properties:
++        esr:
++          $ref: '#/components/schemas/Esr'
++        generic:
++          $ref: '#/components/schemas/Generic'
++    Address:
++      required:
++      - city
++      - countryCode
++      - postalCode
++      - street
++      type: object
++      properties:
++        buildingNumber:
++          maxLength: 16
++          minLength: 1
++          type: string
++          description: Building number
++          example: 20a
++        city:
++          maxLength: 35
++          minLength: 1
++          type: string
++          description: City
++          example: Neudorf
++        countryCode:
++          maxLength: 2
++          pattern: "[A-Z]{2}"
++          type: string
++          description: Country; two-letter ISO country code according to ISO 3166-1.
++          example: CH
++        postalCode:
++          maxLength: 9
++          minLength: 1
++          type: string
++          description: Postal code
++          example: "6025"
++        street:
++          maxLength: 70
++          minLength: 1
++          type: string
++          description: Street
++          example: Soodmattenstrasse
++    AmountValue:
++      type: number
++      description: |
++        The amount value. Take care when using JavaScript libraries to parse this value - it should be treated as a financial amount and therefore not as a floating point number but rather using a precise decimal representation (like BigDecimal in Java).
++        **Maximum value**: '99'999'999.99'
++        **Maximal length**: '10'
++      example: 99.99
++    ApprovalAmountWithCurrency:
++      required:
+       - currencyCode
+-    type: object
+-  ApprovedAmount:
+-    properties:
+-      currencyCode:
+-        type: string
+-      value:
+-        format: double
+-        type: number
+-    title: ApprovedAmount
+-    type: object
+-  BillRecipient:
+-    properties:
+-      address:
+-        $ref: '#/definitions/BillRecipientAddress'
+-      billRecipientId:
+-        description: >-
+-          Alternative unique identifier of the invoice recipient (also known as
+-          "PID"). It is recommended to use the Email Address (emailAddress) and
+-          not the billRecipientId., example: 41010560425610173
+-        maxLength: 17
+-        minLength: 1
+-        pattern: ([0-9])*
+-        type: string
+-      correspondenceLanguage:
+-        description: language for correspondence with this bill recipient ISO-639-2/B
+-        example: ger
+-        maxLength: 3
+-        minLength: 1
+-        type: string
+-      emailAddress:
+-        description: >-
+-          Email address of the invoice recipient. Email address is valid if it
+-          is specified in the current master data of the infrastructure and, in
+-          case it is marked as "historic", it has not been marked as "historic"
+-          for more than 15 months., example: peter@muster.ch
+-        format: email
+-        maxLength: 256
+-        minLength: 1
+-        type: string
+-      enterpriseIdentificationNumber:
+-        description: >
+-          Enterprise Identification Number (UID) for companies as invoice
+-          recipients (in the context eBill for Business). UID is valid, if it is
+-          specified in the current master data of the infrastructure.
+-        example: CHE123456789
+-        maxLength: 12
+-        pattern: CHE[0-9]{9}
+-        type: string
+-      name:
+-        description: >-
+-          First and last name of the invoice recipient. Alternatively company
+-          name.
+-        example: 'for private bill recipient: Muster, for company name: Muster AG'
+-        maxLength: 70
+-        minLength: 1
+-        type: string
+-      type:
+-        description: the type of the bill recipient
+-        enum:
++      - value
++      type: object
++      properties:
++        currencyCode:
++          $ref: '#/components/schemas/CurrencyCode'
++        value:
++          $ref: '#/components/schemas/AmountValue'
++      description: |
++        Amount provided by status changed events if the new status is APPROVED. The value is always greater than zero.
++    ApprovedAmount:
++      title: ApprovedAmount
++      type: object
++      properties:
++        currencyCode:
++          type: string
++        value:
++          type: number
++          format: double
++    BillRecipientForEvent:
++      required:
++      - address
++      - billRecipientId
++      - correspondenceLanguage
++      - name
++      - type
++      type: object
++      properties:
++        emailAddress:
++          maxLength: 256
++          minLength: 1
++          type: string
++          description: Email address of the bill recipient
++          example: peter@muster.ch
++        billRecipientId:
++          maxLength: 17
++          minLength: 1
++          pattern: "^([0-9])*$"
++          type: string
++          description: ID of the bill recipient
++          example: "41010560425610173"
++        enterpriseIdentificationNumber:
++          maxLength: 12
++          pattern: "^CHE[0-9]{9}$"
++          type: string
++          description: "Swiss enterprise identification number (UID) without dashes,\
++            \ dots, or extension"
++          example: CHE123456789
++        type:
++          type: string
++          description: The type of the bill recipient
++          enum:
+           - PRIVATE
+           - COMPANY
+-        type: string
+-    required:
++        name:
++          maxLength: 70
++          minLength: 1
++          pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\\
++            uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
++          type: string
++          description: "Last name if private bill recipient, company name if company\
++            \ bill recipient"
++          example: "for private bill recipient: Muster, for company name: Muster AG"
++        firstName:
++          maxLength: 35
++          pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\\
++            uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
++          type: string
++          description: "First name if private bill recipient, empty if company bill\
++            \ recipient"
++          example: Peter
++        correspondenceLanguage:
++          maxLength: 3
++          minLength: 1
++          type: string
++          description: Language for correspondence with this bill recipient (ISO-639-2/B)
++          example: ger
++        address:
++          required:
++          - city
++          - countryCode
++          - postalCode
++          - streetName
++          type: object
++          properties:
++            streetName:
++              maxLength: 70
++              minLength: 1
++              pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\\
++                uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
++              type: string
++              description: Street name
++              example: Neustadtstrasse
++            postalCode:
++              maxLength: 9
++              minLength: 1
++              pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\\
++                uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
++              type: string
++              description: Postal code
++              example: "6025"
++            city:
++              maxLength: 35
++              minLength: 1
++              pattern: "[\\u0009\\u000A\\u000D\\u0020-\\u007E\\u0085\\u00A0-\\uD7FF\\\
++                uE000-\\uFDCF\\uFDF0-\\uFFFD]*"
++              type: string
++              description: City name
++              example: Neudorf
++            countryCode:
++              maxLength: 2
++              pattern: "^[A-Z]{2}$"
++              type: string
++              description: Country code (ISO 3166-1 alpha 2)
++              example: CH
++          description: RecipientAddress details
++    BillRecipient:
++      required:
+       - billRecipientId
+-      - type
+       - name
+-      - correspondenceLanguage
+-      - address
+-    type: object
+-  BillRecipientAddress:
+-    type: object
+-    properties:
+-      structuredAddress:
+-        $ref: '#/definitions/Address'
+-      unstructuredAddress:
+-        $ref: '#/definitions/UnstructuredAddressType'
+-  UnstructuredAddressType:
+-    properties:
+-      addressLine1:
+-        description: 'Unstructured address line 1'
+-        type: string
+-      addressLine2:
+-        description: 'Unstructured address line 2'
+-        type: string
+-      countryCode:
+-        description: 'Country; two-letter ISO country code according to ISO 3166-1.'
+-        type: string
+-  BillRecipientEmailAddressChangedEvent:
+-    allOf:
+-      - $ref: '#/definitions/Event'
+-      - properties:
++      type: object
++      properties:
++        address:
++          $ref: '#/components/schemas/BillRecipientAddress'
++        billRecipientId:
++          maxLength: 17
++          minLength: 1
++          pattern: "([0-9])*"
++          type: string
++          description: Unique identifier of the invoice recipient (also known as "PID").
++            In some cases (look-up functionality activated by the recipient) it is
++            possible to use the email address (see emailAddress) instead of the billRecipientId.
++            <b>Example:</b> 41010560425610173
++        emailAddress:
++          maxLength: 256
++          minLength: 1
++          type: string
++          description: "Email address of the invoice recipient. Email address is valid\
++            \ if it is specified in the current master data of the infrastructure\
++            \ and, in case it is marked as \"historic\", it has not been marked as\
++            \ \"historic\" for more than 15 months. <b>Example:</b> peter@muster.ch"
++          format: email
++        enterpriseIdentificationNumber:
++          maxLength: 12
++          pattern: "CHE[0-9]{9}"
++          type: string
++          description: |
++            Enterprise Identification Number (UID) for companies as invoice recipients (in the context eBill for Business). UID is valid, if it is specified in the current master data of the infrastructure.
++          example: CHE123456789
++        name:
++          maxLength: 70
++          minLength: 1
++          type: string
++          description: First and last name of the invoice recipient. Alternatively
++            company name.
++          example: "for private bill recipient: Muster, for company name: Muster AG"
++        firstName:
++          maxLength: 70
++          type: string
++          description: "first name, if private bill recipient empty, if company bill\
++            \ recipient"
++          example: Peter
++        type:
++          type: string
++          description: the type of the bill recipient
++          enum:
++          - PRIVATE
++          - COMPANY
++    BillRecipientAddress:
++      type: object
++      properties:
++        structuredAddress:
++          $ref: '#/components/schemas/Address'
++        unstructuredAddress:
++          $ref: '#/components/schemas/UnstructuredAddressType'
++    UnstructuredAddressType:
++      required:
++      - addressLine1
++      - addressLine2
++      - countryCode
++      type: object
++      properties:
++        addressLine1:
++          type: string
++          description: Unstructured address line 1
++        addressLine2:
++          type: string
++          description: Unstructured address line 2
++        countryCode:
++          type: string
++          description: Country; two-letter ISO country code according to ISO 3166-1.
++    BillRecipientEmailAddressChangedEbillGuardianEvent:
++      required:
++      - billerPid
++      - events
++      type: object
++      properties:
++        billerPid:
++            maxLength: 17
++            pattern: "41[0-9]{15}"
++            type: string
++            description: biller PID
++            example: "41100012345678901"
++        events:
++          type: array
++          items:
++            $ref: "#/components/schemas/BillRecipientEmailAddressChangedEvent"
++    BillRecipientEmailAddressChangedEvent:
++      description: An Event describing the change of the email address of a bill recipient.
++      allOf:
++      - $ref: '#/components/schemas/Event'
++      - type: object
++        required:
++        - oldEmailAddress
++        - newEmailAddress
++        - triggeredBy
++        properties:
+           newEmailAddress:
+-            description: the new email address of the bill recipient
+-            example: peter_new@muster.ch
+-            format: email
+             maxLength: 256
+             minLength: 1
+             type: string
+-          oldEmailAddress:
+-            description: >-
+-              the old email address of the bill recipient which has been used in
+-              the submission of a business case
+-            example: peter@muster.ch
++            description: the new email address of the bill recipient
+             format: email
++            example: peter_new@muster.ch
++          oldEmailAddress:
+             maxLength: 256
+             minLength: 1
+             type: string
++            description: the old email address of the bill recipient which has been
++              used in the submission of a business case
++            format: email
++            example: peter@muster.ch
+           triggeredBy:
++            required:
++            - billerPid
++            - businessCaseId
++            type: object
+             properties:
+               billerPid:
+-                description: biller PID
+-                example: '41100012345678901'
+                 maxLength: 17
+-                pattern: 41[0-9]{15}
++                pattern: "41[0-9]{15}"
+                 type: string
++                description: biller PID
++                example: "41100012345678901"
+               businessCaseId:
+-                description: business case id
+-                example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+                 maxLength: 39
+-                pattern: NWPBCID[0-9A-Z]{32}
++                pattern: "BCID[0-9A-Z]{32}"
+                 type: string
+-            required:
+-              - businessCaseId
+-              - billerPid
++                description: business case id
++                example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
++    BillRecipientSubscription:
++      required:
++      - billRecipient
++      type: object
++      properties:
++        accountNumber:
++          maxLength: 21
++          type: string
++          description: |
++            Account number of the biller (e.g. iban), if provided from the financial institution
++        billRecipient:
++          $ref: '#/components/schemas/BillRecipientForEvent'
++        billerPid:
++          maxLength: 17
++          pattern: "41[0-9]{15}"
++          type: string
++          description: biller PID
++          example: "41100012345678901"
++        referenceStructured:
++          maxLength: 27
++          pattern: "([a-zA-Z0-9])*"
++          type: string
++          description: |
++            ESR or QR or creditor reference number, if provided from the financial institution.
++          example: "123456123456789012345678901"
++    BillRecipientSubscriptionForm:
++      type: object
++      description: 'Contains additional information regarding a bill recipient subscription. It contains the users input to the BillerSubscriptionForm.'
++      properties:
++        billRecipientSubscriptionFormFields:
++          type: array
++          items:
+             type: object
+-    description: An Event describing the change of the email address of a bill recipient.
+-    required:
+-      - oldEmailAddress
+-      - newEmailAddress
+-      - triggeredBy
+-    type: object
+-  BillRecipientSubscription:
+-    properties:
+-      accountNumber:
+-        description: >
+-          Account number of the biller (e.g. iban), if provided from the
+-          financial institution
+-        maxLength: 21
+-        type: string
+-      billRecipient:
+-        $ref: '#/definitions/BillRecipient'
+-      billerPid:
+-        description: biller PID
+-        example: '41100012345678901'
+-        maxLength: 17
+-        pattern: 41[0-9]{15}
+-        type: string
+-      referenceStructured:
+-        description: >
+-          ESR or QR or creditor reference number, if provided from the financial
+-          institution.
+-        example: '123456123456789012345678901'
+-        maxLength: 27
+-        pattern: ([a-zA-Z0-9])*
+-        type: string
+-    required:
++            required:
++              - technicalId
++              - value
++            properties:
++              technicalId:
++                type: string
++                minLength: 1
++                maxLength: 35
++                description: 'The identifying token of this subscription form field. Corresponds to the property technicalId of BillerSubscriptionFormField.'
++                example: 'customerNumber'
++              value:
++                type: string
++                minLength: 1
++                maxLength: 256
++                description: 'The value of this subscription form field as entered by the user. If a pattern is defined, it has been checked against it.'
++    BillRecipientSubscriptionFormField:
++      title: BillRecipientSubscriptionFormField
++      type: object
++      properties:
++        technicalId:
++          type: string
++        value:
++          type: string
++    BillRecipientSubscriptionStatusChangedEbillGuardianEvent:
++      required:
+       - billerPid
+-      - billRecipient
+-    type: object
+-  BillRecipientSubscriptionFormField:
+-    properties:
+-      technicalId:
+-        type: string
+-      value:
+-        type: string
+-    title: BillRecipientSubscriptionFormField
+-    type: object
+-  BillRecipientSubscriptionStatusChangedEvent:
+-    allOf:
+-      - $ref: '#/definitions/Event'
+-      - $ref: '#/definitions/BillRecipientSubscription'
+-      - properties:
++      - events
++      type: object
++      properties:
++        billerPid:
++            maxLength: 17
++            pattern: "41[0-9]{15}"
++            type: string
++            description: biller PID
++            example: "41100012345678901"
++        events:
++          type: array
++          items:
++            $ref: "#/components/schemas/BillRecipientSubscriptionStatusChangedEvent"
++    BillRecipientSubscriptionStatusChangedEvent:
++      description: |
++        An Event describing the status change of a bill recipient subscription.
++        Additional properties may be filled according the user input on the biller\'s registration form.
++      allOf:
++      - $ref: '#/components/schemas/Event'
++      - $ref: '#/components/schemas/BillRecipientSubscription'
++      - $ref: '#/components/schemas/BillRecipientSubscriptionForm'
++      - type: object
++        properties:
+           newStatus:
++            type: string
+             description: |
+               The new status of the bill recipient subscription, currently only
+               REQUESTED and INACTIVE are used, see <<Subscriptions and
+               Subscription Cancellations>> for further information.
+             enum:
+-              - INACTIVE
+-              - REQUESTED
+-              - ACTIVE
+-            type: string
+-      - additionalProperties: true
+-    description: >
+-      An Event describing the status change of a bill recipient subscription.
++            - INACTIVE
++            - REQUESTED
++            - ACTIVE
++          allowedEbillDebitSubmissions:
++            type: array
++            description: 'Defines what kind of eBill Direct Debit submissions are allowed.'
++            items:
++              $ref: '#/components/schemas/AllowedEbillDebitSubmission'  
++        additionalProperties: true
++    BillRecipientsForBillerSearchRequestArray:
++      required:
++      - billerPid
++      - items
++      type: object
++      properties:
++        billerPid:
++          maxLength: 17
++          minLength: 17
++          pattern: "([0=9])*"
++          type: string
++          description: Biller PiD provided by the system
++          example: 41NN00BBBBBBBBBPP
++        items:
++          type: array
++          description: Array of bill recipient search requests
++          items:
++            type: object
++            properties:
++              billRecipientId:
++                type: string
++                description: ID of the bill recipient
++                example: "41010560425610173"
++                maxLength: 17
++                minLength: 1
++                pattern: "([0-9])*"
++              emailAddress:
++                type: string
++                description: Email address of the bill recipient
++                example: "peter@muster.ch"
++                maxLength: 256
++                minLength: 1
++                format: email
++              enterpriseIdentificationNumber:
++                type: string
++                description: |
++                  Swiss enterprise identification number (UID) without dashes, dots, or extensions.
++                  This should contain the Swiss enterprise identification number (UID) from the commercial register (Handelsregister),
++                  which may be different from the VAT UID (Mehrwertsteuer UID).
++                example: "CHE123456789"
++                maxLength: 12
++                pattern: "CHE[0-9]{9}"
++    BillRecipientsForBillerSearchRequest:
++      required:
++      - billerPid
++      type: object
++      properties:
++        billRecipientId:
++          maxLength: 17
++          minLength: 1
++          pattern: "([0-9])*"
++          type: string
++          description: id of the bill recipient
++          example: "41010560425610173"
++        billerPid:
++          maxLength: 17
++          minLength: 17
++          pattern: "([0=9])*"
++          type: string
++          description: Biller PiD provided by the system
++          example: 41NN00BBBBBBBBBPP
++        emailAddress:
++          maxLength: 256
++          minLength: 1
++          type: string
++          description: email address of the bill recipient
++          format: email
++          example: peter@muster.ch
++        enterpriseIdentificationNumber:
++          maxLength: 12
++          pattern: "CHE[0-9]{9}"
++          type: string
++          description: |
++            Swiss enterprise identification number (UID) without dashes, dots or extension.
++            Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
++          example: CHE123456789
++    BillRecipientsForBillerSearchResponse:
++      type: object
++      required:
++        - items
++      properties:
++        items:
++          type: array
++          items:
++            $ref: '#/components/schemas/BillRecipientsForBillerSearchResponseItem'
++          minItems: 1
++          maxItems: 100
++        billerPid:
++          maxLength: 17
++          pattern: "41[0-9]{15}"
++          type: string
++          description: biller PID
++          example: "41100012345678901"
++    BillRecipientsForBillerSearchResponseItem:
++      allOf:
++        - $ref: '#/components/schemas/BillRecipientIdentification'
++        - type: object
++          required:
++            - ebillSubmissionStatus
++            - ebillDebitProposalStatus
++          properties:
++            ebillSubmissionStatus:
++              type: string
++              description: 'Defines if the biller can submit a business-case for the provided bill recipient identification in the request (=ALLOWED) or if the bill recipient identification is either not known to the eBill infrastructure or the submission is not allowed (=NOT_ALLOWED).'
++              enum:
++                - ALLOWED
++                - NOT_ALLOWED
++            ebillDebitProposalStatus:
++              type: string
++              description: 'Defines if the biller can submit an eBill Direct Debit proposal for the provided bill recipient id in the request (=ALLOWED) or if the bill recipient is either not known to the eBill infrastructure or the submission of an eBill Direct Debit proposal is not allowed (=NOT_ALLOWED).'
++              enum:
++                - ALLOWED
++                - NOT_ALLOWED
++            allowedEbillDebitSubmissions:
++              type: array
++              description: 'Defines what kind of eBill Direct Debit submissions are allowed.'
++              items:
++                $ref: '#/components/schemas/AllowedEbillDebitSubmission'
++    BillRecipientIdentification:
++      type: object
++      description: 'Exactly one property must be set.'
++      properties:
++        emailAddress:
++          type: string
++          description: 'email address of the bill recipient'
++          example: 'peter@muster.ch'
++          minLength: 1
++          maxLength: 256
++          format: email
++        billRecipientId:
++          type: string
++          description: 'id of the bill recipient'
++          example: '41010560425610173'
++          minLength: 1
++          maxLength: 17
++          pattern: '([0-9])*'
++        enterpriseIdentificationNumber:
++          type: string
++          description: |
++            Swiss enterprise identification number (UID) without dashes, dots or extension.
++            Note that this has to contain the swiss enterprise identification number (UID) from the commercial register (Handelsregister) which may be different from the VAT UID (Mehrwertsteuer UID).
++          maxLength: 12
++          pattern: 'CHE[0-9]{9}'
++          example: 'CHE123456789'
++    AllowedEbillDebitSubmission:
++      description: 'Defines the relevant information what type of eBill Direct Debit submission the biller is allowed to do.'
++      type: object
++      required:
++        - currencyCode
++        - chargebackMode
++      properties:
++        currencyCode:
++          $ref: '#/components/schemas/EbillDebitCurrenyCode'
++        chargebackMode:
++          $ref: '#/components/schemas/ChargebackMode'
++    EbillDebitProposal:
++      description: 'eBill Direct Debit proposal for the bill recipient.'
++      type: object
++      required:
++        - billRecipientIdentification
++        - currencyCode
++        - chargebackMode
++      properties:
++        id:
++          type: string
++          minLength: 36
++          maxLength: 36
++          description: 'A unique id for this eBill Direct Debit proposal. Property must not be given when creating a new object.'
++        billRecipientIdentification:
++          $ref: '#/components/schemas/BillRecipientIdentification'
++        currencyCode:
++          $ref: '#/components/schemas/EbillDebitCurrenyCode'
++        chargebackMode:
++          $ref: '#/components/schemas/ChargebackMode'
++    ChargebackMode:
++      type: string
++      description: 'If supported, the bill recipient can initiate a chargeback of the corresponding payment.'
++      enum:
++        - SUPPORTED
++        - NOT_SUPPORTED
++    EbillDebitCurrenyCode:
++      description: |
++        The amount currency code according to ISO-4217 used for eBill Direct Debit.
++      type: string
++      example: 'CHF'
++      maxLength: 3
++      pattern: 'CHF|EUR'
++    AccountNumber:
++      type: object
++      description: |
++        For the account number, either IBAN or ESR participant number has to be specified (not both).
++      properties:
++        esrParticipantNumber:
++          type: string
++          description: |
++            ESR participant number, format according to the specifications:
+ 
+-      Additional properties may be filled according the user input on the
+-      biller\'s registration form.
+-    required:
+-      - newStatus
+-    type: object
+-  BillRecipientsForBillerSearchRequest:
+-    properties:
+-      billRecipientId:
+-        description: id of the bill recipient
+-        example: '41010560425610173'
+-        maxLength: 17
+-        minLength: 1
+-        pattern: ([0-9])*
+-        type: string
+-      billerPid:
+-        description: Biller PiD provided by the system
+-        example: 41NN00BBBBBBBBBPP
+-        maxLength: 17
+-        minLength: 17
+-        pattern: ([0=9])*
+-        type: string
+-      emailAddress:
+-        description: email address of the bill recipient
+-        example: peter@muster.ch
+-        format: email
+-        maxLength: 256
+-        minLength: 1
+-        type: string
+-      enterpriseIdentificationNumber:
+-        description: >
+-          Swiss enterprise identification number (UID) without dashes, dots or
+-          extension.
++            - numerical value with mandatory 9 digits long (unhyphenated)
+ 
+-          Note that this has to contain the swiss enterprise identification
+-          number (UID) from the commercial register (Handelsregister) which may
+-          be different from the VAT UID (Mehrwertsteuer UID).
+-        example: CHE123456789
+-        maxLength: 12
+-        pattern: CHE[0-9]{9}
+-        type: string
+-    required:
+-      - billerPid
+-    type: object
+-  BillRecipientsForBillerSearchResponse:
+-    properties:
+-      billRecipientId:
+-        description: id of the bill recipient
+-        example: '41010560425610173'
+-        maxLength: 17
+-        minLength: 1
+-        pattern: ([0-9])*
+-        type: string
+-      emailAddress:
+-        description: email address of the bill recipient
+-        example: peter@muster.ch
+-        format: email
+-        maxLength: 256
+-        minLength: 1
+-        type: string
+-      enterpriseIdentificationNumber:
+-        description: >
+-          Swiss enterprise identification number (UID) without dashes, dots or
+-          extension.
++            - structure: VV999999P
++            - VV = preceding digits, either 01 or 03
+ 
+-          Note that this has to contain the swiss enterprise identification
+-          number (UID) from the commercial register (Handelsregister) which may
+-          be different from the VAT UID (Mehrwertsteuer UID).
+-        example: CHE123456789
+-        maxLength: 12
+-        pattern: CHE[0-9]{9}
+-        type: string
+-    required:
+-      - billRecipientId
+-    type: object
+-  Biller:
+-    properties:
+-      billerPid:
+-        description: biller PID
+-        example: '41100012345678901'
+-        maxLength: 17
+-        pattern: 41[0-9]{15}
+-        type: string
+-      legalName:
+-        description: >-
+-          Legal name of the invoice issuer. This name is also displayed in the
+-          invoice overview in the eBill customer portal.
+-        example: legalName
+-        type: string
+-      postalAddress:
+-        $ref: '#/definitions/PostalAddress'
+-        description: postalAddress
+-        example: postalAddress
+-    required:
++            - 999999: reference number
++
++              where a reference number is only 6 digits long, additional zeros must be inserted on the left hand side
++
++              reference number should be greater than 000000
++
++            - P: check digit in accordance with Modulo 10, recursive
++
++          maxLength: 9
++          example: '010001628'
++          pattern: '[0-9]{9}'
++        iban:
++          type: string
++          description: |
++            credit account
++
++            - The requirements for IBAN usage are limited to the country codes CH and LI, otherwise the business case will be rejected.
++
++            - The IBAN should match an already existing credit account of the biller, otherwise the business case will be rejected.
++
++            - See also ISO-13616-1
++
++          maxLength: 21
++          example: 'CH100023000A109822346'
++          pattern: '(CH|LI)\d{7}[0-9A-Z]{12}'
++    Biller:
++      title: Biller
++      required:
+       - billerPid
+       - legalName
+       - postalAddress
+-    title: Biller
+-    type: object
+-  BillerAuthenticationError:
+-    properties:
+-      billerPid:
+-        description: Biller PiD provided by the system
+-        example: 41NN00BBBBBBBBBPP
+-        maxLength: 17
+-        minLength: 17
+-        pattern: ([0=9])*
+-        type: string
+-      error:
+-        description: Cause for not issuing token
+-        example: Biller not found!
+-        maxLength: 300
+-        minLength: 1
+-        type: string
+-      errorCode:
+-        description: Error code for the error
+-        example: '404'
+-        type: number
+-      type:
+-        description: User Type
+-        example: BILLER
+-        maxLength: 10
+-        minLength: 1
+-        type: string
+-    required:
+-      - type
++      type: object
++      properties:
++        billerPid:
++          maxLength: 17
++          pattern: "41[0-9]{15}"
++          type: string
++          description: biller PID
++          example: "41100012345678901"
++        legalName:
++          type: string
++          description: Legal name of the invoice issuer. This name is also displayed
++            in the invoice overview in the eBill customer portal.
++          example: legalName
++        postalAddress:
++          $ref: '#/components/schemas/PostalAddress'
++    BillerAuthenticationError:
++      required:
+       - billerPid
+       - error
+       - errorCode
+-    type: object
+-  BillerAuthenticationRequest:
+-    properties:
+-      billerPid:
+-        description: Biller PiD provided by the system
+-        example: 41NN00BBBBBBBBBPP
+-        maxLength: 17
+-        minLength: 17
+-        pattern: ([0=9])*
+-        type: string
+-      billerSecret:
+-        description: Biller secret key provided by the system
+-        example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+-        maxLength: 36
+-        minLength: 36
+-        type: string
+-    required:
++      - type
++      type: object
++      properties:
++        billerPid:
++          maxLength: 17
++          minLength: 17
++          pattern: "([0=9])*"
++          type: string
++          description: Biller PiD provided by the system
++          example: 41NN00BBBBBBBBBPP
++        error:
++          maxLength: 300
++          minLength: 1
++          type: string
++          description: Cause for not issuing token
++          example: Biller not found!
++        errorCode:
++          type: number
++          description: Error code for the error
++          example: 404.0
++        type:
++          maxLength: 10
++          minLength: 1
++          type: string
++          description: User Type
++          example: BILLER
++    BillerAuthenticationRequest:
++      required:
+       - billerPid
+       - billerSecret
+-    type: object
+-  BillerAuthenticationResponse:
+-    properties:
+-      billerPid:
+-        description: Biller PiD provided by the system
+-        example: 41NN00BBBBBBBBBPP
+-        maxLength: 17
+-        minLength: 17
+-        pattern: ([0=9])*
+-        type: string
+-      expiresIn:
+-        description: Expiration Time for access token in milliseconds
+-        example: '3600'
+-        type: number
+-      token:
+-        description: Access Token
+-        example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
+-        maxLength: 300
+-        minLength: 1
+-        type: string
+-      type:
+-        description: User Type
+-        example: BILLER
+-        maxLength: 10
+-        minLength: 1
+-        type: string
+-    required:
+-      - type
++      type: object
++      properties:
++        billerPid:
++          maxLength: 17
++          minLength: 17
++          pattern: "([0=9])*"
++          type: string
++          description: Biller PiD provided by the system
++          example: 41NN00BBBBBBBBBPP
++        billerSecret:
++          maxLength: 36
++          minLength: 36
++          type: string
++          description: Biller secret key provided by the system
++          example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
++    BillerAuthenticationResponse:
++      required:
+       - billerPid
+-      - token
+       - expiresIn
+-    type: object
+-  BusinessCase:
+-    description: the business case object on the NWP
+-    properties:
+-      id:
+-        description: >
+-          A unique id for this business case on the NWP. Property must not be
+-          given when creating a new business case.
+-        example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+-        maxLength: 39
+-        pattern: NWPBCID[0-9A-Z]{32}
+-        type: string
+-      status:
+-        description: the status of the business case
+-        enum:
++      - token
++      - type
++      type: object
++      properties:
++        billerPid:
++          maxLength: 17
++          minLength: 17
++          pattern: "([0=9])*"
++          type: string
++          description: Biller PiD provided by the system
++          example: 41NN00BBBBBBBBBPP
++        expiresIn:
++          type: number
++          description: Expiration Time for access token in milliseconds
++          example: 3600.0
++        token:
++          maxLength: 300
++          minLength: 1
++          type: string
++          description: Access Token
++          example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...
++        type:
++          maxLength: 10
++          minLength: 1
++          type: string
++          description: User Type
++          example: BILLER
++    BusinessCase:
++      required:
++      - id
++      - status
++      type: object
++      properties:
++        type:
++          type: string
++          description: |
++            the type of the business case
++          example: Bill
++        businessCaseDate:
++          type: string
++          description: |
++            The business case date (ISO-8601 format), can not be more than 90 days in the past on the date it was created. Cannot be in the future
++          example: 2023-12-22
++        id:
++          maxLength: 39
++          pattern: "BCID[0-9A-Z]{32}"
++          type: string
++          description: |
++            A unique id for this business case on the NWP. Property must not be given when creating a new business case.
++          example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
++        status:
++          type: string
++          description: the status of the business case
++          enum:
+           - NWP_PENDING
+           - OPEN
+           - APPROVED
+           - REJECTED
+           - COMPLETED
+-        type: string
+-    required:
+-      - id
+-      - status
+-    type: object
+-  BusinessCaseId:
+-    properties:
+-      id:
+-        description: >
+-          A unique id for business cases on the NWP. Property must not be given
+-          when creating a new business case.
+-        example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+-        maxLength: 39
+-        pattern: NWPBCID[0-9A-Z]{32}
+-        type: string
+-    required:
++        referenceNumber:
++          type: string
++          description: A business case reference given by the biller. Must be unique
++            in combination with the billerId.
++          example: 2018-123456-22
++        totalAmount:
++          $ref: '#/components/schemas/TotalAmount'
++        billerPid:
++          type: string
++          description: |
++            Biller PID
++          example: "41010560425610173"
++      description: the business case object on the NWP
++    BusinessCaseId:
++      required:
+       - id
+-    type: object
+-  BusinessCaseStatusChangedEvent:
+-    allOf:
+-      - $ref: '#/definitions/Event'
+-      - properties:
+-          approvedAmount:
+-            $ref: '#/definitions/ApprovalAmountWithCurrency'
+-          billerPid:
+-            description: biller PID
+-            example: '41100012345678901'
++      type: object
++      properties:
++        id:
++          maxLength: 39
++          pattern: "BCID[0-9A-Z]{32}"
++          type: string
++          description: |
++            A unique id for business cases on the NWP. Property must not be given when creating a new business case.
++          example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
++    BusinessCaseStatusChangedEbillGuardianEvent:
++      required:
++      - billerPid
++      - events
++      type: object
++      properties:
++        billerPid:
+             maxLength: 17
+-            pattern: 41[0-9]{15}
++            pattern: "41[0-9]{15}"
+             type: string
++            description: biller PID
++            example: "41100012345678901"
++        events:
++          type: array
++          items:
++            $ref: "#/components/schemas/BusinessCaseStatusChangedEvent"
++    BusinessCaseStatusChangedEvent:
++      description: "An Event describing the status change of a business case. These\
++        \ events are sent for bills, reminders, advices and credit notes. The approved\
++        \ amount is only provided for the status `APPROVED`."
++      allOf:
++      - $ref: '#/components/schemas/Event'
++      - type: object
++        properties:
++          approvedAmount:
++            $ref: '#/components/schemas/ApprovalAmountWithCurrency'
+           businessCaseId:
+-            description: business case id
+-            example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+             maxLength: 39
+-            pattern: NWPBCID[0-9A-Z]{32}
++            pattern: "BCID[0-9A-Z]{32}"
+             type: string
++            description: business case id
++            example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
+           newStatus:
+-            description: the new status of the business case
+-            enum:
+-              - NWP_PENDING
+-              - OPEN
+-              - APPROVED
+-              - REJECTED
+-              - COMPLETED
+             type: string
+-    description:
+-      "An Event describing the status change of a business case. These events are
+-      sent for bills, reminders, advices and credit notes. The approved amount
+-      is only provided for the status `APPROVED`."
+-    required:
+-      - billerPid
+-      - businessCaseId
+-      - newStatus
+-    type: object
+-  BusinessCaseType:
+-    enum:
+-      - Bill
+-      - Reminder
+-      - CreditNote
+-      - Advice
+-      - InstalmentBill
+-    type: string
+-  CreateBusinessCaseRequest:
+-    properties:
+-      billRecipient:
+-        $ref: '#/definitions/BillRecipient'
+-        description: billRecipient data
+-        example: billRecipient
+-      biller:
+-        $ref: '#/definitions/Biller'
+-        description: biller data
+-        example: biller
+-      businessCaseDate:
+-        description:
+-          "Date of the business case.</br>
+-          At time of submission, cannot be older than `90` days. </br>
+-          At time of submission, cannot be in the future.</br>
+-          Default value is taken to be date of submission of Business Case"
+-        example: '2022-05-05'
+-        type: string
+-      businessCaseType:
+-        $ref: '#/definitions/BusinessCaseType'
+-      content:
+-        description: Business Case PDF file encoded in base64 String
+-        example: PDF encoded in base64 String
+-        type: string
+-      fileIdentifier:
+-        description: Name for the Business Case PDF file.<br>
+-          <b>Example:</b> "invoice-123456789", For a PDF document "invoice-123456789.pdf"
+-        example: testInvoice
+-        type: string
+-      paymentsByInstalments:
+-        description:
+-          "Possibility to offer payment of the invoice in instalments. </br>
+-          Instalment invoices can be submitted as <b>multi-group-invoices</b> or <b>single-group-invoices</b>.</br></br>
+-          <b>Multi-Groups</b> -  Invoices with several instalment groups to choose from. </br>
+-          The invoice recipient can decide with which instalment option the invoice will be paid. One of the instalments
+-          groups can contain a total instalment to be used for the payment of the entire invoice (isTotalPaymentOption, can only be set to `true` in one instalment group).</br></br>
+-          <b>Single-groups</b> - Invoice with only one instalment group.</br>
+-          The invoice recipient can only pay with this instalment option"
+-        items:
+-          $ref: '#/definitions/PaymentByInstalments'
+-        type: array
+-      referenceNumber:
+-        description:
+-          "Reference number of the referenced business case.</br>
+-          If the referenced invoice is found, it will be substituted with the new credit note, notification, or invoice.</br>
+-          In case of a reminder, the referenced invoice will not be substituted; at time of approval, the
+-          invoice recipient decides whether to pay the original invoice or the
+-          reminder.
+-          </br> If the referenced invoice is not found, a new business case is created."
+-        example: "101403020210803153141402094"
+-        type: string
+-      referencedBill:
+-        $ref: '#/definitions/ReferenceBill'
+-        description: referencedBill
+-        example: referencedBill
+-      singlePayment:
+-        $ref: '#/definitions/SinglePayment'
+-        description: singlePayment
+-        example: singlePayment
+-      totalAmount:
+-        $ref: '#/definitions/TotalAmount'
+-        description: biller data
+-      workflow:
+-        $ref: '#/definitions/WorkFlow'
+-        description:
+-          "Information about the workflow. Auxiliary data that can be used for
+-          pre-registering a reminder in bookkeeping."
+-    required:
++            description: the new status of the business case
++            enum:
++            - NWP_PENDING
++            - OPEN
++            - APPROVED
++            - REJECTED
++            - COMPLETED
++          externalDonationPurposeId:
++            type: string
++            description: 'optional field only to be used for donation inquiries to represent a potential selection of a donation purpose by the bill recipient, note the connection to the field externalDonationPurposeId from eBill business case specification'
++    BusinessCaseType:
++      type: string
++      enum:
++      - Bill
++      - Reminder
++      - CreditNote
++      - Advice
++      - InstalmentBill
++    CreateBusinessCaseRequest:
++      title: CreateBusinessCaseRequest
++      required:
+       - billRecipient
+       - biller
+-      - content
+-      - contentType
++      - businessCaseDate
+       - businessCaseType
++      - content
+       - fileIdentifier
+       - totalAmount
+-    title: CreateBusinessCaseRequest
+-    type: object
+-  CurrencyCode:
+-    description: |
+-      The amount currency code according to ISO-4217.
+-    example: CHF
+-    maxLength: 3
+-    pattern: '[A-Z]{3}'
+-    type: string
+-  EbillResponse:
+-    properties:
+-      billerId:
+-        description: biller id of biller associated with invoice
+-        example: BID00012345
+-        type: string
+-      businessCaseDate:
+-        description: businessCaseDate of invoice
+-        example: '2021-01-15'
+-        type: string
+-      businessCaseId:
+-        type: string
+-      id:
+-        description: id of business case
+-        example: BCID8FC1AE666B65449EAFEA65AD6473B9A3
+-        type: string
+-      referenceBill:
+-        $ref: '#/definitions/ReferenceBill'
+-        description: referenceBill
+-        example: referenceBill
+-      referenceNumber:
+-        description: referenceNumber of invoice
+-        example: Bill2021-01-15T07:20:49.047Z123
+-        type: string
+-      status:
+-        description: status of invoice
+-        example: OPEN
+-        type: string
+-      totalAmount:
+-        $ref: '#/definitions/TotalAmount'
+-        description: totalAmount
+-        example: totalAmount
+-      type:
+-        description: type of invoice
+-        example: Bill
+-        type: string
+-    title: EbillResponse
+-    type: object
+-  Esr:
+-    properties:
+-      esrParticipantNumber:
+-        description: >-
+-          Credit account of the invoice issuer (ESR-participant number). 9
+-          characters, numeric value, unhyphenated. Composition- VV999999P - VV =
+-          ESR code (01 for ESR in CHF or 03 for ESR in EUR) - 999999 = serial
+-          number- if number has less than 6 digits, it must be filled with zeros
+-          on the left side; must be bigger than 000000. - P = check digit
+-          according to Modulus 10 recursive. Example: 010001628
+-        example: 10001628
+-        type: string
+-      referenceStructured:
+-        description: ESR reference number (including check digit)
+-        example: abc1234cefgh56
+-        type: string
+-    required:
++      type: object
++      properties:
++        billRecipient:
++          $ref: '#/components/schemas/BillRecipient'
++        biller:
++          $ref: '#/components/schemas/Biller'
++        businessCaseDate:
++          type: string
++          description: "Date of the business case in TZ format.</br> At time of submission,\
++            \ cannot be older than `90` days. </br> At time of submission, cannot\
++            \ be in the future. <b>Example: </b>'2022-11-29T09:53:31.814795Z'"
++          example: 2022-11-29T09:53:31.814795Z
++        businessCaseType:
++          $ref: '#/components/schemas/BusinessCaseType'
++        content:
++          type: string
++          description: Business Case PDF file encoded in base64 String
++          example: PDF encoded in base64 String
++        fileIdentifier:
++          type: string
++          description: "Name for the Business Case PDF file.<br> <b>Example:</b> \"\
++            invoice-123456789\", For a PDF document \"invoice-123456789.pdf\""
++          example: testInvoice
++        paymentsByInstalments:
++          type: array
++          description: "Possibility to offer payment of the invoice in instalments.\
++            \ </br> Instalment invoices can be submitted as <b>multi-group-invoices</b>\
++            \ or <b>single-group-invoices</b>.</br></br> <b>Multi-Groups</b> -  Invoices\
++            \ with several instalment groups to choose from. </br> The invoice recipient\
++            \ can decide with which instalment option the invoice will be paid. One\
++            \ of the instalments groups can contain a total instalment to be used\
++            \ for the payment of the entire invoice (isTotalPaymentOption, can only\
++            \ be set to `true` in one instalment group).</br></br> <b>Single-groups</b>\
++            \ - Invoice with only one instalment group.</br> The invoice recipient\
++            \ can only pay with this instalment option"
++          items:
++            $ref: '#/components/schemas/PaymentByInstalments'
++        referenceNumber:
++          type: string
++          description: "Reference number of the referenced business case.</br> If\
++            \ the referenced invoice is found, it will be substituted with the new\
++            \ credit note, notification, or invoice.</br> In case of a reminder, the\
++            \ referenced invoice will not be substituted; at time of approval, the\
++            \ invoice recipient decides whether to pay the original invoice or the\
++            \ reminder. </br> If the referenced invoice is not found, a new business\
++            \ case is created."
++          example: "101403020210803153141402094"
++        referencedBill:
++          $ref: '#/components/schemas/ReferenceBill'
++        singlePayment:
++          $ref: '#/components/schemas/SinglePayment'
++        totalAmount:
++          $ref: '#/components/schemas/TotalAmount'
++        workflow:
++          $ref: '#/components/schemas/WorkFlow'
++    CurrencyCode:
++      maxLength: 3
++      pattern: "[A-Z]{3}"
++      type: string
++      description: |
++        The amount currency code according to ISO-4217.
++      example: CHF
++    EbillResponse:
++      title: EbillResponse
++      type: object
++      properties:
++        billerId:
++          type: string
++          description: biller id of biller associated with invoice
++          example: BID00012345
++        businessCaseDate:
++          type: string
++          description: businessCaseDate of invoice
++          example: 2021-01-15
++        businessCaseId:
++          type: string
++        id:
++          type: string
++          description: id of business case
++          example: BCID8FC1AE666B65449EAFEA65AD6473B9A3
++        referenceBill:
++          $ref: '#/components/schemas/ReferenceBill'
++        referenceNumber:
++          type: string
++          description: referenceNumber of invoice
++          example: Bill2021-01-15T07:20:49.047Z123
++        status:
++          type: string
++          description: status of invoice
++          example: OPEN
++        totalAmount:
++          $ref: '#/components/schemas/TotalAmount'
++        type:
++          type: string
++          description: type of invoice
++          example: Bill
++    Esr:
++      title: Esr
++      required:
+       - esrParticipantNumber
+       - referenceStructured
+-    title: Esr
+-    type: object
+-  Event:
+-    description: contains common fields for all events
+-    properties:
+-      eventId:
+-        description: event id
+-        example: NWPEVID82A65938766547EBBBA39BA6F7B07F24
+-        maxLength: 39
+-        pattern: NWPEVID[0-9A-Z]{32}
+-        type: string
+-      timestamp:
+-        description: timestamp of the event
+-        example: '2019-01-01T10:00:00.000Z'
+-        format: date-time
+-        minLength: 1
+-        type: string
+-    required:
++      type: object
++      properties:
++        esrParticipantNumber:
++          type: string
++          description: "Credit account of the invoice issuer (ESR-participant number).\
++            \ 9 characters, numeric value, unhyphenated. Composition- VV999999P -\
++            \ VV = ESR code (01 for ESR in CHF or 03 for ESR in EUR) - 999999 = serial\
++            \ number- if number has less than 6 digits, it must be filled with zeros\
++            \ on the left side; must be bigger than 000000. - P = check digit according\
++            \ to Modulus 10 recursive. Example: 010001628"
++          example: "10001628"
++        referenceStructured:
++          type: string
++          description: ESR reference number (including check digit)
++          example: abc1234cefgh56
++    Event:
++      required:
+       - eventId
+       - timestamp
+-    type: object
+-  Fre:
+-    properties:
+-      address:
+-        $ref: '#/definitions/Address'
+-      displayName:
+-        type: string
+-      logo:
+-        $ref: '#/definitions/Logo'
+-      website:
+-        type: string
+-    title: Fre
+-    type: object
+-  Generic:
+-    properties:
+-      iban:
+-        description: 'Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO13616-1.</br>
+-                      The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and 21 alphanumeric characters.</br>
+-
+-                      Example: `CH9300762011623852957`,`LI21088100002324013AA` . </br>
+-
+-                      Must contain country code CH or LI, otherwise the business case will be denied.
+-
+-                      Must be matching with a credit account that is specified in the infrastructure in the
+-                      master data of the invoice issuer, otherwise the business case will be denied.'
+-        example: CH9300762011623852957
+-        type: string
+-      referenceStructured:
+-        description: >-
+-          Reference number, structured payment reference. Note: the reference is
+-          either a QR reference, creditor reference (ISO 11649) or an IPI
+-          reference. QR Reference: 27 characters, numerical; check digit
+-          computation with Modulus 10 recursive (27th position of the
+-          reference). Creditor Reference (ISO 11649): up to 25 characters,
+-          alphanumeric. IPI Reference: 20 characters, alphanumeric; check digit
+-          computation with Modulus 97-10 (ISO 7064) (Note: the IPI receipt was
+-          eliminated by 31.03.2020) When using QR-IBAN, this element must be
+-          filled with the QR Reference. When using IBAN and referenceType SCOR,
+-          this element must be filled with the Creditor Reference. When using
+-          IBAN and referenceType IPI, this element must be filled with the IPI
+-          Reference. When using IBAN and referenceType NON, this element is not
+-          permitted to be filled.
+-        example: abc1234cefgh56
+-        type: string
+-      referenceType:
+-        description: >-
+-          Reference type of the structured reference. Following values are
+-          permitted: QRR - QR Reference SCOR - Creditor Reference (ISO 11649)
+-          NON - without reference IPI - IPI Reference (Note: the IPI receipt was
+-          eliminated by 31.03.2020) When using the QR-IBAN, the code QRR must be
+-          included. When using the IBAN, either the code SCOR, IPI or NON must
+-          be included.
+-        example: NON
+-        type: string
+-      referenceUnstructured:
+-        description: Unstructured message
+-        example: Unstructured message
+-        type: string
+-    required:
++      type: object
++      properties:
++        eventId:
++          maxLength: 39
++          pattern: "EVID[0-9A-Z]{32}"
++          type: string
++          description: event id
++          example: EVID82A65938766547EBBBA39BA6F7B07F24
++        timestamp:
++          type: string
++          description: timestamp of the event
++          format: date-time
++          example: 2019-01-01T10:00:00Z
++      description: contains common fields for all events
++    EbillGuardianEvent:
++      required:
++      - billerPid
++      - events
++      type: object
++      properties:
++        billerPid:
++            maxLength: 17
++            pattern: "41[0-9]{15}"
++            type: string
++            description: biller PID
++            example: "41100012345678901"
++        events:
++          type: array
++          items:
++            $ref: "#/components/schemas/Event"
++      description: contains common fields for all events
++    Fre:
++      title: Fre
++      type: object
++      properties:
++        address:
++          $ref: '#/components/schemas/Address'
++        displayName:
++          type: string
++        logo:
++          $ref: '#/components/schemas/Logo'
++        website:
++          type: string
++    Generic:
++      title: Generic
++      required:
+       - iban
+       - referenceType
+-    title: Generic
+-    type: object
+-  Ger:
+-    properties:
+-      address:
+-        $ref: '#/definitions/Address'
+-      displayName:
+-        type: string
+-      logo:
+-        $ref: '#/definitions/Logo'
+-      website:
+-        type: string
+-    title: Ger
+-    type: object
+-  HealthCheckRequest:
+-    properties:
+-      message:
+-        description: expected response message from health check
+-        example: any String
+-        maxLength: 100
+-        minLength: 1
+-        type: string
+-    required:
++      type: object
++      properties:
++        iban:
++          type: string
++          description: |-
++            Credit account of the invoice issuer (IBAN or QR-IBAN). See also ISO13616-1.</br> The usage of IBAN or QR-IBAN is only permitted with country codes CH or LI and 21 alphanumeric characters.</br>
++            Example: `CH9300762011623852957`,`LI21088100002324013AA` . </br>
++            Must contain country code CH or LI, otherwise the business case will be denied.
++            Must be matching with a credit account that is specified in the infrastructure in the master data of the invoice issuer, otherwise the business case will be denied.
++          example: CH9300762011623852957
++        referenceStructured:
++          type: string
++          description: "Reference number, structured payment reference. Note: the\
++            \ reference is either a QR reference, creditor reference (ISO 11649) or\
++            \ an IPI reference. QR Reference: 27 characters, numerical; check digit\
++            \ computation with Modulus 10 recursive (27th position of the reference).\
++            \ Creditor Reference (ISO 11649): up to 25 characters, alphanumeric. IPI\
++            \ Reference: 20 characters, alphanumeric; check digit computation with\
++            \ Modulus 97-10 (ISO 7064) (Note: the IPI receipt was eliminated by 31.03.2020)\
++            \ When using QR-IBAN, this element must be filled with the QR Reference.\
++            \ When using IBAN and referenceType SCOR, this element must be filled\
++            \ with the Creditor Reference. When using IBAN and referenceType IPI,\
++            \ this element must be filled with the IPI Reference. When using IBAN\
++            \ and referenceType NON, this element is not permitted to be filled."
++          example: abc1234cefgh56
++        referenceType:
++          type: string
++          description: "Reference type of the structured reference. Following values\
++            \ are permitted: QRR - QR Reference SCOR - Creditor Reference (ISO 11649)\
++            \ NON - without reference IPI - IPI Reference (Note: the IPI receipt was\
++            \ eliminated by 31.03.2020) When using the QR-IBAN, the code QRR must\
++            \ be included. When using the IBAN, either the code SCOR, IPI or NON must\
++            \ be included."
++          example: NON
++        referenceUnstructured:
++          type: string
++          description: Unstructured message
++          example: Unstructured message
++    Ger:
++      title: Ger
++      type: object
++      properties:
++        address:
++          $ref: '#/components/schemas/Address'
++        displayName:
++          type: string
++        logo:
++          $ref: '#/components/schemas/Logo'
++        website:
++          type: string
++    HealthCheckRequest:
++      required:
+       - message
+-    type: object
+-  HealthCheckResponse:
+-    properties:
+-      apiVersion:
+-        description: the version of the software partner api
+-        example: 1.0.23
+-        type: string
+-      applicationVersion:
+-        description: the version of the server application at network partner
+-        example: 1.4.3.0-desire-20180927091004161-71-5e3ca91
+-        type: string
+-      environmentStage:
+-        description: the instance which the request was sent to
+-        example: XE
+-        type: string
+-      message:
+-        description: response message from health check
+-        example: >-
+-          The healthcheck GET resp. POST request was successfully received and
+-          processed
+-        maxLength: 100
+-        type: string
+-      receivedHeaders:
+-        items:
+-          properties:
+-            headerName:
+-              description: the name of the provided header
+-              example: X-CORRELATION-ID
+-              type: string
+-            headerValue:
+-              description: As received
+-              example: 9bcd4351-4b7b-4017-9b63-9613414c6ff1
+-              type: string
+-          type: object
+-        type: array
+-      requestDateTime:
+-        description: >
+-          according to RFC3339, section 5.6 in ISO 8601 with timezone and
+-          milliseconds
+-        example: '2018-10-03T16:03:09.101+02:00'
+-        format: date-time
+-        type: string
+-    required:
++      type: object
++      properties:
++        message:
++          maxLength: 100
++          minLength: 1
++          type: string
++          description: expected response message from health check
++          example: any String
++    HealthCheckResponse:
++      required:
++      - apiVersion
++      - applicationVersion
++      - environmentStage
+       - message
+-      - requestDateTime
+       - receivedHeaders
+-      - environmentStage
+-      - applicationVersion
+-      - apiVersion
+-    type: object
+-  Instalment:
+-    properties:
+-      description:
+-        description: Description of the instalment.
+-        type: string
+-      externalInstalmentId:
+-        description: >-
+-          Unique reference of the instalment. It is assigned by the invoice
+-          issuer and must be unique for the entire business case. This reference
+-          is used so that the invoice issuer knows exactly which instalment was
+-          approved or denied
+-        type: string
+-      paymentInformation:
+-        $ref: '#/definitions/PaymentInformation'
+-        description: Payment information about the instalment.
+-    required:
++      - requestDateTime
++      type: object
++      properties:
++        apiVersion:
++          type: string
++          description: the version of the software partner api
++          example: 1.0.23
++        applicationVersion:
++          type: string
++          description: the version of the server application at network partner
++          example: 1.4.3.0-desire-20180927091004161-71-5e3ca91
++        environmentStage:
++          type: string
++          description: the instance which the request was sent to
++          example: XE
++        message:
++          maxLength: 100
++          type: string
++          description: response message from health check
++          example: The healthcheck GET resp. POST request was successfully received
++            and processed
++        receivedHeaders:
++          type: array
++          items:
++            type: object
++            properties:
++              headerName:
++                type: string
++                description: the name of the provided header
++                example: X-CORRELATION-ID
++              headerValue:
++                type: string
++                description: As received
++                example: 9bcd4351-4b7b-4017-9b63-9613414c6ff1
++        requestDateTime:
++          type: string
++          description: |
++            according to RFC3339, section 5.6 in ISO 8601 with timezone and milliseconds
++          format: date-time
++          example: 2018-10-03T16:03:09.101+02:00
++    Instalment:
++      title: Instalment
++      required:
+       - externalInstalmentId
+       - paymentInformation
+-    title: Instalment
+-    type: object
+-  InstalmentStatusChangedEvent:
+-    allOf:
+-      - $ref: '#/definitions/Event'
+-      - properties:
+-          approvedAmount:
+-            $ref: '#/definitions/ApprovalAmountWithCurrency'
+-          billerPid:
+-            description: biller PID
+-            example: '41100012345678901'
++      type: object
++      properties:
++        description:
++          type: string
++          description: Description of the instalment.
++        externalInstalmentId:
++          type: string
++          description: Unique reference of the instalment. It is assigned by the invoice
++            issuer and must be unique for the entire business case. This reference
++            is used so that the invoice issuer knows exactly which instalment was
++            approved or denied
++        paymentInformation:
++          $ref: '#/components/schemas/PaymentInformation'
++    InstalmentStatusChangedEbillGuardianEvent:
++      required:
++      - billerPid
++      - events
++      type: object
++      properties:
++        billerPid:
+             maxLength: 17
+-            pattern: 41[0-9]{15}
++            pattern: "41[0-9]{15}"
+             type: string
++            description: biller PID
++            example: "41100012345678901"
++        events:
++          type: array
++          items:
++            $ref: "#/components/schemas/InstalmentStatusChangedEvent"
++    InstalmentStatusChangedEvent:
++      description: |
++        An Event describing the status change of an instalment. These events are only sent for instalment bills. The approved amount is only provided for the status APPROVED.
++      allOf:
++      - $ref: '#/components/schemas/Event'
++      - type: object
++        properties:
++          approvedAmount:
++            $ref: '#/components/schemas/ApprovalAmountWithCurrency'
+           businessCaseId:
+-            description: business case id
+-            example: NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9
+             maxLength: 39
+-            pattern: NWPBCID[0-9A-Z]{32}
++            pattern: "BCID[0-9A-Z]{32}"
+             type: string
++            description: business case id
++            example: BCID0FB909852BBC4D06AD8336AAE87D7FC9
+           externalInstalmentId:
+-            description: external id of the instalment
+-            example: 298031-2999-ACX01
+             maxLength: 36
+             minLength: 1
+             type: string
++            description: external id of the instalment
++            example: 298031-2999-ACX01
+           externalPaymentByInstalmentsId:
+-            description: external id of the respective paymentByInstalment
+-            example: 298031-2999
+             maxLength: 36
+             minLength: 1
+             type: string
++            description: external id of the respective paymentByInstalment
++            example: 298031-2999
+           newStatus:
++            type: string
+             description: the new status of the instalment
+             enum:
+-              - NWP_PENDING
+-              - OPEN
+-              - APPROVED
+-              - REJECTED
+-              - COMPLETED
+-            type: string
+-    description: >
+-      An Event describing the status change of an instalment. These events are
+-      only sent for instalment bills. The approved amount is only provided for
+-      the status APPROVED.
+-    required:
+-      - billerPid
+-      - businessCaseId
+-      - externalInstalmentId
+-      - externalPaymentByInstalmentsId
+-      - newStatus
+-    type: object
+-  Ita:
+-    properties:
+-      address:
+-        $ref: '#/definitions/Address'
+-      displayName:
+-        type: string
+-      logo:
+-        $ref: '#/definitions/Logo'
+-      website:
+-        type: string
+-    title: Ita
+-    type: object
+-  LocalizedData:
+-    properties:
+-      defaultLanguage:
+-        type: string
+-      fre:
+-        $ref: '#/definitions/Fre'
+-      ger:
+-        $ref: '#/definitions/Ger'
+-      ita:
+-        $ref: '#/definitions/Ita'
+-    title: LocalizedData
+-    type: object
+-  LocalizedSectorData:
+-    properties:
+-      name:
+-        description: name of the sector
+-        example: Transport
+-        maxLength: 36
+-        minLength: 1
+-        type: string
+-    required:
++            - NWP_PENDING
++            - OPEN
++            - APPROVED
++            - REJECTED
++            - COMPLETED
++    Ita:
++      title: Ita
++      type: object
++      properties:
++        address:
++          $ref: '#/components/schemas/Address'
++        displayName:
++          type: string
++        logo:
++          $ref: '#/components/schemas/Logo'
++        website:
++          type: string
++    LocalizedData:
++      title: LocalizedData
++      type: object
++      properties:
++        defaultLanguage:
++          type: string
++        fre:
++          $ref: '#/components/schemas/Fre'
++        ger:
++          $ref: '#/components/schemas/Ger'
++        ita:
++          $ref: '#/components/schemas/Ita'
++    LocalizedSectorData:
++      required:
+       - name
+-    type: object
+-  Logo:
+-    properties:
+-      assetId:
+-        type: string
+-      name:
+-        type: string
+-    title: Logo
+-    type: object
+-  PaymentByInstalments:
+-    description: >-
+-      An instalment group can be chosen for payment. Following, all single
+-      instalments, that are included in the instalment group can be approved one
+-      by one. The maximum allowed number of instalment groups is 99. The
+-      instalment group that is marked as the total instalment
+-      (isTotalPaymentOption = `true`) is initially shown to the invoice
+-      recipient as the chosen option. If there is no total instalment option
+-      (isTotalPaymentOption = `false`) the invoice recipient sees automatically
+-      the first instalment group as chosen.
+-    properties:
+-      description:
+-        description: Description of the instalment group.
+-        type: string
+-      externalPaymentByInstalmentsId:
+-        description: >-
+-          Unique reference of the instalment group. It is assigned by the
+-          invoice issuer and must be unique for the entire business case.
+-        type: string
+-      instalments:
+-        items:
+-          $ref: '#/definitions/Instalment'
+-        type: array
+-      isTotalAmountHidden:
+-        description: >-
+-          If `true` - then the total amount of the invoice is not permitted to
+-          be presented to the invoice recipient.
+-        type: boolean
+-      isTotalPaymentOption:
+-        description: >-
+-          If `true` - then the instalment of the instalment group is considered
+-          as the total instalment of the invoice i.e. the instalment with which
+-          the invoice issuer enables the total invoice amount to be paid all at
+-          once. isTotalPaymentOption can only be set to `true` in one instalment
+-          group. It is recommended to provide a total instalment option.
+-        type: boolean
+-    required:
+-      - instalments
+-    title: PaymentByInstalments
+-    type: object
+-  PaymentInformation:
+-    properties:
+-      accountAndReference:
+-        $ref: '#/definitions/AccountAndReference'
+-        description: accountAndReference
+-        example: accountAndReference
+-      amount:
+-        $ref: '#/definitions/TotalAmount'
+-        description: totalAmount
+-        example: totalAmount
+-      dueDate:
+-        description: >-
+-          At time of submission, cannot be set to more than 3 years in the
+-          future (1095 days). At time of submission, cannot be older than 90
+-          days.
+-        example: '202"2-05-05'
+-        type: string
+-      payableAmountCanBeModified:
+-        description: >-
+-          If `true`, then the provided invoice amount is permitted to be
+-          altered. If the invoice amount is not provided, the value must be set
+-          to `true`. If no value is provided, the eBill infrastructure will automatically set
+-          to `true`.
+-
+-        example: true
+-        type: boolean
+-    required:
+-      - accountAndReference
+-      - amount
+-      - dueDate
+-    title: PaymentInformation
+-    type: object
+-  PostalAddress:
+-    properties:
+-      buildingNumber:
+-        description: buliding number of biller
+-        example: '01'
+-        type: string
+-      city:
+-        description: city
+-        example: Adliswil
+-        type: string
+-      countryCode:
+-        description: countryCode
+-        example: CH
+-        type: string
+-      postalCode:
+-        description: postalCode
+-        example: 8134
+-        type: string
+-      street:
+-        description: street name
+-        example: Soodmattenstrasse
+-        type: string
+-    required:
+-      - buildingNumber
+-      - city
+-      - countryCode
+-      - postalCode
+-      - street
+-    title: PostalAddress
+-    type: object
+-  Problem:
+-    properties:
+-      detail:
+-        description: >
+-          A human readable explanation specific to this occurrence of the
+-          problem.
+-        example: >
+-          The submitted request contains invalid or missing data which can not
+-          be processed.
+-        type: string
+-      fieldErrors:
+-        items:
+-          properties:
+-            fieldName:
+-              description: the name of the field with the error
+-              example: localizedData.ger.address.city
+-              type: string
+-            message:
+-              description: the message describing the error
+-              example: size must be between 1 and 35
+-              type: string
+-            rejectedValue:
+-              description: the provided value which was rejected if available
+-              example: Very Long Invalid City Name Which Is Rejected
+-              type: string
+-          type: object
+-        type: array
+-      instance:
+-        description: >
+-          An absolute URI that identifies the specific occurrence of the
+-          problem.
+-
+-          It may or may not yield further information if dereferenced.
+-        example: |
+-          /swp/v1/biller/errors/NWPBCID0090000001/provided-X-CORRELATION-ID
+-        format: uri
+-        type: string
+-      status:
+-        description: >
+-          The HTTP status code generated by the origin server for this
+-          occurrence of the problem.
+-        example: 400
+-        exclusiveMaximum: true
+-        format: int32
+-        maximum: 600
+-        minimum: 100
+-        type: integer
+-      technicalReason:
+-        description: >
+-          The Technical Description/Reason for engineers might contain addition
+-          system information on the problem.
+-        example: Some field validations failed
+-        type: string
+-      title:
+-        description: A short, human readable summary of the problem type.
+-        example: Payload has missing or invalid values
+-        type: string
+-      type:
+-        default: about:blank
+-        description: >
+-          An absolute URI that identifies the problem type.
+-
+-          We may provide human-readable documentation for the problem type in
+-          the future, when the URI is dereferenced.
+-
+-          For now consult the Software Partner API documentation for further
+-          information.
+-
+-          The URI consists of the /problems endpoint and the documented problem
+-          type, see example.
+-        example: /problems/REQUEST_BODY_VALIDATION_FAILED
+-        format: uri
+-        type: string
+-    type: object
+-  RecipientSubscriptionEvent:
+-    properties:
+-      accountNumber:
+-        type: string
+-      billRecipient:
+-        $ref: '#/definitions/BillRecipient'
+-      billRecipientSubscriptionFormFields:
+-        items:
+-          $ref: '#/definitions/BillRecipientSubscriptionFormField'
+-        type: array
+-      billerId:
+-        type: string
+-      eventId:
+-        description: 'event id '
+-        example: 41010560425610180
+-        type: string
+-      newStatus:
+-        type: string
+-      referenceStructured:
+-        type: string
+-      timestamp:
+-        type: string
+-    required:
+-      - eventId
+-    title: RecipientSubscriptionEvent
+-    type: object
+-  ReferenceBill:
+-    properties:
+-      referenceNumber:
+-        description: >-
+-          Reference number/invoice number of the referenced business case. If
+-          the referenced invoice is found, it will be substituted with the new
+-          credit note, notification, or invoice. In case of a reminder, the
+-          referenced invoice will not be substituted; at time of approval, the
+-          invoice recipient decides whether to pay the original invoice or the
+-          reminder. If the referenced invoice is not found, a new business case
+-          is created.
+-        example: BCID8FC1AE666B65449EAFEA65AD64731234
+-        type: string
+-    title: ReferenceBill
+-    type: object
+-  Sector:
+-    properties:
+-      id:
+-        description: A unique id for this sector.
+-        example: SCID0000000000
+-        maxLength: 14
+-        pattern: SCID[0-9]{10}
+-        type: string
+-      localizedData:
+-        properties:
+-          eng:
+-            $ref: '#/definitions/LocalizedSectorData'
+-          fre:
+-            $ref: '#/definitions/LocalizedSectorData'
+-          ger:
+-            $ref: '#/definitions/LocalizedSectorData'
+-          ita:
+-            $ref: '#/definitions/LocalizedSectorData'
+-        type: object
+-    type: object
+-  SinglePayment:
+-    properties:
+-      paymentInformation:
+-        $ref: '#/definitions/PaymentInformation'
+-        description: paymentInformation
+-        example: paymentInformation
+-    required:
+-      - paymentInformation
+-    title: SinglePayment
+-    type: object
+-  TotalAmount:
+-    properties:
+-      currencyCode:
+-        description: >-
+-          Currency code according to ISO 4217 When using QR-IBAN or
+-          ESR-participant number, only CHF and EUR are allowed.
+-        example: CHF
+-        type: string
+-      value:
+-        description: >-
+-          Maximum amount `99'999'999.99` for invoices, instalment invoices, reminders and credit notes. Minimal amount `-99'999'999.99` to maximum amount `99'999'999.99` for advice notes. Amount must be greater than `0` for invoices, instalment invoices and reminders. Amount must be ≥ `0 for credit notes.
+-          If an IBAN or QR-IBAN is used for invoices or instalments of an instalment invoice, the amount does not have to be supplied (compatibility QR invoice).
+-        example: 10
+-        type: string
+-    required:
+-      - currencyCode
+-      - value
+-    title: TotalAmount
+-    type: object
+-  WorkFlow:
+-    properties:
+-      amountPaid:
+-        $ref: '#/definitions/TotalAmount'
+-        description: >-
+-          Sum of the amount that was paid by the invoice recipient in advance
+-          (without VAT-relevant advance invoice). The outstanding total invoice
+-          amount to be paid corresponds to the element "totalAmount"
+-      caseReferenceForBillRecipient:
+-        description: >-
+-          Association reference to be used by the invoice recipient to allocate
+-          the business case in his bookkeeping
+-        type: string
+-      deliveryDateEnd:
+-        description: Delivery date or end date of the service provision
+-        example: YYYY-MM-DD
+-        type: string
+-      deliveryDateStart:
+-        description: >-
+-          Start date of the service provision, in case it is different than
+-          deliveryDateEnd
+-        example: YYYY-MM-DD
+-        type: string
+-      netAmount:
+-        $ref: '#/definitions/TotalAmount'
+-        description: Total invoice amount without VAT (e.g. CHF 1095.80)
+-      vatEnterpriseIdentificationNumbers:
+-        description: >-
+-          VAT-UID of the invoice issuer. Presentation without punctuation (e.g.
+-          CHE123456789MWST).
+-        example:
+-          - str1
+-          - str2
+-          - str3
+-        items:
++      type: object
++      properties:
++        name:
++          maxLength: 36
++          minLength: 1
+           type: string
+-        type: array
+-      vatRates:
+-        description: VAT information per VAT rate
+-        items:
++          description: name of the sector
++          example: Transport
++    Logo:
++      title: Logo
++      type: object
++      properties:
++        assetId:
++          type: string
++        name:
++          type: string
++    PaymentByInstalments:
++      title: PaymentByInstalments
++      required:
++      - instalments
++      type: object
++      properties:
++        description:
++          type: string
++          description: Description of the instalment group.
++        externalPaymentByInstalmentsId:
++          type: string
++          description: Unique reference of the instalment group. It is assigned by
++            the invoice issuer and must be unique for the entire business case.
++        instalments:
++          type: array
++          items:
++            $ref: '#/components/schemas/Instalment'
++        isTotalAmountHidden:
++          type: boolean
++          description: If `true` - then the total amount of the invoice is not permitted
++            to be presented to the invoice recipient.
++        isTotalPaymentOption:
++          type: boolean
++          description: If `true` - then the instalment of the instalment group is
++            considered as the total instalment of the invoice i.e. the instalment
++            with which the invoice issuer enables the total invoice amount to be paid
++            all at once. isTotalPaymentOption can only be set to `true` in one instalment
++            group. It is recommended to provide a total instalment option.
++      description: "An instalment group can be chosen for payment. Following, all\
++        \ single instalments, that are included in the instalment group can be approved\
++        \ one by one. The maximum allowed number of instalment groups is 99. The instalment\
++        \ group that is marked as the total instalment (isTotalPaymentOption = `true`)\
++        \ is initially shown to the invoice recipient as the chosen option. If there\
++        \ is no total instalment option (isTotalPaymentOption = `false`) the invoice\
++        \ recipient sees automatically the first instalment group as chosen."
++    PaymentInformation:
++      title: PaymentInformation
++      required:
++      - accountAndReference
++      - amount
++      - dueDate
++      type: object
++      properties:
++        accountAndReference:
++          $ref: '#/components/schemas/AccountAndReference'
++        amount:
++          $ref: '#/components/schemas/TotalAmount'
++        dueDate:
++          type: string
++          description: "At time of submission, cannot be set to more than 3 years\
++            \ in the future (1095 days). At time of submission, cannot be older than\
++            \ 90 days."
++          example: 202"2-05-05
++        payableAmountCanBeModified:
++          type: boolean
++          description: "If `true`, then the provided invoice amount is permitted to\
++            \ be altered. If the invoice amount is not provided, the value must be\
++            \ set to `true`. If no value is provided, the eBill infrastructure will\
++            \ automatically set to `true`."
++          example: true
++    PostalAddress:
++      title: PostalAddress
++      required:
++      - buildingNumber
++      - city
++      - countryCode
++      - postalCode
++      - street
++      type: object
++      properties:
++        buildingNumber:
++          type: string
++          description: buliding number
++          example: "01"
++        city:
++          type: string
++          description: city
++          example: Adliswil
++        countryCode:
++          type: string
++          description: countryCode
++          example: CH
++        postalCode:
++          type: string
++          description: postalCode
++          example: "8134"
++        street:
++          type: string
++          description: street name
++          example: Soodmattenstrasse
++    Problem:
++      type: object
++      properties:
++        detail:
+           type: string
+-        type: array
+-    required:
+-      - vatEnterpriseIdentificationNumbers
+-      - netAmount
+-      - amountPaid
+-      - vatRates
+-    title: WorkFlow
+-    type: object
+-host: stage-api.ebill.billte.ch
+-info:
+-  contact:
+-    name: Software Partner API
+-    url: https://guard-api.ebill.billte.ch
+-  description: >
+-    The application programming interface for software partners (Software
+-    Partner API) allows communication with an eBill Network Partner.
+-
+-    The eBill service comprises of electronic bills, reminders, credit notes and
+-    advices which are summarized under the term "business case". Business cases
+-    are delivered from software partners via network partners to the SIX eBill
+-    infrastructure and can be received online by bill recipients.
+-
+-
+-    Documentation and Open API licence of the Software Partner API can be found
+-    on https://ebill-swp.org
+-
+-
+-    Examples and extra information -
+-    https://github.com/billte-engineering/ebill-swp-redoc.
+-
+-
+-    Examples include:
+-
+-
+-    * submitting an invoice
+-
+-    * submitting a reminder
+-
+-    * submitting an installment
+-
+-    * submitting payableAmount
+-
+-
+-
+-
+-
+-
+-    ### General Note
+-
+-
+-    These APIs are based on the work of the Working Group eBill-SWP-API. Biller is a
+-    member of the group and an active contributer.
+-
+-
+-    This documentation has been compiled with the greatest care, but may
+-    nevertheless contain errors or inaccuracies. Working Group eBill-SWP-API
+-    cannot assume any legal responsibility or any liability for erroneous
+-    information or its consequences.
+-
+-
+-    If you notice any errors in this documentation or have any suggestions for
+-    improvements, we would be grateful to receive your feedback; please open an
+-    issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
+-
+-    ### Environments
+-
+-    + #### Production environment [code:P]
+-    <br> `baseUrl` : https://guard-api.ebill.billte.ch
+-
+-    + #### Stable staging environment [code:XP]
+-    <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
+-
+-    + #### Unstable staging environment [code:XE]
+-    <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
+-
+-  title: Billte eBill SWP API
+-  version: 1.0.0
+-parameters:
+-  header_authorization:
+-    description: |
+-      Access-Token with the prefix "Bearer".
+-    in: header
+-    name: Authorization
+-    required: true
+-    type: string
+-  header_xBusinessCaseFormat:
+-    description: Format of the business case.
+-    enum:
+-      - zugferd.EN16931
+-      - zugferd.EXTENDED
+-      - zugferd.BasicWL
+-      - fscmxml
+-      - yellowbill
+-      - qrbill
+-    in: header
+-    name: X-BCFORMAT
+-    required: false
+-    type: string
+-  header_xBusinessCaseFunction:
+-    description: Function of the business case.
+-    enum:
+-      - bill
+-      - creditnote
+-      - advice
+-      - reminder
+-    in: header
+-    name: X-BCFUNCTION
+-    required: false
+-    type: string
+-  header_xCorrelationId:
+-    description: |
+-      ID which will unambiguously identify this request to the API.
+-      **Minimal length**: '1'
+-      **Maximal length**: '36'
+-    in: header
+-    maxLength: 36
+-    minLength: 1
+-    name: X-CORRELATION-ID
+-    required: true
+-    type: string
+-  header_xFilename:
+-    description: >
+-      Filename for the business case PDF. This is only used for analytical
+-      purposes and support. The filename is not visible for the bill recipient.
+-
+-      **Minimal length**: '1'
+-
+-      **Maximal length**: '99'
+-    in: header
+-    maxLength: 99
+-    minLength: 1
+-    name: X-FILENAME
+-    required: false
+-    type: string
+-  query_billerPid:
+-    description: |
+-      biller PID
+-      **Maximal length**: '17'
+-      **Example**: '"41NN00BBBBBBBBBPP"'
+-      **Pattern**: '41[0-9]{15}'
+-    in: query
+-    maxLength: 17
+-    name: billerPid
+-    pattern: 41[0-9]{15}
+-    required: true
+-    type: string
+-  query_businessCaseId:
+-    description: |
+-      business case id
+-      **Maximal length**: '39'
+-      **Example**: '"NWPBCID0FB909852BBC4D06AD8336AAE87D7FC9"'
+-      **Pattern**: 'NWPBCID[0-9A-Z]{32}'
+-    in: query
+-    maxLength: 39
+-    name: businessCaseId
+-    pattern: NWPBCID[0-9A-Z]{32}
+-    required: true
+-    type: string
+-  query_lastEventId:
+-    description: >
+-      Id of the last received event. If omitted, the result starts with the
+-      oldest available event.
+-
+-      **Example**: '"NWPEVID82A65938766547EBBBA39BA6F7B07F24"'
+-
+-      **Maximal length**: '39'
+-
+-      **Pattern**: '"NWPEVID[0-9A-Z]{32}"'
+-    in: query
+-    maxLength: 39
+-    name: lastEventId
+-    pattern: NWPEVID[0-9A-Z]{32}
+-    type: string
+-  query_limitEvents:
+-    default: 1000
+-    description: >
+-      Maximum number of events one wants to receive (technical maximum is 10000,
+-      no more will be returned at once and you have to fetch again to check if
+-      there are more)
+-    in: query
+-    maximum: 10000
+-    name: limit
+-    type: integer
+-paths:
+-  /billers/authenticate:
+-    post:
+-      consumes:
+-        - application/json
+-      description: |
+-        Returns an authentication token for the biller to be used in other APIs.
+-      operationId: getAuthenticationTokenForBiller
+-      parameters:
+-        - in: body
+-          name: body
+-          required: true
+-          schema:
+-            $ref: '#/definitions/BillerAuthenticationRequest'
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Biller Found
+-          schema:
+-            items:
+-              $ref: '#/definitions/BillerAuthenticationResponse'
+-            type: array
+-        default:
+           description: |
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/BillerAuthenticationError'
+-      summary: Authenticate Biller
+-      tags:
+-        - Billers
+-  /billers/bill-recipient/search:
+-    parameters:
+-      - $ref: '#/parameters/header_authorization'
+-    post:
+-      consumes:
+-        - application/json
+-      description: >
+-        Returns a list of one or more bill recipients.
+-
+-
+-        The response will only list a bill recipient if he allows bills in his online banking
+-        to be posted by the biller or allows bills to be posted in general. It will
+-        always return the billRecipientId and optionally any other provided
+-        parameter.
+-
+-
+-        The call will return an empty list if no matching bill recipient is
+-
+-        found or the biller is not allowed to send bills to the bill recipient.
+-      operationId: searchBillRecipientsForBiller
+-      parameters:
+-        - description: >-
+-            Parameters for the search, at least one of the parameters is
+-            required in addition to the mandatory "billerPid". It is recommended to use "billRecipientId"
+-            since it is a permenant id of each recipient in the SIX infrastructure.
+-          in: body
+-          name: body
+-          required: true
+-          schema:
+-            $ref: '#/definitions/BillRecipientsForBillerSearchRequest'
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Bill recipients found
+-          schema:
+-            items:
+-              $ref: '#/definitions/BillRecipientsForBillerSearchResponse'
+-            type: array
+-        default:
++            A human readable explanation specific to this occurrence of the problem.
++          example: |
++            The submitted request contains invalid or missing data which can not be processed.
++        fieldErrors:
++          type: array
++          items:
++            type: object
++            properties:
++              fieldName:
++                type: string
++                description: the name of the field with the error
++                example: localizedData.ger.address.city
++              message:
++                type: string
++                description: the message describing the error
++                example: size must be between 1 and 35
++              rejectedValue:
++                type: string
++                description: the provided value which was rejected if available
++                example: Very Long Invalid City Name Which Is Rejected
++        instance:
++          type: string
+           description: |
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Search for bill recipients for this biller
+-      tags:
+-        - Billers
+-  /billers/business-cases:
+-    get:
+-      description: >
+-        Depending on the accept header, this operation either returns a JSON
+-        business case object or the original PDF.
+-
+-        The returned JSON object contains one of the business case subtypes -
+-
+-        Bill, InstalmentBill, Reminder, CreditNote or Advice.
+-      operationId: getBusinessCase
+-      parameters:
+-        - $ref: '#/parameters/query_billerPid'
+-        - $ref: '#/parameters/query_businessCaseId'
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Business case found
+-          schema:
+-            $ref: '#/definitions/BusinessCase'
+-        default:
++            An absolute URI that identifies the specific occurrence of the problem.
++            It may or may not yield further information if dereferenced.
++          format: uri
++          example: |
++            /swp/v1/biller/errors/BCID0090000001/provided-X-CORRELATION-ID
++        status:
++          maximum: 600
++          exclusiveMaximum: true
++          minimum: 100
++          type: integer
+           description: |
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Get Business Case
+-      tags:
+-        - Billers
+-    parameters:
+-      - $ref: '#/parameters/header_authorization'
+-    post:
+-      consumes:
+-        - application/pdf
+-      description: |
+-        The creation of a business case in PDF/A-3b format works with a simple
+-        POST request where the PDF is the binary payload of the request. Note
+-        that only one PDF can be submitted at a time.
+-
+-        Validation of the submitted data will take place immediately and the
+-        response either confirms the successful creation of the business case on
+-        the NWP or contains the error details of the validation.
+-      operationId: createBusinessCase
+-      parameters:
+-        - description: >-
+-            Request body for the creation of business case. Required objects
+-            depend on type of business case.
+-          in: body
+-          name: body
+-          required: true
+-          schema:
+-            $ref: '#/definitions/CreateBusinessCaseRequest'
+-      produces:
+-        - application/json
+-      responses:
+-        '201':
+-          description: Business case created
+-          schema:
+-            $ref: '#/definitions/BusinessCaseId'
+-        default:
++            The HTTP status code generated by the origin server for this occurrence of the problem.
++          format: int32
++          example: 400
++        technicalReason:
++          type: string
+           description: |
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Create business case
+-      tags:
+-        - Billers
+-  /events/bill-recipient-email-address-changed:
+-    get:
+-      description: >
+-        This event is triggered after any billerPid registered with the
+-        requesting SWP has submitted a business case with an outdated, so called
+-        historically available email address. It notifies about the changed
+-        email address of a bill recipient, which has been adjusted in eBill.
+-
+-        An email address is considered to be historically available if it was
+-        present up to 15 months prior to the submission time.
+-
+-        The billers are able to submit business cases with historically
+-        available email addresses of a bill recipient. However, latest 15 months
+-        after the email address changed, the billers are required to submit the
+-        business cases with the currently valid email address of the bill
+-
+-        recipient.
+-      operationId: findBillRecipientEmailAddressChangedEvent
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Bill recipient email address changed events found
++            The Technical Description/Reason for engineers might contain addition system information on the problem.
++          example: Some field validations failed
++        title:
++          type: string
++          description: "A short, human readable summary of the problem type."
++          example: Payload has missing or invalid values
++        type:
++          type: string
++          description: |
++            An absolute URI that identifies the problem type.
++            We may provide human-readable documentation for the problem type in the future, when the URI is dereferenced.
++            For now consult the Software Partner API documentation for further information.
++            The URI consists of the /problems endpoint and the documented problem type, see example.
++          format: uri
++          example: /problems/REQUEST_BODY_VALIDATION_FAILED
++          default: about:blank
++    RecipientSubscriptionEvent:
++      title: RecipientSubscriptionEvent
++      required:
++      - eventId
++      type: object
++      properties:
++        accountNumber:
++          type: string
++        billRecipient:
++          $ref: '#/components/schemas/BillRecipient'
++        billRecipientSubscriptionFormFields:
++          type: array
++          items:
++            $ref: '#/components/schemas/BillRecipientSubscriptionFormField'
++        billerId:
++          type: string
++        eventId:
++          type: string
++          description: 'event id '
++          example: "41010560425610180"
++        newStatus:
++          type: string
++        referenceStructured:
++          type: string
++        timestamp:
++          type: string
++    ReferenceBill:
++      title: ReferenceBill
++      type: object
++      properties:
++        referenceNumber:
++          type: string
++          description: "Reference number/invoice number of the referenced business\
++            \ case. If the referenced invoice is found, it will be substituted with\
++            \ the new credit note, notification, or invoice. In case of a reminder,\
++            \ the referenced invoice will not be substituted; at time of approval,\
++            \ the invoice recipient decides whether to pay the original invoice or\
++            \ the reminder. If the referenced invoice is not found, a new business\
++            \ case is created."
++          example: BCID8FC1AE666B65449EAFEA65AD64731234
++    Sector:
++      type: object
++      properties:
++        id:
++          maxLength: 14
++          pattern: "SCID[0-9]{10}"
++          type: string
++          description: A unique id for this sector.
++          example: SCID0000000000
++        localizedData:
++          type: object
++          properties:
++            eng:
++              $ref: '#/components/schemas/LocalizedSectorData'
++            fre:
++              $ref: '#/components/schemas/LocalizedSectorData'
++            ger:
++              $ref: '#/components/schemas/LocalizedSectorData'
++            ita:
++              $ref: '#/components/schemas/LocalizedSectorData'
++    SinglePayment:
++      title: SinglePayment
++      required:
++      - paymentInformation
++      type: object
++      properties:
++        paymentInformation:
++          $ref: '#/components/schemas/PaymentInformation'
++    TotalAmount:
++      title: TotalAmount
++      required:
++      - currencyCode
++      - value
++      type: object
++      properties:
++        currencyCode:
++          type: string
++          description: "Currency code according to ISO 4217 When using QR-IBAN or\
++            \ ESR-participant number, only CHF and EUR are allowed."
++          example: CHF
++        value:
++          type: string
++          description: "Maximum amount `99'999'999.99` for invoices, instalment invoices,\
++            \ reminders and credit notes. Minimal amount `-99'999'999.99` to maximum\
++            \ amount `99'999'999.99` for advice notes. Amount must be greater than\
++            \ `0` for invoices, instalment invoices and reminders. Amount must be\
++            \ ≥ `0 for credit notes. If an IBAN or QR-IBAN is used for invoices or\
++            \ instalments of an instalment invoice, the amount does not have to be\
++            \ supplied (compatibility QR invoice)."
++          example: "10"
++    WorkFlow:
++      title: WorkFlow
++      required:
++      - amountPaid
++      - netAmount
++      - vatEnterpriseIdentificationNumbers
++      - vatRates
++      type: object
++      properties:
++        amountPaid:
++          $ref: '#/components/schemas/TotalAmount'
++        caseReferenceForBillRecipient:
++          type: string
++          description: Association reference to be used by the invoice recipient to
++            allocate the business case in his bookkeeping
++        deliveryDateEnd:
++          type: string
++          description: Delivery date or end date of the service provision
++          example: YYYY-MM-DD
++        deliveryDateStart:
++          type: string
++          description: "Start date of the service provision, in case it is different\
++            \ than deliveryDateEnd"
++          example: YYYY-MM-DD
++        netAmount:
++          $ref: '#/components/schemas/TotalAmount'
++        vatEnterpriseIdentificationNumbers:
++          type: array
++          description: VAT-UID of the invoice issuer. Presentation without punctuation
++            (e.g. CHE123456789MWST).
++          example:
++          - str1
++          - str2
++          - str3
++          items:
++            type: string
++        vatRates:
++          type: array
++          description: VAT information per VAT rate
++          items:
++            type: string
++  responses:
++    BadRequest:
++      description: bad request
++      content:
++        '*/*':
+           schema:
+-            items:
+-              $ref: '#/definitions/BillRecipientEmailAddressChangedEvent'
+-            type: array
+-        default:
+-          description: >
+-            See section Error Handling of the Network Partner API documentation
+-            for further details about errors and error handling.
++            $ref: '#/components/schemas/Problem'
++    Forbidden:
++      description: forbidden
++      content:
++        '*/*':
+           schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Find events for bill recipients email address changes
+-      tags:
+-        - Events
+-    parameters:
+-      - $ref: '#/parameters/query_lastEventId'
+-      - $ref: '#/parameters/query_limitEvents'
+-      - $ref: '#/parameters/header_authorization'
+-  /events/bill-recipient-subscription-status-changed:
+-    get:
+-      description: >
+-        Events for status changes on bill recipient subscriptions to any
+-        billerPid registered with the requesting SWP, regardless if
+-        subscriptions have been done without registration form (event from
+-        infrastructure) or with registration form (no event from
+-        infrastructure).
+-      operationId: findBillRecipientSubscriptionStatusChangedEvents
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Bill recipient subscription changed events found
++            $ref: '#/components/schemas/Problem'
++    NotFound:
++      description: the specified resource was not found
++      content:
++        '*/*':
+           schema:
+-            items:
+-              $ref: '#/definitions/BillRecipientSubscriptionStatusChangedEvent'
+-            type: array
+-        default:
+-          description: >
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
++            $ref: '#/components/schemas/Problem'
++    Unauthorized:
++      description: unauthorized
++      content:
++        '*/*':
+           schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Find events for bill recipient subscriptions which changed status
+-      tags:
+-        - Events
+-    parameters:
+-      - $ref: '#/parameters/query_lastEventId'
+-      - $ref: '#/parameters/query_limitEvents'
+-      - $ref: '#/parameters/header_authorization'
+-  /events/business-case-status-changed:
+-    get:
++            $ref: '#/components/schemas/Problem'
++  parameters:
++    header_authorization:
++      name: Authorization
++      in: header
+       description: |
+-        Events for status changes of bills, advices, credit notes and reminders
+-        which belong to any billerPid registered with the requesting SWP.
+-      operationId: findBusinessCaseStatusChangedEvents
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Business case status changed events found
+-          schema:
+-            items:
+-              $ref: '#/definitions/BusinessCaseStatusChangedEvent'
+-            type: array
+-        default:
+-          description: |
+-            See section Error Handling of the Network Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Find events for business cases which changed status
+-      tags:
+-        - Events
+-    parameters:
+-      - $ref: '#/parameters/query_lastEventId'
+-      - $ref: '#/parameters/query_limitEvents'
+-      - $ref: '#/parameters/header_authorization'
+-  /events/instalment-status-changed:
+-    get:
++        Access-Token with the prefix "Bearer".
++      required: true
++      schema:
++        type: string
++    header_xBusinessCaseFormat:
++      name: X-BCFORMAT
++      in: header
++      description: Format of the business case.
++      schema:
++        type: string
++        enum:
++        - zugferd.EN16931
++        - zugferd.EXTENDED
++        - zugferd.BasicWL
++        - fscmxml
++        - yellowbill
++        - qrbill
++    header_xBusinessCaseFunction:
++      name: X-BCFUNCTION
++      in: header
++      description: Function of the business case.
++      schema:
++        type: string
++        enum:
++        - bill
++        - creditnote
++        - advice
++        - reminder
++    header_xCorrelationId:
++      name: X-CORRELATION-ID
++      in: header
+       description: |
+-        Events for status changes of instalment bills only which belong to any
+-        billerPid registered with the requesting SWP.
+-      operationId: findInstalmentStatusChangedEvents
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Instalment status changed events found
+-          schema:
+-            items:
+-              $ref: '#/definitions/InstalmentStatusChangedEvent'
+-            type: array
+-        default:
+-          description: |
+-            See section Error Handling of the Network Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Find events for instalments which changed status
+-      tags:
+-        - Events
+-    parameters:
+-      - $ref: '#/parameters/query_lastEventId'
+-      - $ref: '#/parameters/query_limitEvents'
+-      - $ref: '#/parameters/header_authorization'
+-  /healthcheck:
+-    get:
+-      description: Returns a status message of the system.
+-      operationId: healthCheckForGet
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Healthcheck successful
+-          schema:
+-            $ref: '#/definitions/HealthCheckResponse'
+-        default:
+-          description: >
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Health check using GET method
+-      tags:
+-        - Healthcheck
+-    parameters:
+-      - $ref: '#/parameters/header_authorization'
+-    post:
+-      consumes:
+-        - application/json
+-      description: Returns the request body. This operation will not modify the system.
+-      operationId: healthCheckForPost
+-      parameters:
+-        - description: Any message which is expected in the response
+-          in: body
+-          name: body
+-          required: true
+-          schema:
+-            $ref: '#/definitions/HealthCheckRequest'
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Healthcheck successful
+-          schema:
+-            $ref: '#/definitions/HealthCheckResponse'
+-        default:
+-          description: >
+-            See section Error Handling of the Software Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Health check using POST method
+-      tags:
+-        - Healthcheck
+-  /sectors:
+-    get:
+-      description: >-
+-        Get the industry sector list of the eBill infrastructure. The sectors
+-        are more or less static and can therefore be cached.
+-      operationId: findSectors
+-      produces:
+-        - application/json
+-      responses:
+-        '200':
+-          description: Sectors found
+-          schema:
+-            items:
+-              $ref: '#/definitions/Sector'
+-            type: array
+-        default:
+-          description: >-
+-            See section Error Handling of the Network Partner API documentation
+-            for further details about errors and error handling.
+-          schema:
+-            $ref: '#/definitions/Problem'
+-      summary: Find Sectors
+-      tags:
+-        - Sectors
+-    parameters:
+-      - $ref: '#/parameters/header_authorization'
+-responses:
+-  BadRequest:
+-    description: bad request
+-    schema:
+-      $ref: '#/definitions/Problem'
+-  Forbidden:
+-    description: forbidden
+-    schema:
+-      $ref: '#/definitions/Problem'
+-  NotFound:
+-    description: the specified resource was not found
+-    schema:
+-      $ref: '#/definitions/Problem'
+-  Unauthorized:
+-    description: unauthorized
+-    schema:
+-      $ref: '#/definitions/Problem'
+-schemes:
+-  - https
+-swagger: '2.0'
+-tags:
+-  - description: >-
+-      All operations that are associated with a biller are located within the
+-      biller resource, including the creation of business cases.
+-    name: Billers
+-  - description: >
+-      **Notification Events**
+-
+-      The event resource allows the software partner to retrieve changes for the
+-      event type 'Subscription status changes'.
+-    name: Events
+-  - description: >
+-      **Industry Sector**
+-
+-      Industry sectors are valid system wide. Each biller will reference one or
+-      several industry sectors.
+-    name: Sectors
+-  - description: >
+-      **System Healthcheck**
+-
+-      This allows to check the basic state of the system (can it be reached,
+-      does authentication and auhorization work, does it respond). As some
+-      infrastructures block certain HTTP methods by default, the healthcheck
+-      allows to test if all required methods (GET, POST) work across all layers.
+-    name: Healthcheck
++        ID which will unambiguously identify this request to the API.
++        **Minimal length**: '1'
++        **Maximal length**: '36'
++      required: true
++      schema:
++        maxLength: 36
++        minLength: 1
++        type: string
++    header_xFilename:
++      name: X-FILENAME
++      in: header
++      description: |
++        Filename for the business case PDF. This is only used for analytical purposes and support. The filename is not visible for the bill recipient.
++        **Minimal length**: '1'
++        **Maximal length**: '99'
++      schema:
++        maxLength: 99
++        minLength: 1
++        type: string
++    query_billerPid:
++      name: billerPid
++      in: query
++      description: |
++        biller PID
++        **Maximal length**: '17'
++        **Example**: '"41NN00BBBBBBBBBPP"'
++        **Pattern**: '41[0-9]{15}'
++      required: true
++      schema:
++        maxLength: 17
++        pattern: "41[0-9]{15}"
++        type: string
++    query_businessCaseId:
++      name: businessCaseId
++      in: query
++      description: |
++        business case id
++        **Maximal length**: '39'
++        **Example**: '"BCID0FB909852BBC4D06AD8336AAE87D7FC9"'
++        **Pattern**: 'BCID[0-9A-Z]{32}'
++      required: true
++      schema:
++        maxLength: 39
++        pattern: "BCID[0-9A-Z]{32}"
++        type: string
++    query_lastEventId:
++      name: lastEventId
++      in: query
++      description: |
++        Id of the last received event. If omitted, the result starts with the oldest available event.
++        **Example**: '"EVID82A65938766547EBBBA39BA6F7B07F24"'
++        **Maximal length**: '39'
++        **Pattern**: '"EVID[0-9A-Z]{32}"'
++      schema:
++        maxLength: 39
++        pattern: "EVID[0-9A-Z]{32}"
++        type: string
++    query_limitEvents:
++      name: limit
++      in: query
++      description: |
++        Maximum number of events one wants to receive (technical maximum is 1000, no more will be returned at once and you have to fetch again to check if there are more)
++      schema:
++        maximum: 1000
++        type: integer
++        default: 100
++x-original-swagger-version: "2.0"
