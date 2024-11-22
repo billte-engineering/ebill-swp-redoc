@@ -1,8 +1,14 @@
 openapi: 3.0.1
 info:
   title: Billte AG Ebill Software Partner APIs
-  description: >
+  description: |
     A set of APIs enabling software/network partners to provide their billers access to billing APIs.
+
+    Documentation and Open API licence of the Software Partner API can be found on https://ebill-swp.org
+
+    Extra information - https://github.com/billte-engineering/ebill-swp-redoc
+
+    Yaml - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/billte_software_partner_api.yaml
   version: 1.0.0
   contact:
     name: Software Partner API
@@ -12,17 +18,17 @@ servers:
   - url: https://guard-api.ebill.billte.ch/swp/v2
 
 tags:
-  - name: Software Partner
+  - name: Biller
 paths:
   /biller:
     post:
       tags:
-        - Software Partner
-      summary: Onboard Biller
+        - Biller
+      summary: Request for On-boarding Biller
       description: >
-        Onboard a biller for a software partner. 
-        
-        
+        Onboard a biller for a software partner.
+
+
         The request body must be signed using the private key, and the signature along with company code should be included in the headers.
       parameters:
         - in: header
@@ -113,7 +119,7 @@ components:
             pattern: 'SCID[0-9]{10}'
           minItems: 1
           maxItems: 100
-        
+
     DefaultLanguage:
       type: string
       description: |
@@ -124,7 +130,7 @@ components:
           - fre
           - ita
           - eng
-          
+
     LocalizedBillerData:
       type: object
       required:
@@ -169,7 +175,7 @@ components:
               example: 446681800
           description: |
             Phone number to contact the biller. It is recommended to provide a specific phone number for questions concerning eBill, if available.
-  
+
             Both the countryCode and the nationalNumber are as defined in International Telecommunication Union (ITU) Recommendation E.164, without any leading zeros.
         website:
           type: string
@@ -185,7 +191,7 @@ components:
           description: |
             Biller logos may be provided and will be scaled down to the necessary size.
             Contains the reference to a logo as binary from the /biller/{billerId}/assets endpoint.
-  
+
             For create/update: if assetId is empty, a new assetId will be returned, were the logo can be uploaded.
           properties:
             name:
@@ -196,7 +202,7 @@ components:
               example: 'company-logo-de'
               description: |
                 the name of the asset
-  
+
                 for create/update: will be taken as asset name if provided
                 the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues
             assetId:
