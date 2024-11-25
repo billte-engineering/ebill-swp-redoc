@@ -8,11 +8,12 @@ info:
 
     The YAML specification for the API can be accessed at <a href="https://github.com/billte-engineering/ebill-swp-redoc/blob/master/billte_software_partner_api.yaml"> billte_software_partner_api.yaml </a>.
 
-    If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
     ### Environments
     + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch
     + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
     + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
+
+    If any errors are found in this documentation or suggestions for improvements arise, feedback would be greatly appreciated. An issue can be opened on our GitHub repository : https://github.com/billte-engineering/ebill-swp-redoc.
 
     <a href="https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json">Sector IDs</a>
   version: 1.0.0
