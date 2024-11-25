@@ -186,31 +186,6 @@ components:
           example: 'http://www.nnn-verlag.info'
         address:
           $ref: '#/components/schemas/BillerAddress'
-        logo:
-          type: object
-          description: |
-            Biller logos may be provided and will be scaled down to the necessary size.
-            Contains the reference to a logo as binary from the /biller/{billerId}/assets endpoint.
-
-            For create/update: if assetId is empty, a new assetId will be returned, were the logo can be uploaded.
-          properties:
-            name:
-              type: string
-              pattern: '[\u0009\u000A\u000D\u0020-\u007E\u0085\u00A0-\uD7FF\uE000-\uFDCF\uFDF0-\uFFFD]*'
-              minLength: 1
-              maxLength: 256
-              example: 'company-logo-de'
-              description: |
-                the name of the asset
-
-                for create/update: will be taken as asset name if provided
-                the pattern restricts to a subset of XML1.0 conform characters to avoid downstream issues
-            assetId:
-              type: string
-              description: 'asset id'
-              maxLength: 14
-              example: 'ASID0000000001'
-              pattern: 'ASID[0-9]{10}'
     BillerAddress:
       type: object
       required:
