@@ -67,6 +67,7 @@ components:
         - localizedData
         - address
         - sectorIds
+        - email
       properties:
         iban:
           type: string
