@@ -10,6 +10,8 @@ info:
 
     Yaml - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/billte_software_partner_api.yaml
 
+    Sector IDs - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json
+
     If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
     ### Environments
     + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch

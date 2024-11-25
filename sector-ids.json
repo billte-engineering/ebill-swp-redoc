@@ -1,0 +1,393 @@
+[
+  {
+    "id": "SCID0000000001",
+    "localizedData": {
+      "ger": {
+        "name": "Öffentliche Verwaltung"
+      },
+      "fre": {
+        "name": "Confédération, cantons, communes"
+      },
+      "ita": {
+        "name": "Organi federali, cantonali, comunali"
+      },
+      "eng": {
+        "name": "Public administration"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000002",
+    "localizedData": {
+      "ger": {
+        "name": "Handel"
+      },
+      "fre": {
+        "name": "Commerce"
+      },
+      "ita": {
+        "name": "Commercio"
+      },
+      "eng": {
+        "name": "Retail"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000003",
+    "localizedData": {
+      "ger": {
+        "name": "Diverse"
+      },
+      "fre": {
+        "name": "Divers"
+      },
+      "ita": {
+        "name": "Diversi"
+      },
+      "eng": {
+        "name": "Miscellaneous"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000004",
+    "localizedData": {
+      "ger": {
+        "name": "Finanzinstitute"
+      },
+      "fre": {
+        "name": "Instituts financiers"
+      },
+      "ita": {
+        "name": "Istituti finanziari"
+      },
+      "eng": {
+        "name": "Financial institution"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000005",
+    "localizedData": {
+      "ger": {
+        "name": "Informationstechnologie"
+      },
+      "fre": {
+        "name": "Informatique"
+      },
+      "ita": {
+        "name": "Informatica"
+      },
+      "eng": {
+        "name": "Information technology"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000006",
+    "localizedData": {
+      "ger": {
+        "name": "Kreditkarte/Kundenkarte"
+      },
+      "fre": {
+        "name": "Cartes de crédit et cartes clients"
+      },
+      "ita": {
+        "name": "Carte di credito e tessere clienti"
+      },
+      "eng": {
+        "name": "Credit card/Store card"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000007",
+    "localizedData": {
+      "ger": {
+        "name": "Liegenschaftsverwaltung"
+      },
+      "fre": {
+        "name": "Gérance d'immeubles"
+      },
+      "ita": {
+        "name": "Amministrazione immobili"
+      },
+      "eng": {
+        "name": "Property Management"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000008",
+    "localizedData": {
+      "ger": {
+        "name": "Medien"
+      },
+      "fre": {
+        "name": "Médias"
+      },
+      "ita": {
+        "name": "Media"
+      },
+      "eng": {
+        "name": "Media"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000009",
+    "localizedData": {
+      "ger": {
+        "name": "Medizin"
+      },
+      "fre": {
+        "name": "Médecine"
+      },
+      "ita": {
+        "name": "Medicina"
+      },
+      "eng": {
+        "name": "Medicine"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000010",
+    "localizedData": {
+      "ger": {
+        "name": "Pharma"
+      },
+      "fre": {
+        "name": "Industrie pharmaceutique"
+      },
+      "ita": {
+        "name": "Industria farmaceutica"
+      },
+      "eng": {
+        "name": "Pharmaceuticals"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000011",
+    "localizedData": {
+      "ger": {
+        "name": "Gesundheitswesen"
+      },
+      "fre": {
+        "name": "Santé publique"
+      },
+      "ita": {
+        "name": "Sanità pubblica"
+      },
+      "eng": {
+        "name": "Healthcare"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000012",
+    "localizedData": {
+      "ger": {
+        "name": "Online-Shop"
+      },
+      "fre": {
+        "name": "Online-Shop"
+      },
+      "ita": {
+        "name": "Online-Shop"
+      },
+      "eng": {
+        "name": "Online-Shop"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000013",
+    "localizedData": {
+      "ger": {
+        "name": "Reisen/Öffentlicher Verkehr"
+      },
+      "fre": {
+        "name": "Voyages/Transport public"
+      },
+      "ita": {
+        "name": "Viaggi/Trasporti pubblici"
+      },
+      "eng": {
+        "name": "Travel/Public transportation"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000014",
+    "localizedData": {
+      "ger": {
+        "name": "Strom, Wasser, Gas"
+      },
+      "fre": {
+        "name": "Electricité, eau, gaz"
+      },
+      "ita": {
+        "name": "Elettricità, acqua, gas"
+      },
+      "eng": {
+        "name": "Electricity, water, gas"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000015",
+    "localizedData": {
+      "ger": {
+        "name": "Telekommunikation, Radio, TV"
+      },
+      "fre": {
+        "name": "Télécommunication, radio, tv"
+      },
+      "ita": {
+        "name": "Telecomunicazione, radio, tv"
+      },
+      "eng": {
+        "name": "Telecommunication, radio, tv"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000016",
+    "localizedData": {
+      "ger": {
+        "name": "Transport/Logistik"
+      },
+      "fre": {
+        "name": "Transport/Logistique"
+      },
+      "ita": {
+        "name": "Trasporto/Logistica"
+      },
+      "eng": {
+        "name": "Transportation/Logistic"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000017",
+    "localizedData": {
+      "ger": {
+        "name": "Treuhand"
+      },
+      "fre": {
+        "name": "Société fiduciaire"
+      },
+      "ita": {
+        "name": "Società fiduciaria"
+      },
+      "eng": {
+        "name": "Trust"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000018",
+    "localizedData": {
+      "ger": {
+        "name": "Beratung"
+      },
+      "fre": {
+        "name": "Société de conseils"
+      },
+      "ita": {
+        "name": "Società di consulenze"
+      },
+      "eng": {
+        "name": "Consulting"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000019",
+    "localizedData": {
+      "ger": {
+        "name": "Verbände, Stiftungen, Vereine"
+      },
+      "fre": {
+        "name": "Associations, fondations"
+      },
+      "ita": {
+        "name": "Associazioni, fondazioni"
+      },
+      "eng": {
+        "name": "Clubs, foundations, associations"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000020",
+    "localizedData": {
+      "ger": {
+        "name": "Versandhandel"
+      },
+      "fre": {
+        "name": "Vente par correspondance"
+      },
+      "ita": {
+        "name": "Vendita per corrispondenza"
+      },
+      "eng": {
+        "name": "Mail order"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000021",
+    "localizedData": {
+      "ger": {
+        "name": "Versicherungen, Krankenkassen"
+      },
+      "fre": {
+        "name": "Assurances, caisses-maladie"
+      },
+      "ita": {
+        "name": "Compagnie assicurative, casse malati"
+      },
+      "eng": {
+        "name": "Insurance, health insurance"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000022",
+    "localizedData": {
+      "ger": {
+        "name": "Grosshandel"
+      },
+      "fre": {
+        "name": "Commerce de gros"
+      },
+      "ita": {
+        "name": "Commercio all'ingrosso"
+      },
+      "eng": {
+        "name": "Wholesale"
+      }
+    }
+  },
+  {
+    "id": "SCID0000000023",
+    "localizedData": {
+      "ger": {
+        "name": "Industrie/Gewerbe"
+      },
+      "fre": {
+        "name": "Industrie/Artisanat"
+      },
+      "ita": {
+        "name": "Industria/Artigianato"
+      },
+      "eng": {
+        "name": "Industry/Commerce"
+      }
+    }
+  }
+]
