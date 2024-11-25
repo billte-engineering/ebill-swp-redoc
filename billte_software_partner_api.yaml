@@ -9,6 +9,13 @@ info:
     Extra information - https://github.com/billte-engineering/ebill-swp-redoc
 
     Yaml - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/billte_software_partner_api.yaml
+
+    If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
+    ### Environments
+    + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch
+    + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
+    + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
+
   version: 1.0.0
   contact:
     name: Software Partner API
