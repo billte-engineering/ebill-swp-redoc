@@ -13,9 +13,7 @@ info:
     + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
     + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
 
-    If any errors are found in this documentation or suggestions for improvements arise, feedback would be greatly appreciated. An issue can be opened on our GitHub repository : https://github.com/billte-engineering/ebill-swp-redoc.
-
-    <a href="https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json">Sector IDs</a>
+    If any errors are found in this documentation or suggestions for improvements arise, feedback would be greatly appreciated. An issue can be opened on our GitHub repository.
   version: 1.0.0
   contact:
     name: Software Partner API
@@ -117,7 +115,7 @@ components:
               $ref: '#/components/schemas/LocalizedBillerData'
         sectorIds:
           type: array
-          description: 'list of assigned sector ids to the biller - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json'
+          description: 'list of assigned sector ids to the biller - <a href="https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json">Sector IDs</a>'
           items:
             type: string
             description: 'sector id'
