@@ -2,15 +2,11 @@ openapi: 3.0.1
 info:
   title: Billte AG Ebill Software Partner APIs
   description: |
-    A set of APIs enabling software/network partners to provide their billers access to billing APIs.
+    This suite of APIs is designed to provide software partners with tools for onboarding and managing their billers (clients).
+    APIs specifically for the management of eBills (billing) are available separately at https://billte-engineering.github.io/ebill-swp-redoc/.
 
-    Documentation and Open API licence of the Software Partner API can be found on https://ebill-swp.org
 
-    Extra information - https://github.com/billte-engineering/ebill-swp-redoc
-
-    Yaml - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/billte_software_partner_api.yaml
-
-    Sector IDs - https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json
+    The YAML specification for the API can be accessed at <a href="https://github.com/billte-engineering/ebill-swp-redoc/blob/master/billte_software_partner_api.yaml"> billte_software_partner_api.yaml </a>.
 
     If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
     ### Environments
@@ -18,6 +14,7 @@ info:
     + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
     + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
 
+    <a href="https://github.com/billte-engineering/ebill-swp-redoc/blob/master/sector-ids.json">Sector IDs</a>
   version: 1.0.0
   contact:
     name: Software Partner API
@@ -81,7 +78,7 @@ components:
         extBillerId:
           type: string
           maxLength: 35
-          description: 'Software Partner ID of the biller, that can be used for tracking the status.'
+          description: 'An external ID assigned to a biller by the software partner, if available. For example, this ID can be used to streamline communication between the software partner and the NWP .'
           example: '6a84f450-6d0e-4474-b643-905617d9b2cb'
         email:
           type: string
