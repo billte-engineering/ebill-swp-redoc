@@ -36,6 +36,19 @@ paths:
 
         The request body must be signed using the private key, and the signature along with company code of the software partner (SwpCode) should be included in the headers.
         Algorithm used for signing - `SHA256withRSA`
+
+
+        Authentication Requirements <br>
+
+        Step 1: Normalize the JSON payload: <br>
+        Sort keys alphabetically. <br>
+        Remove unnecessary whitespace. <br>
+        Step 2: Compute a SHA-256 hash of the normalized payload. <br>
+        Step 3: Sign the hash using your private key with SHA256withRSA and PKCS#1 v1.5 padding. <br>
+        Step 4: Send: <br>
+        The normalized JSON payload in the request body. <br>
+        The Base64-encoded signature in the Signature header.
+
       parameters:
         - in: header
           name: SwpCode
