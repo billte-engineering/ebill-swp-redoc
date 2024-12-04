@@ -35,6 +35,7 @@ paths:
 
 
         The request body must be signed using the private key, and the signature along with company code should be included in the headers.
+        Algorithm used for signing - `SHA256withRSA`
       parameters:
         - in: header
           name: SwpCode
