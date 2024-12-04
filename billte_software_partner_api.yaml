@@ -34,7 +34,7 @@ paths:
         Onboard a biller for a software partner.
 
 
-        The request body must be signed using the private key, and the signature along with company code should be included in the headers.
+        The request body must be signed using the private key, and the signature along with company code of the software partner (SwpCode) should be included in the headers.
         Algorithm used for signing - `SHA256withRSA`
       parameters:
         - in: header
