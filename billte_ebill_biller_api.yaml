@@ -98,7 +98,7 @@ paths:
         found or the biller is not allowed to send bills to the bill recipient.
 
         ### Note:
-        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.   
+        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.
       operationId: searchBillRecipientsForBiller
       parameters:
       - name: Authorization
@@ -114,7 +114,7 @@ paths:
           \ to use \"billRecipientId\" since it is a permenant id of each recipient\
           \ in the SIX infrastructure."
         content:
-          application/json: 
+          application/json:
             schema:
               oneOf:
                 - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequestArray'
@@ -943,7 +943,7 @@ components:
             type: array
             description: 'Defines what kind of eBill Direct Debit submissions are allowed.'
             items:
-              $ref: '#/components/schemas/AllowedEbillDebitSubmission'  
+              $ref: '#/components/schemas/AllowedEbillDebitSubmission'
         additionalProperties: true
     BillRecipientsForBillerSearchRequestArray:
       required:
@@ -2002,6 +2002,12 @@ components:
       properties:
         paymentInformation:
           $ref: '#/components/schemas/PaymentInformation'
+        paymentMode:
+          type: string
+          description: "eBill payment or eBill Direct Debit payment. eBill payment (EBILL): approval by the recipient required. eBill Direct Debit payment (EBILL_DEBIT): automatically collected on the recipient side. Requires a defined eBill Direct Debit submission approval."
+          enum:
+            - EBILL
+            - EBILL_DEBIT
     TotalAmount:
       title: TotalAmount
       required:
