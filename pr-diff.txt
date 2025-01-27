@@ -62,10 +62,10 @@ index 1decaf42..fc8bec8a 100644
 +  description: |
 +    The application programming interface for software partners (Software Partner API) allows communication with an eBill Network Partner.
 +    The eBill service comprises of electronic bills, reminders, credit notes and advices which are summarized under the term "business case". Business cases are delivered from software partners via network partners to the SIX eBill infrastructure and can be received online by bill recipients.
- 
+
 -      **Maximum value**: '99'999'999.99'
 +    Documentation and Open API licence of the Software Partner API can be found on https://ebill-swp.org
- 
+
 -      **Maximal length**: '10'
 -    example: 99.99
 -    type: number
@@ -95,7 +95,7 @@ index 1decaf42..fc8bec8a 100644
 +
 +    ### General Note
 +
-+    These APIs are based on the work of the Working Group eBill-SWP-API. Biller is a member of the group and an active contributer.
++    These APIs are based on the work of the Working Group eBill-SWP-API. Billte is a member of the group and an active contributer.
 +
 +    This documentation has been compiled with the greatest care, but may nevertheless contain errors or inaccuracies. Working Group eBill-SWP-API cannot assume any legal responsibility or any liability for erroneous information or its consequences.
 +
@@ -171,7 +171,7 @@ index 1decaf42..fc8bec8a 100644
 +        found or the biller is not allowed to send bills to the bill recipient.
 +
 +        ### Note:
-+        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.   
++        - This endpoint accepts either a JSON array of objects (preferred) or a single JSON object.
 +      operationId: searchBillRecipientsForBiller
 +      parameters:
 +      - name: Authorization
@@ -187,7 +187,7 @@ index 1decaf42..fc8bec8a 100644
 +          \ to use \"billRecipientId\" since it is a permenant id of each recipient\
 +          \ in the SIX infrastructure."
 +        content:
-+          application/json: 
++          application/json:
 +            schema:
 +              oneOf:
 +                - $ref: '#/components/schemas/BillRecipientsForBillerSearchRequestArray'
@@ -1173,7 +1173,7 @@ index 1decaf42..fc8bec8a 100644
 +            type: array
 +            description: 'Defines what kind of eBill Direct Debit submissions are allowed.'
 +            items:
-+              $ref: '#/components/schemas/AllowedEbillDebitSubmission'  
++              $ref: '#/components/schemas/AllowedEbillDebitSubmission'
 +        additionalProperties: true
 +    BillRecipientsForBillerSearchRequestArray:
 +      required:
@@ -1371,7 +1371,7 @@ index 1decaf42..fc8bec8a 100644
 +          type: string
 +          description: |
 +            ESR participant number, format according to the specifications:
- 
+
 -      Additional properties may be filled according the user input on the
 -      biller\'s registration form.
 -    required:
@@ -1405,7 +1405,7 @@ index 1decaf42..fc8bec8a 100644
 -          Swiss enterprise identification number (UID) without dashes, dots or
 -          extension.
 +            - numerical value with mandatory 9 digits long (unhyphenated)
- 
+
 -          Note that this has to contain the swiss enterprise identification
 -          number (UID) from the commercial register (Handelsregister) which may
 -          be different from the VAT UID (Mehrwertsteuer UID).
@@ -1438,7 +1438,7 @@ index 1decaf42..fc8bec8a 100644
 -          extension.
 +            - structure: VV999999P
 +            - VV = preceding digits, either 01 or 03
- 
+
 -          Note that this has to contain the swiss enterprise identification
 -          number (UID) from the commercial register (Handelsregister) which may
 -          be different from the VAT UID (Mehrwertsteuer UID).
