@@ -2111,6 +2111,8 @@ components:
       properties:
         donationPurpose:
           type: array
+          minItems: 1
+          maxItems: 10
           items:
             $ref: '#/components/schemas/DonationPurpose'
 
@@ -2121,6 +2123,8 @@ components:
       properties:
         proposedDonationAmount:
           type: array
+          minItems: 2
+          maxItems: 5
           items:
             $ref: '#/components/schemas/TotalAmount'
       description: 'The donation inquiry recipient can select one of the proposed donation amounts or enter a free amount.'
