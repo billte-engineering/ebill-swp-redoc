@@ -1193,6 +1193,10 @@ components:
           example: legalName
         postalAddress:
           $ref: '#/components/schemas/PostalAddress'
+        allowedToSubmitDonationInquiries:
+          type: boolean
+          default: false
+          description: 'States whether the biller is allowed to submit donation inquiries. Only billers that have been verified to be non-profit organisations (NPO) may be granted this permission.'
     BillerAuthenticationError:
       required:
       - billerPid
@@ -1284,7 +1288,13 @@ components:
           type: string
           description: |
             the type of the business case
-          example: Bill
+          enum:
+          - NWP_PENDING
+          - OPEN
+          - APPROVED
+          - REJECTED
+          - COMPLETED
+          - DonationInquiry
         businessCaseDate:
           type: string
           description: |
@@ -1383,6 +1393,7 @@ components:
       - CreditNote
       - Advice
       - InstalmentBill
+      - DonationInquiry
     CreateBusinessCaseRequest:
       title: CreateBusinessCaseRequest
       required:
