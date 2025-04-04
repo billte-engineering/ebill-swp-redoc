@@ -1853,10 +1853,14 @@ components:
           example: 202"2-05-05
         payableAmountCanBeModified:
           type: boolean
-          description: "If `true`, then the provided invoice amount is permitted to\
-            \ be altered. If the invoice amount is not provided, the value must be\
-            \ set to `true`. If no value is provided, the eBill infrastructure will\
-            \ automatically set to `true`."
+          description: |
+            If `true`, then the provided invoice amount is permitted to be altered.
+            If the invoice amount is not provided, the value must be set to `true`.
+            If no value is provided, the eBill infrastructure will automatically set to `true`.
+            
+            For donation inquiries:
+            - This field must be set to `true` when proposedDonationAmounts is specified
+            - This allows the donation inquiry recipient to select one of the proposed amounts or enter a free amount
           example: true
     PostalAddress:
       title: PostalAddress
@@ -2038,13 +2042,19 @@ components:
           example: CHF
         value:
           type: string
-          description: "Maximum amount `99'999'999.99` for invoices, instalment invoices,\
-            \ reminders and credit notes. Minimal amount `-99'999'999.99` to maximum\
-            \ amount `99'999'999.99` for advice notes. Amount must be greater than\
-            \ `0` for invoices, instalment invoices and reminders. Amount must be\
-            \ ≥ `0 for credit notes. If an IBAN or QR-IBAN is used for invoices or\
-            \ instalments of an instalment invoice, the amount does not have to be\
-            \ supplied (compatibility QR invoice)."
+          description: |
+            Maximum amount `99'999'999.99` for invoices, instalment invoices,
+            reminders and credit notes. Minimal amount `-99'999'999.99` to maximum
+            amount `99'999'999.99` for advice notes. Amount must be greater than
+            `0` for invoices, instalment invoices and reminders. Amount must be
+            ≥ `0` for credit notes. If an IBAN or QR-IBAN is used for invoices or
+            instalments of an instalment invoice, the amount does not have to be
+            supplied (compatibility QR invoice).
+            
+            For donation inquiries:
+            - The value must be an empty string ("") when proposedDonationAmounts is specified
+            - The value must be an empty string ("") in the paymentInformation.amount when proposedDonationAmounts is specified
+            - The payableAmountCanBeModified must be set to true in paymentInformation
           example: "10"
     WorkFlow:
       title: WorkFlow
