@@ -713,10 +713,50 @@ components:
               description: Country code (ISO 3166-1 alpha 2)
               example: CH
           description: RecipientAddress details
-    BillRecipient:
+    BillRecipientForCreateBusinessCase:
       required:
       - billRecipientId
       - name
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/BillRecipientAddress'
+        billRecipientId:
+          maxLength: 17
+          minLength: 1
+          pattern: "([0-9])*"
+          type: string
+          description: Unique identifier of the invoice recipient (also known as "PID").
+            In some cases (look-up functionality activated by the recipient) it is
+            possible to use the email address (see emailAddress) instead of the billRecipientId.
+            <b>Example:</b> 41010560425610173
+        emailAddress:
+          maxLength: 256
+          minLength: 1
+          type: string
+          description: "Email address of the invoice recipient. Email address is valid\
+            \ if it is specified in the current master data of the infrastructure\
+            \ and, in case it is marked as \"historic\", it has not been marked as\
+            \ \"historic\" for more than 15 months. <b>Example:</b> peter@muster.ch"
+          format: email
+        enterpriseIdentificationNumber:
+          maxLength: 12
+          pattern: "CHE[0-9]{9}"
+          type: string
+          description: |
+            Enterprise Identification Number (UID) for companies as invoice recipients (in the context eBill for Business). UID is valid, if it is specified in the current master data of the infrastructure.
+          example: CHE123456789
+        name:
+          maxLength: 70
+          minLength: 1
+          type: string
+          description: First and last name of the invoice recipient. Alternatively
+            company name.
+          example: "for private bill recipient: Muster, for company name: Muster AG"
+    BillRecipient:
+      required:
+        - billRecipientId
+        - name
       type: object
       properties:
         address:
@@ -763,8 +803,8 @@ components:
           type: string
           description: the type of the bill recipient
           enum:
-          - PRIVATE
-          - COMPANY
+            - PRIVATE
+            - COMPANY
     BillRecipientAddress:
       type: object
       properties:
@@ -1406,7 +1446,7 @@ components:
       type: object
       properties:
         billRecipient:
-          $ref: '#/components/schemas/BillRecipient'
+          $ref: '#/components/schemas/BillRecipientForCreateBusinessCase'
         biller:
           $ref: '#/components/schemas/Biller'
         businessCaseDate:
@@ -1857,7 +1897,7 @@ components:
             If `true`, then the provided invoice amount is permitted to be altered.
             If the invoice amount is not provided, the value must be set to `true`.
             If no value is provided, the eBill infrastructure will automatically set to `true`.
-            
+
             For donation inquiries:
             - This field must be set to `true` when proposedDonationAmounts is specified
             - This allows the donation inquiry recipient to select one of the proposed amounts or enter a free amount
@@ -2050,7 +2090,7 @@ components:
             ≥ `0` for credit notes. If an IBAN or QR-IBAN is used for invoices or
             instalments of an instalment invoice, the amount does not have to be
             supplied (compatibility QR invoice).
-            
+
             For donation inquiries:
             - The value must be an empty string ("") when proposedDonationAmounts is specified
             - The value must be an empty string ("") in the paymentInformation.amount when proposedDonationAmounts is specified
