@@ -28,9 +28,9 @@ info:
 
     If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
     ### Environments
-    + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch
-    + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch
-    + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch
+    + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch/swp/v1
+    + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch/swp/v1
+    + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch/swp/v1
   contact:
     name: Software Partner API
     url: https://guard-api.ebill.billte.ch
@@ -1329,11 +1329,12 @@ components:
           description: |
             the type of the business case
           enum:
-          - NWP_PENDING
-          - OPEN
-          - APPROVED
-          - REJECTED
-          - COMPLETED
+          - Bill
+          - Reminder
+          - CreditNote
+          - Advice
+          - InstalmentBill
+          - DonationInquiry
         businessCaseDate:
           type: string
           description: |
@@ -1350,11 +1351,11 @@ components:
           type: string
           description: the status of the business case
           enum:
-          - NWP_PENDING
-          - OPEN
-          - APPROVED
-          - REJECTED
-          - COMPLETED
+            - CHARGEBACK_INITIATED
+            - OPEN
+            - APPROVED
+            - REJECTED
+            - COMPLETED
         referenceNumber:
           type: string
           description: A business case reference given by the biller. Must be unique
@@ -1416,11 +1417,11 @@ components:
             type: string
             description: the new status of the business case
             enum:
-            - NWP_PENDING
-            - OPEN
-            - APPROVED
-            - REJECTED
-            - COMPLETED
+              - CHARGEBACK_INITIATED
+              - OPEN
+              - APPROVED
+              - REJECTED
+              - COMPLETED
           externalDonationPurposeId:
             type: string
             description: 'optional field only to be used for donation inquiries to represent a potential selection of a donation purpose by the bill recipient, note the connection to the field externalDonationPurposeId from eBill business case specification'
@@ -1790,11 +1791,11 @@ components:
             type: string
             description: the new status of the instalment
             enum:
-            - NWP_PENDING
-            - OPEN
-            - APPROVED
-            - REJECTED
-            - COMPLETED
+              - CHARGEBACK_INITIATED
+              - OPEN
+              - APPROVED
+              - REJECTED
+              - COMPLETED
     Ita:
       title: Ita
       type: object
