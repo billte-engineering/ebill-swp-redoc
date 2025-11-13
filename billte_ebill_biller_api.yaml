@@ -224,7 +224,7 @@ paths:
         description: Request body for the creation of business case. Required objects
           depend on type of business case.
         content:
-          application/pdf:
+          application/json:
             schema:
               $ref: '#/components/schemas/CreateBusinessCaseRequest'
         required: true
