@@ -16,10 +16,6 @@ info:
     * submitting an installment
     * submitting payableAmount
 
-
-
-
-
     ### General Note
 
     These APIs are based on the work of the Working Group eBill-SWP-API. Billte is a member of the group and an active contributor.
@@ -28,9 +24,18 @@ info:
 
     If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our website : https://github.com/billte-engineering/ebill-swp-redoc.
     ### Environments
-    + #### Production environment [code:P] <br> `baseUrl` : https://guard-api.ebill.billte.ch/swp/v1
-    + #### Stable staging environment [code:XP] <br> `baseUrl` : https://guard-api-xp.ebill.billte.ch/swp/v1
-    + #### Unstable staging environment [code:XE] <br> `baseUrl` : https://guard-api-xe.ebill.billte.ch/swp/v1
+
+    - **Production environment [code:P] -**
+
+      `baseUrl` : https://guard-api.ebill.billte.ch/swp/v1
+
+    - **Stable staging environment [code:XP] -**
+
+      `baseUrl` : https://guard-api-xp.ebill.billte.ch/swp/v1
+
+    - **Unstable staging environment [code:XE] -**
+
+      `baseUrl` : https://guard-api-xe.ebill.billte.ch/swp/v1
   contact:
     name: Software Partner API
     url: https://guard-api.ebill.billte.ch
