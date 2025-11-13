@@ -161,7 +161,6 @@ paths:
         description: |
           biller PID
           **Maximal length**: '17'
-          **Example**: '"41NN00BBBBBBBBBPP"'
           **Pattern**: '41[0-9]{15}'
         required: true
         schema:
@@ -997,7 +996,7 @@ components:
           pattern: "([0=9])*"
           type: string
           description: Biller PiD provided by the system
-          example: 41NN00BBBBBBBBBPP
+          example: 41000000000001234
         items:
           type: array
           description: Array of bill recipient search requests
