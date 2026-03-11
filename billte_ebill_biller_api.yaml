@@ -58,6 +58,10 @@ tags:
   description: |
     **System Healthcheck**
     This allows to check the basic state of the system (can it be reached, does authentication and auhorization work, does it respond). As some infrastructures block certain HTTP methods by default, the healthcheck allows to test if all required methods (GET, POST) work across all layers.
+- name: Utils
+  description: |
+    **Utilities**
+    Helper endpoints such as QR code generation. The QR endpoint is open (no Bearer token required).
 paths:
   /billers/authenticate:
     post:
@@ -235,6 +239,89 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BusinessCase'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
+            for further details about errors and error handling.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: body
+  /billers/bill-recipient-subscription-initiations-generic-url:
+    post:
+      tags:
+      - Billers
+      summary: Create subscription initiation generic URL
+      description: |
+        Creates a generic subscription initiation URL for the biller. This URL can be shared with bill recipients (e.g. on print or web) so they can subscribe to eBill for this biller without a registration form. The URL is valid until the given validTo date.
+      operationId: createSubscriptionInitiationGenericUrl
+      parameters:
+      - name: Authorization
+        in: header
+        description: |
+          Access-Token with the prefix "Bearer".
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillRecipientSubscriptionInitiationGenericUrlRequest'
+        required: true
+      responses:
+        "200":
+          description: Subscription initiation generic URL created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionInitiationGenericUrlResponse'
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
+            for further details about errors and error handling.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: body
+  /billers/update-bill-recipient-subscription-initiations-generic-url:
+    put:
+      tags:
+      - Billers
+      summary: Update subscription initiation generic URL
+      description: |
+        Updates an existing generic subscription initiation URL (e.g. extend validity or change subscription info). The URL is identified by subscriptionAtEbillInitiationTokenId returned when the URL was created.
+      operationId: updateSubscriptionInitiationGenericUrl
+      parameters:
+      - name: Authorization
+        in: header
+        description: |
+          Access-Token with the prefix "Bearer".
+        required: true
+        schema:
+          type: string
+      - name: subscriptionAtEbillInitiationTokenId
+        in: query
+        description: |
+          Token ID of the subscription initiation URL to update (returned when the URL was created).
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillRecipientSubscriptionInitiationGenericUrlRequest'
+        required: true
+      responses:
+        "200":
+          description: Subscription initiation generic URL updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionInitiationGenericUrlResponse'
         default:
           description: |
             See section Error Handling of the Software Partner API documentation
@@ -442,6 +529,59 @@ paths:
         default:
           description: |
             See section Error Handling of the Network Partner API documentation
+            for further details about errors and error handling.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /utils/qr:
+    get:
+      tags:
+      - Utils
+      summary: Generate QR code image
+      description: |
+        Generates a Billte-branded QR code as a PNG image. The QR code encodes the provided `data` (e.g. a subscription URL or any string). No authentication is required. The image includes the eBill center logo and is suitable for print or web.
+      operationId: generateQr
+      parameters:
+      - name: data
+        in: query
+        description: |
+          Content to encode in the QR code (e.g. URL or text).
+        required: true
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: |
+          QR cell size in pixels. Clamped to 64–1024; default 500.
+        schema:
+          type: integer
+          minimum: 64
+          maximum: 1024
+          default: 500
+      - name: ecc
+        in: query
+        description: |
+          Error correction level. L, M, Q, or H (default M). Use H for better resilience when the QR has a center logo.
+        schema:
+          type: string
+          enum:
+          - L
+          - M
+          - Q
+          - H
+          default: M
+      responses:
+        "200":
+          description: QR code PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: |
+            See section Error Handling of the Software Partner API documentation
             for further details about errors and error handling.
           content:
             application/json:
@@ -989,6 +1129,30 @@ components:
             items:
               $ref: '#/components/schemas/AllowedEbillDebitSubmission'
         additionalProperties: true
+    BillRecipientSubscriptionInitiationGenericUrlRequest:
+      title: BillRecipientSubscriptionInitiationGenericUrlRequest
+      type: object
+      required:
+      - validTo
+      properties:
+        subscriptionInfo:
+          type: string
+          description: Optional information to attach to the subscription initiation (e.g. reference or label).
+        validTo:
+          type: string
+          description: Validity end date/time of the subscription initiation URL (ISO-8601 recommended).
+    SubscriptionInitiationGenericUrlResponse:
+      title: SubscriptionInitiationGenericUrlResponse
+      type: object
+      description: Response from create or update subscription initiation generic URL. Contains the URL and token id (from eBill infrastructure).
+      properties:
+        subscriptionInitiationUrl:
+          type: string
+          description: The generic subscription initiation URL to share with bill recipients.
+        subscriptionAtEbillInitiationTokenId:
+          type: string
+          description: Token ID identifying this initiation; required when updating the URL via PUT.
+      additionalProperties: true
     BillRecipientsForBillerSearchRequestArray:
       required:
       - billerPid
