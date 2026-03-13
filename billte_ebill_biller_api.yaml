@@ -75,15 +75,15 @@ paths:
         required: true
       responses:
         "200":
-          description: Biller Found
+          description: Biller Found. Response body is wrapped in a `data` object.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BillerAuthenticationResponse'
+                $ref: '#/components/schemas/ApiResponseEnvelopeBillerAuth'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation
-            for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field (string or array of validation errors).
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -116,7 +116,7 @@ paths:
       requestBody:
         description: "Parameters for the search, at least one of the parameters is\
           \ required in addition to the mandatory \"billerPid\". It is recommended\
-          \ to use \"billRecipientId\" since it is a permenant id of each recipient\
+          \ to use \"billRecipientId\" since it is a permanent id of each recipient\
           \ in the SIX infrastructure."
         content:
           application/json:
@@ -136,8 +136,8 @@ paths:
                   - $ref: '#/components/schemas/BillRecipientsForBillerSearchResponseItem'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation
-            for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -149,9 +149,8 @@ paths:
       - Billers
       summary: Get Business Case
       description: |
-        Depending on the accept header, this operation either returns a JSON business case object or the original PDF.
-        The returned JSON object contains one of the business case subtypes -
-        Bill, InstalmentBill, Reminder, CreditNote or Advice.
+        Returns the business case as JSON. The response body is wrapped in a `data` object containing the business case.
+        The business case object contains one of the subtypes - Bill, InstalmentBill, Reminder, CreditNote or Advice.
       operationId: getBusinessCase
       parameters:
       - name: Authorization
@@ -186,15 +185,15 @@ paths:
           type: string
       responses:
         "200":
-          description: Business case found
+          description: Business case found. Response body is wrapped in a `data` object.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BusinessCase'
+                $ref: '#/components/schemas/ApiResponseEnvelopeBusinessCase'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation
-            for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -204,13 +203,12 @@ paths:
       - Billers
       summary: Create business case
       description: |
-        The creation of a business case in PDF/A-3b format works with a simple
-        POST request where the PDF is the binary payload of the request. Note
-        that only one PDF can be submitted at a time.
+        The creation of a business case is done with a POST request with a JSON body (application/json).
+        The request body includes business case metadata and the PDF content as a base64-encoded string
+        in the `content` field (PDF/A-3b format). Only one business case can be submitted per request.
 
-        Validation of the submitted data will take place immediately and the
-        response either confirms the successful creation of the business case on
-        the NWP or contains the error details of the validation.
+        Validation of the submitted data takes place immediately; the response either confirms the
+        successful creation of the business case on the NWP or contains the error details.
       operationId: createBusinessCase
       parameters:
       - name: Authorization
@@ -237,8 +235,8 @@ paths:
                 $ref: '#/components/schemas/BusinessCase'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation
-            for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -291,7 +289,8 @@ paths:
                 $ref: '#/components/schemas/BillRecipientEmailAddressChangedEbillGuardianEvent'
         default:
           description: |
-            See section Error Handling of the Network Partner API documentation for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -340,7 +339,8 @@ paths:
                 $ref: '#/components/schemas/BillRecipientSubscriptionStatusChangedEbillGuardianEvent'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -390,8 +390,8 @@ paths:
                 $ref: '#/components/schemas/BusinessCaseStatusChangedEbillGuardianEvent'
         default:
           description: |
-            See section Error Handling of the Network Partner API documentation
-            for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -441,8 +441,8 @@ paths:
                 $ref: '#/components/schemas/InstalmentStatusChangedEbillGuardianEvent'
         default:
           description: |
-            See section Error Handling of the Network Partner API documentation
-            for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -464,14 +464,15 @@ paths:
           type: string
       responses:
         "200":
-          description: Healthcheck successful
+          description: Healthcheck successful. Response body is wrapped in a `data` object.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthCheckResponse'
+                $ref: '#/components/schemas/ApiResponseEnvelopeHealthCheck'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -499,14 +500,15 @@ paths:
         required: true
       responses:
         "200":
-          description: Healthcheck successful
+          description: Healthcheck successful. Response body is wrapped in a `data` object.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthCheckResponse'
+                $ref: '#/components/schemas/ApiResponseEnvelopeHealthCheck'
         default:
           description: |
-            See section Error Handling of the Software Partner API documentation for further details about errors and error handling.
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -538,8 +540,9 @@ paths:
                 items:
                   $ref: '#/components/schemas/Sector'
         default:
-          description: See section Error Handling of the Network Partner API documentation
-            for further details about errors and error handling.
+          description: |
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
           content:
             application/json:
               schema:
@@ -998,10 +1001,10 @@ components:
         billerPid:
           maxLength: 17
           minLength: 17
-          pattern: "([0=9])*"
+          pattern: "41[0-9]{15}"
           type: string
           description: Biller PiD provided by the system
-          example: 41000000000001234
+          example: "41000000000001234"
         items:
           type: array
           description: Array of bill recipient search requests
@@ -1046,10 +1049,10 @@ components:
         billerPid:
           maxLength: 17
           minLength: 17
-          pattern: "([0=9])*"
+          pattern: "41[0-9]{15}"
           type: string
           description: Biller PiD provided by the system
-          example: 41NN00BBBBBBBBBPP
+          example: "41100012345678901"
         emailAddress:
           maxLength: 256
           minLength: 1
@@ -1252,10 +1255,10 @@ components:
         billerPid:
           maxLength: 17
           minLength: 17
-          pattern: "([0=9])*"
+          pattern: "41[0-9]{15}"
           type: string
           description: Biller PiD provided by the system
-          example: 41NN00BBBBBBBBBPP
+          example: "41100012345678901"
         error:
           maxLength: 300
           minLength: 1
@@ -1281,10 +1284,10 @@ components:
         billerPid:
           maxLength: 17
           minLength: 17
-          pattern: "([0=9])*"
+          pattern: "41[0-9]{15}"
           type: string
           description: Biller PiD provided by the system
-          example: 41NN00BBBBBBBBBPP
+          example: "41100012345678901"
         billerSecret:
           maxLength: 36
           minLength: 36
@@ -1302,10 +1305,10 @@ components:
         billerPid:
           maxLength: 17
           minLength: 17
-          pattern: "([0=9])*"
+          pattern: "41[0-9]{15}"
           type: string
           description: Biller PiD provided by the system
-          example: 41NN00BBBBBBBBBPP
+          example: "41100012345678901"
         expiresIn:
           type: number
           description: Expiration Time for access token in milliseconds
@@ -1999,6 +2002,30 @@ components:
           format: uri
           example: /problems/REQUEST_BODY_VALIDATION_FAILED
           default: about:blank
+    ApiResponseEnvelopeBillerAuth:
+      type: object
+      required:
+        - data
+      description: Success response wrapper. The API returns this envelope for the authenticate endpoint.
+      properties:
+        data:
+          $ref: '#/components/schemas/BillerAuthenticationResponse'
+    ApiResponseEnvelopeHealthCheck:
+      type: object
+      required:
+        - data
+      description: Success response wrapper. The API returns this envelope for healthcheck endpoints.
+      properties:
+        data:
+          $ref: '#/components/schemas/HealthCheckResponse'
+    ApiResponseEnvelopeBusinessCase:
+      type: object
+      required:
+        - data
+      description: Success response wrapper. The API returns this envelope for GET business case by id.
+      properties:
+        data:
+          $ref: '#/components/schemas/BusinessCase'
     RecipientSubscriptionEvent:
       title: RecipientSubscriptionEvent
       required:
