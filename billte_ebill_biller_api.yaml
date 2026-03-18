@@ -1238,10 +1238,6 @@ components:
           description: Legal name of the invoice issuer. This name is also displayed
             in the invoice overview in the eBill customer portal.
           example: legalName
-        enterpriseIdentificationNumber:
-          type: string
-          description: Enterprise Identification Number (UID) of the biller (if available).
-          example: CHE123456789
         postalAddress:
           $ref: '#/components/schemas/Address'
     BillerAuthenticationError:
