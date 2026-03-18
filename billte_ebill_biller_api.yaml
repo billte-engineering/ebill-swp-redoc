@@ -1239,11 +1239,7 @@ components:
             in the invoice overview in the eBill customer portal.
           example: legalName
         postalAddress:
-          $ref: '#/components/schemas/PostalAddress'
-        allowedToSubmitDonationInquiries:
-          type: boolean
-          default: false
-          description: 'States whether the biller is allowed to submit donation inquiries. Only billers that have been verified to be non-profit organisations (NPO) may be granted this permission.'
+          $ref: '#/components/schemas/Address'
     BillerAuthenticationError:
       required:
       - billerPid
