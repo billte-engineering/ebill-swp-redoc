@@ -704,7 +704,7 @@ components:
           type: string
           nullable: true
           description: Optional information to be embedded/associated with the subscription initiation.
-          example: "customerRef=ABC123"
+          example: "Marketing Campaign ABC"
         validTo:
           type: string
           description: Expiration timestamp of the generated URL.
