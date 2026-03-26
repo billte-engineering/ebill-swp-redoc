@@ -58,6 +58,10 @@ tags:
   description: |
     **System Healthcheck**
     This allows to check the basic state of the system (can it be reached, does authentication and auhorization work, does it respond). As some infrastructures block certain HTTP methods by default, the healthcheck allows to test if all required methods (GET, POST) work across all layers.
+- name: Utilities
+  description: |
+    **Utilities**
+    Helper endpoints which are not part of the SIX eBill SWP specification.
 paths:
   /billers/authenticate:
     post:
@@ -233,6 +237,98 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BusinessCase'
+        default:
+          description: |
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: body
+  /billers/bill-recipient-subscription-initiations-generic-url:
+    post:
+      tags:
+      - Billers
+      summary: Create generic subscription initiation URL
+      description: |
+        Creates a **generic** subscription initiation URL.
+
+        Notes:
+        - Requires biller authentication (Bearer token).
+        - The response body is returned **raw** (not wrapped in a `data` envelope).
+      operationId: createSubscriptionInitiationGenericUrl
+      parameters:
+      - name: Authorization
+        in: header
+        description: |
+          Access-Token with the prefix "Bearer".
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillRecipientSubscriptionInitiationGenericUrlRequest'
+      responses:
+        "200":
+          description: Generic subscription initiation URL created (raw upstream result object).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionInitiationGenericUrlResult'
+        default:
+          description: |
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: body
+  /billers/update-bill-recipient-subscription-initiations-generic-url:
+    put:
+      tags:
+      - Billers
+      summary: Update generic subscription initiation URL
+      description: |
+        Updates an existing generic subscription initiation URL.
+
+        Notes:
+        - Requires biller authentication (Bearer token).
+        - The response body is returned **raw** (not wrapped in a `data` envelope).
+      operationId: updateSubscriptionInitiationGenericUrl
+      parameters:
+      - name: Authorization
+        in: header
+        description: |
+          Access-Token with the prefix "Bearer".
+        required: true
+        schema:
+          type: string
+      - name: subscriptionAtEbillInitiationTokenId
+        in: query
+        description: |
+          Token id identifying the generic subscription initiation URL to update.
+        required: true
+        schema:
+          type: string
+          minLength: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillRecipientSubscriptionInitiationGenericUrlRequest'
+      responses:
+        "200":
+          description: Generic subscription initiation URL updated (raw upstream result object).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionInitiationGenericUrlResult'
         default:
           description: |
             Error response. The body may be a Problem object or a simple object with an `error` field.
@@ -547,8 +643,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /utils/qr:
+    get:
+      tags:
+      - Utilities
+      summary: Generate QR code PNG
+      description: |
+        Generates a QR code as a PNG image for the given data string.
+
+        This endpoint is **unauthenticated**.
+      operationId: generateQr
+      parameters:
+      - name: data
+        in: query
+        description: Data to encode into the QR code.
+        required: true
+        schema:
+          type: string
+          minLength: 1
+      - name: size
+        in: query
+        description: QR image size in pixels (backend clamps to a supported range).
+        required: false
+        schema:
+          type: integer
+          default: 500
+          minimum: 64
+          maximum: 1024
+      - name: ecc
+        in: query
+        description: Error correction level. One of `L`, `M`, `Q`, `H`.
+        required: false
+        schema:
+          type: string
+          default: M
+          enum: [L, M, Q, H]
+      responses:
+        "200":
+          description: PNG image.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: |
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   schemas:
+    BillRecipientSubscriptionInitiationGenericUrlRequest:
+      type: object
+      required:
+      - validTo
+      properties:
+        subscriptionInfo:
+          type: string
+          nullable: true
+          description: Optional information to be embedded/associated with the subscription initiation.
+          example: "customerRef=ABC123"
+        validTo:
+          type: string
+          description: Expiration timestamp of the generated URL.
+          example: "2026-12-31T23:59:59Z"
+      description: Request body to create/update a generic subscription initiation URL.
+    SubscriptionInitiationGenericUrlResult:
+      type: object
+      description: Raw upstream result object returned by the API.
+      additionalProperties: true
+      example:
+        genericSubscriptionInitiationUrl: "https://example.com/subscription/generic?token=..."
+        subscriptionAtEbillInitiationTokenId: "d290f1ee-6c54-4b01-90e6-d701748f0851"
     AccountAndReference:
       title: AccountAndReference
       type: object
