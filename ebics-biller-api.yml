@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: EBICS Biller API
+  description: |
+    Biller-facing EBICS API exposed by eBillGuardian.
+
+    ## Authentication flow
+    1. Call **POST /swp/v1/billers/authenticate** with your `billerPid` and `billerSecret`.
+    2. The response contains a JWT `token`. Pass it as `Authorization: Bearer <token>` on every EBICS call.
+    3. The JWT encodes your granted **scopes** (`EBILL`, `EBICS`, or both) based on your account status.
+       - `EBICS` scope is required to call any `/ebics/v1/v3/*` endpoint.
+       - A biller with `ebicsStatus = ACTIVE` will have `EBICS` in their token scopes.
+    4. You do **not** need to pass `ebicsUserId` or `billerId` — these are resolved internally from your JWT.
+  version: 1.1.0
+
+servers:
+  - url: https://api.billte.ch
+    description: Production
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Unauthorized: billerPid not present in token"
+
+    AuthenticateRequest:
+      type: object
+      required: [billerPid, billerSecret]
+      properties:
+        billerPid:
+          type: string
+          example: "41140074442216296"
+        billerSecret:
+          type: string
+          example: "s3cr3t-uuid-value"
+
+    AuthenticateResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "Biller"
+        billerPid:
+          type: string
+          example: "41140074442216296"
+        token:
+          type: string
+          description: JWT containing billerPid, scopes, and expiry
+          example: "eyJhbGci..."
+        expiresIn:
+          type: integer
+          description: Token lifetime in seconds
+          example: 90000
+
+    BTURequest:
+      type: object
+      description: |
+        Upload a file via EBICS BTU (H005).
+        Use the exact `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
+        values from your subscribed order types (call HTD to retrieve them).
+      required: [fileName, serviceName, scope, msgName, fileContent]
+      properties:
+        fileName:
+          type: string
+          example: "payment.xml"
+        serviceName:
+          type: string
+          description: EBICS service name (e.g. MCT, SDD)
+          example: "MCT"
+        scope:
+          type: string
+          example: "CH"
+        serviceOption:
+          type: string
+          nullable: true
+        msgName:
+          type: string
+          example: "pain.001"
+        msgNameVersion:
+          type: string
+          example: "03"
+        msgNameVariant:
+          type: string
+          nullable: true
+        msgNameFormat:
+          type: string
+          nullable: true
+        containerType:
+          type: string
+          nullable: true
+          description: Use null unless your subscribed format specifies a container type
+        signatureFlag:
+          type: boolean
+          example: true
+        signatureFlagEds:
+          type: boolean
+          example: false
+        fileContent:
+          type: string
+          format: byte
+          description: Base64-encoded file content
+
+    BTUResponse:
+      type: object
+      properties:
+        ebicsUserId:
+          type: string
+          example: "PFC00904"
+        status:
+          type: string
+          example: "SUCCESS"
+        transactionId:
+          type: string
+          nullable: true
+        orderId:
+          type: string
+          nullable: true
+        receiptCode:
+          type: string
+          nullable: true
+
+    BTDRequest:
+      type: object
+      description: |
+        Download a file via EBICS BTD (H005).
+        Use the exact service parameters from your subscribed order types (call HTD to retrieve them).
+      required: [serviceName, scope, msgName]
+      properties:
+        serviceName:
+          type: string
+          description: EBICS service name (e.g. EOP, STM, REP, PSR)
+          example: "EOP"
+        scope:
+          type: string
+          example: "CH"
+        serviceOption:
+          type: string
+          nullable: true
+        containerType:
+          type: string
+          nullable: true
+          example: "ZIP"
+        msgName:
+          type: string
+          example: "camt.053"
+        msgNameVersion:
+          type: string
+          example: "04"
+        msgNameVariant:
+          type: string
+          nullable: true
+        msgNameFormat:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          format: date
+          example: "2026-01-01"
+        endDate:
+          type: string
+          format: date
+          example: "2026-04-19"
+
+    BTDResponse:
+      type: object
+      properties:
+        ebicsUserId:
+          type: string
+          example: "PFC00904"
+        status:
+          type: string
+          example: "SUCCESS"
+        data:
+          type: string
+          description: Base64-encoded downloaded file content
+          nullable: true
+        transactionId:
+          type: string
+          nullable: true
+        orderId:
+          type: string
+          nullable: true
+
+    HTDRequest:
+      type: object
+      description: Retrieve the list of subscribed EBICS order types for this biller (H005 HTD v3).
+      properties: {}
+
+    HTDResponse:
+      type: object
+      properties:
+        ebicsUserId:
+          type: string
+          example: "PFC00904"
+        businessTransactionFormats:
+          type: array
+          description: List of subscribed order type combinations. Use these exact values in BTU/BTD requests.
+          items:
+            type: object
+            properties:
+              serviceName:
+                type: string
+                example: "MCT"
+              scope:
+                type: string
+                example: "CH"
+              serviceOption:
+                type: string
+                nullable: true
+              containerType:
+                type: string
+                nullable: true
+              msgName:
+                type: string
+                example: "pain.001"
+              msgNameVersion:
+                type: string
+                nullable: true
+                example: "03"
+              msgNameVariant:
+                type: string
+                nullable: true
+              msgNameFormat:
+                type: string
+                nullable: true
+
+paths:
+  # ════════════════════════════════════════════
+  # AUTHENTICATION (no JWT required)
+  # ════════════════════════════════════════════
+  /swp/v1/billers/authenticate:
+    post:
+      summary: Authenticate – obtain JWT
+      description: |
+        Exchange `billerPid` + `billerSecret` for a JWT.
+
+        The returned token contains `scopes` derived from your account status:
+        - `EBILL` — if your biller is in `EbillOnboarded` status
+        - `EBICS` — if your biller has `ebicsStatus = ACTIVE`
+
+        The `EBICS` scope is required to call any `/ebics/v1/v3/*` endpoint.
+      operationId: authenticateBiller
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticateRequest'
+            example:
+              billerPid: "41140074442216296"
+              billerSecret: "s3cr3t-uuid-value"
+      responses:
+        '200':
+          description: JWT issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticateResponse'
+        '401':
+          description: Invalid credentials or biller not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ════════════════════════════════════════════
+  # HEALTH
+  # ════════════════════════════════════════════
+  /client/ebics/healthcheck:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+
+  # ════════════════════════════════════════════
+  # EBICS v3 (H005) — requires EBICS scope
+  # ════════════════════════════════════════════
+  /client/ebics/v3/htd:
+    post:
+      summary: HTD – List subscribed order types
+      description: |
+        Returns the list of EBICS order types subscribed for this biller at the bank.
+        Use the returned `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
+        values directly in BTU/BTD requests.
+      operationId: v3Htd
+      tags: [EBICS v3]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HTDRequest'
+            example: {}
+      responses:
+        '200':
+          description: List of subscribed order types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTDResponse'
+        '401':
+          description: Unauthorized or missing EBICS scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /client/ebics/v3/btu:
+    post:
+      summary: BTU – Upload file
+      description: |
+        Upload a file to the bank via EBICS H005 BTU.
+
+        Call **HTD** first to retrieve the exact service parameters subscribed for your account.
+        The `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType` must match
+        your subscribed configuration exactly.
+
+        **Example (MCT / pain.001):**
+        ```json
+        {
+          "fileName": "payment.xml",
+          "serviceName": "MCT",
+          "scope": "CH",
+          "serviceOption": null,
+          "msgName": "pain.001",
+          "msgNameVersion": "03",
+          "containerType": null,
+          "signatureFlag": true,
+          "signatureFlagEds": false,
+          "fileContent": "<base64>"
+        }
+        ```
+      operationId: v3Btu
+      tags: [EBICS v3]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BTURequest'
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BTUResponse'
+        '401':
+          description: Unauthorized or missing EBICS scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: EBICS backend error (see message for details)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /client/ebics/v3/btd:
+    post:
+      summary: BTD – Download file
+      description: |
+        Download a file from the bank via EBICS H005 BTD.
+
+        Call **HTD** first to retrieve the exact service parameters subscribed for your account.
+
+        **Common combinations for PFC00904:**
+        | serviceName | msgName | msgNameVersion | containerType |
+        |---|---|---|---|
+        | EOP | camt.053 | 04 or 08 | ZIP |
+        | STM | camt.052 | 04 or 08 | ZIP |
+        | REP | camt.054 | 04 or 08 | ZIP |
+        | PSR | pain.002 | 03 or 10 | ZIP |
+      operationId: v3Btd
+      tags: [EBICS v3]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BTDRequest'
+            example:
+              serviceName: "EOP"
+              scope: "CH"
+              serviceOption: null
+              containerType: "ZIP"
+              msgName: "camt.053"
+              msgNameVersion: "04"
+              startDate: "2026-01-01"
+              endDate: "2026-04-19"
+      responses:
+        '200':
+          description: File downloaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BTDResponse'
+        '401':
+          description: Unauthorized or missing EBICS scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: EBICS backend error (see message for details)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Authentication
+    description: Obtain a JWT before calling any EBICS endpoint
+  - name: Health
+    description: Service health
+  - name: EBICS v3
+    description: EBICS H005 order types (require EBICS scope in JWT)
