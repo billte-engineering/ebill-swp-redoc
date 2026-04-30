@@ -69,7 +69,7 @@ components:
       description: |
         Upload a file via EBICS BTU (H005).
         Use the exact `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
-        values from your subscribed order types (call HTD to retrieve them).
+        values from your subscribed BTF (Business Transaction Formats) Call HTD to retrieve them.
       required: [fileName, serviceName, scope, msgName, fileContent]
       properties:
         fileName:
@@ -135,7 +135,7 @@ components:
       type: object
       description: |
         Download a file via EBICS BTD (H005).
-        Use the exact service parameters from your subscribed order types (call HTD to retrieve them).
+        Use the exact service parameters from your subscribed BTF (Business Transaction Formats) Call HTD to retrieve them.
       required: [serviceName, scope, msgName]
       properties:
         serviceName:
@@ -295,9 +295,9 @@ paths:
   # ════════════════════════════════════════════
   /client/ebics/v3/htd:
     post:
-      summary: HTD – List subscribed order types
+      summary: HTD – List subscribed BTF formats 
       description: |
-        Returns the list of EBICS order types subscribed for this biller at the bank.
+        Returns the list of EBICS BTF (Business Transaction Formats) subscribed for this biller at the bank.
         Use the returned `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
         values directly in BTU/BTD requests.
       operationId: v3Htd
@@ -311,7 +311,7 @@ paths:
             example: {}
       responses:
         '200':
-          description: List of subscribed order types
+          description: List of subscribed BTF (Business Transaction Formats) 
           content:
             application/json:
               schema:
@@ -329,8 +329,8 @@ paths:
       description: |
         Upload a file to the bank via EBICS H005 BTU.
 
-        Call **HTD** first to retrieve the exact service parameters subscribed for your account.
-        The `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType` must match
+        Call **HTD** first to retrieve the exact BTF (Business Transaction Format) parameters subscribed for your account.
+        The `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType` values must match
         your subscribed configuration exactly.
 
         **Example (MCT / pain.001):**
@@ -382,15 +382,15 @@ paths:
       description: |
         Download a file from the bank via EBICS H005 BTD.
 
-        Call **HTD** first to retrieve the exact service parameters subscribed for your account.
+        Call **HTD** first to retrieve the exact BTF (Business Transaction Format) parameters subscribed for your account.
 
-        **Common combinations for PFC00904:**
-        | serviceName | msgName | msgNameVersion | containerType |
+        **Common BTF parameters in European Banks:**
+        | serviceName | msgName | msgNameVersion | containerType | description |
         |---|---|---|---|
-        | EOP | camt.053 | 04 or 08 | ZIP |
-        | STM | camt.052 | 04 or 08 | ZIP |
-        | REP | camt.054 | 04 or 08 | ZIP |
-        | PSR | pain.002 | 03 or 10 | ZIP |
+        | EOP | camt.053 | 04 or 08 | ZIP | End of day statements |
+        | STM | camt.052 | 04 or 08 | ZIP | Intraday statements |
+        | REP | camt.054 | 04 or 08 | ZIP | Credit/Debit notifications |
+        | PSR | pain.002 | 03 or 10 | ZIP | Payment status reports |
       operationId: v3Btd
       tags: [EBICS v3]
       requestBody:
@@ -434,4 +434,4 @@ tags:
   - name: Health
     description: Service health
   - name: EBICS v3
-    description: EBICS H005 order types (require EBICS scope in JWT)
+    description: EBICS H005 operations (require EBICS scope in JWT)
