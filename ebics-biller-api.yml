@@ -67,110 +67,161 @@ components:
     BTURequest:
       type: object
       description: |
-        Upload a file via EBICS BTU (H005).
+        Upload a file (e.g. payment order, direct debit order) via EBICS BTU (H005).
         Use the exact `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
         values from your subscribed BTF (Business Transaction Formats) Call HTD to retrieve them.
       required: [fileName, serviceName, scope, msgName, fileContent]
       properties:
         fileName:
           type: string
+          description: Logical file name for the uploaded payload. Used only for reference on bank side.
           example: "payment.xml"
         serviceName:
           type: string
-          description: EBICS service name (e.g. MCT, SDD)
+          description: BTF service name (e.g. payment or collection service family)
           example: "MCT"
         scope:
           type: string
+          description: BTF scope value defined by the bank for this service
           example: "CH"
         serviceOption:
           type: string
           nullable: true
+          description: Optional BTF service option if required by the bank
         msgName:
           type: string
+          description: Message name of the uploaded format
           example: "pain.001"
         msgNameVersion:
           type: string
+          description: Message name version
           example: "03"
         msgNameVariant:
           type: string
           nullable: true
+          description: Message name variant
+          example: "001"
         msgNameFormat:
           type: string
           nullable: true
+          description: Message format
+          example: "XML"
         containerType:
           type: string
           nullable: true
-          description: Use null unless your subscribed format specifies a container type
+          description: |
+            Container type for the uploaded data. Allowed values include XML, ZIP, and SVC.
+            Use null unless your subscribed format specifies a container type.
+          example: "XML"
         signatureFlag:
           type: boolean
+          description: |
+            Set to true to use default upload method (EBICS upload Method 1) and false to use manual upload method (EBICS Method 2).
+            Maps to BTU order parameter SignatureFlag (present = true).
+            signatureFlag=true: EBICS upload Method 1 (default method) — order is declared for bank-technical electronic signatures (ES) inside EBICS.
+            signatureFlag=false: EBICS Method 2 (manual method) – style upload; order is not routed to Electronic Distributed Signature (EDS) per specification;
+            business approval is outside the normal ES/EDS workflow (bank-specific).
+            Note: Which ES classes are attached (e.g. A, B, E, T) is configured separately on bank side.
           example: true
         signatureFlagEds:
           type: boolean
+          description: |
+            Set to false for fully signed orders, true for partially signed orders.
+            This flag controls whether the bank forwards the order to EDS (Electronic Distributed Signature).
+            Use only when signatureFlag is true; ignored otherwise.
+            signatureFlagEds=true: Order is forwarded to EDS (case for partially signed orders)
+            a) if the submitted ES are not yet sufficient, the bank may place the order in EDS so further signers can add ES via order type HVE;
+            b) if ES are already sufficient, forwarding to EDS has no further effect.
+            signatureFlagEds=false: Order is not forwarded to EDS (normal case for fully signed orders).
+            In case of insufficient ES this normally leads to rejection instead of EDS.
           example: false
         fileContent:
           type: string
           format: byte
-          description: Base64-encoded file content
+          description: |
+            File payload, this field is Base64-encoded (standard Jackson binding for byte[]).
+            The decoded bytes must match the message type implied by the BTF parameters above (msgName, msgNameVersion, msgNameVariant, msgNameFormat, containerType).
+            For example, when msgName is "pain.001", msgNameVersion is "09", and msgNameVariant is "001", the payload must be the Base64 encoding of an XML document
+            that validates against the official ISO 20022 schema pain.001.001.09.xsd (Customer Credit Transfer Initiation).
+            Choose msg/container settings and bytes consistently so the bank receives the format it expects for that order.
 
     BTUResponse:
       type: object
       properties:
         ebicsUserId:
           type: string
-          example: "PFC00904"
+          description: EBICS user identifier used for the request
+          example: "ZKB03305"
         status:
           type: string
+          description: High-level processing status of the BTU operation
           example: "SUCCESS"
+        message:
+          type: string
+          description: Human-readable message describing the BTU processing result
+          nullable: true
         transactionId:
           type: string
           nullable: true
+          description: EBICS transaction identifier returned by the bank
         orderId:
           type: string
           nullable: true
+          description: EBICS order identifier associated with the BTU request (pattern like one letter followed by three alphanumeric characters)
         receiptCode:
           type: string
           nullable: true
+          description: Bank receipt code confirming upload handling (currently always null)
 
     BTDRequest:
       type: object
       description: |
-        Download a file via EBICS BTD (H005).
+        Download a file (e.g. statement, report, etc.) via EBICS BTD (H005).
         Use the exact service parameters from your subscribed BTF (Business Transaction Formats) Call HTD to retrieve them.
       required: [serviceName, scope, msgName]
       properties:
         serviceName:
           type: string
-          description: EBICS service name (e.g. EOP, STM, REP, PSR)
+          description: BTF service name (e.g. account reporting service family)
           example: "EOP"
         scope:
           type: string
+          description: BTF scope value defined by the bank for this service
           example: "CH"
         serviceOption:
           type: string
           nullable: true
+          description: Optional BTF service option if required by the bank
         containerType:
           type: string
           nullable: true
+          description: Container type expected for returned data. Allowed values include XML, ZIP, and SVC.
           example: "ZIP"
         msgName:
           type: string
+          description: Message name of the requested format
           example: "camt.053"
         msgNameVersion:
           type: string
+          description: Message version
           example: "04"
         msgNameVariant:
           type: string
           nullable: true
+          description: Message variant
         msgNameFormat:
           type: string
           nullable: true
+          description: Message format
         startDate:
           type: string
           format: date
+          description: Optional start date (inclusive) for historical data retrieval in yyyy-MM-dd format
           example: "2026-01-01"
         endDate:
           type: string
           format: date
+          description: Optional end date (inclusive) for historical data retrieval in yyyy-MM-dd format
           example: "2026-04-19"
 
     BTDResponse:
@@ -178,24 +229,60 @@ components:
       properties:
         ebicsUserId:
           type: string
-          example: "PFC00904"
+          description: EBICS user identifier used for the request
+          example: "ZKB03305"
         status:
           type: string
+          description: High-level processing status of the BTD operation
           example: "SUCCESS"
-        data:
+        message:
           type: string
-          description: Base64-encoded downloaded file content
+          description: Human-readable message describing the BTD processing result
           nullable: true
+        cloudUrl:
+          type: string
+          nullable: true
+          description: Public signed cloud storage URL for accessing the downloaded file. For security reasons, don't share this URL with anyone. This URL expires after 24 hours.
+        partialFilePath:
+          type: string
+          nullable: true
+          description: Relative path within the cloud storage bucket for the downloaded file
         transactionId:
           type: string
           nullable: true
+          description: EBICS transaction identifier returned by the bank (currently always null)
         orderId:
           type: string
           nullable: true
+          description: EBICS order identifier associated with the BTD request (pattern like one letter followed by three alphanumeric characters)
+        dataAvailabilityStatus:
+          type: string
+          nullable: true
+          description: Data availability status derived from EBICS return codes (e.g. AVAILABLE, NO_DATA, ERROR)
+        headerReturnCode:
+          type: string
+          nullable: true
+          description: Header-level EBICS return code
+        headerReturnText:
+          type: string
+          nullable: true
+          description: Header-level EBICS return text
+        bodyReturnCode:
+          type: string
+          nullable: true
+          description: Body-level EBICS return code
+        bodyReturnText:
+          type: string
+          nullable: true
+          description: Body-level EBICS return text
+        bodyReturnSymbolicName:
+          type: string
+          nullable: true
+          description: Symbolic name for the body-level EBICS return code
 
     HTDRequest:
       type: object
-      description: Retrieve the list of subscribed EBICS order types for this biller (H005 HTD v3).
+      description: Retrieve the list of subscribed EBICS BTF formats for this biller (H005 HTD v3).
       properties: {}
 
     HTDResponse:
@@ -203,10 +290,10 @@ components:
       properties:
         ebicsUserId:
           type: string
-          example: "PFC00904"
+          example: "ZKB03305"
         businessTransactionFormats:
           type: array
-          description: List of subscribed order type combinations. Use these exact values in BTU/BTD requests.
+          description: List of subscribed BTF format combinations. Use these exact values in BTU/BTD requests.
           items:
             type: object
             properties:
@@ -316,6 +403,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTDResponse'
+              examples:
+                htdListingBTFsAndAccounts:
+                  summary: HTD response example listing allowed BTFs and accounts
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    businessTransactionFormats:
+                      - serviceName: "MCT"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: null
+                        msgName: "pain.001"
+                        msgNameVersion: "09"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "MCT"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: null
+                        msgName: "pain.001"
+                        msgNameVersion: "03"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "PSR"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "pain.002"
+                        msgNameVersion: "03"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "PSR"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "pain.002"
+                        msgNameVersion: "10"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "EOP"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "camt.053"
+                        msgNameVersion: "04"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "EOP"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "camt.053"
+                        msgNameVersion: "08"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "REP"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "camt.054"
+                        msgNameVersion: "04"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "REP"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "camt.054"
+                        msgNameVersion: "08"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                    message: null
+                    status: null
+                    accounts:
+                      - id: "12345"
+                        currency: "CHF"
+                        description: null
+                        accountHolder: "Mustermann AG"
+                        structuredAccountNumbers:
+                          - value: "CH3900700115651849173"
+                            international: true
+                          - value: "651849173"
+                            international: false
+                        nationalAccountNumbers: []
+                        structuredBankCodes:
+                          - value: "RAIFCH22XXX"
+                            international: true
+                            prefix: null
+                        nationalBankCodes:
+                          - value: "81356"
+                            format: "other"
         '401':
           description: Unauthorized or missing EBICS scope
           content:
@@ -327,27 +504,11 @@ paths:
     post:
       summary: BTU – Upload file
       description: |
-        Upload a file to the bank via EBICS H005 BTU.
+        Upload a file (e.g. payment order, direct debit order) to the bank via EBICS H005 BTU.
 
         Call **HTD** first to retrieve the exact BTF (Business Transaction Format) parameters subscribed for your account.
         The `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType` values must match
         your subscribed configuration exactly.
-
-        **Example (MCT / pain.001):**
-        ```json
-        {
-          "fileName": "payment.xml",
-          "serviceName": "MCT",
-          "scope": "CH",
-          "serviceOption": null,
-          "msgName": "pain.001",
-          "msgNameVersion": "03",
-          "containerType": null,
-          "signatureFlag": true,
-          "signatureFlagEds": false,
-          "fileContent": "<base64>"
-        }
-        ```
       operationId: v3Btu
       tags: [EBICS v3]
       requestBody:
@@ -356,6 +517,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BTURequest'
+            examples:
+              pain001SwissPaymentOrder:
+                summary: Swiss payment order upload (pain.001.001.09)
+                description: Example BTU request for a Swiss payment order.
+                value:
+                  fileName: "pain.001.001.09.xml"
+                  serviceName: "MCT"
+                  scope: "CH"
+                  msgName: "pain.001"
+                  msgNameVersion: "09"
+                  signatureFlag: true
+                  signatureFlagEds: true
+                  fileContent: "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPERvY3VtZW50IHhtbG5zPSJ1cm46aXNvOnN0ZDppc286MjAwMjI6dGVjaDp4c2Q6cGFpbi4wMDEuMDAxLjA5Ij4KICA8Q3N0bXJDZHRUcmZJbml0bj4KICAgIDxHcnBIZHI+CiAgICAgIDxNc2dJZD5NU0ctMjAyNjA0MjctMjIwNzE5LTVFRUY8L01zZ0lkPgogICAgICA8Q3JlRHRUbT4yMDI2LTA0LTI3VDIyOjA3OjE5PC9DcmVEdFRtPgogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPgogICAgICA8Q3RybFN1bT4xMDAuMDA8L0N0cmxTdW0+CiAgICAgIDxJbml0Z1B0eT4KICAgICAgICA8Tm0+UG9zdEZpbmFuY2UgVGVzdCBEZWJ0b3I8L05tPgogICAgICA8L0luaXRnUHR5PgogICAgPC9HcnBIZHI+CiAgICA8UG10SW5mPgogICAgICA8UG10SW5mSWQ+UE1ULTIwMjYwNDI3LTIyMDcxOS01RUVGPC9QbXRJbmZJZD4KICAgICAgPFBtdE10ZD5UUkY8L1BtdE10ZD4KICAgICAgPEJ0Y2hCb29rZz50cnVlPC9CdGNoQm9va2c+CiAgICAgIDxOYk9mVHhzPjE8L05iT2ZUeHM+CiAgICAgIDxDdHJsU3VtPjEwMC4wMDwvQ3RybFN1bT4KICAgICAgPFJlcWRFeGN0bkR0PgogICAgICAgIDxEdD4yMDI2LTA0LTI3PC9EdD4KICAgICAgPC9SZXFkRXhjdG5EdD4KICAgICAgPERidHI+CiAgICAgICAgPE5tPlBvc3RGaW5hbmNlIFRlc3QgRGVidG9yPC9ObT4KICAgICAgPC9EYnRyPgogICAgICA8RGJ0ckFjY3Q+CiAgICAgICAgPElkPgogICAgICAgICAgPElCQU4+Q0g5MzAwNzYyMDExNjIzODUyOTU3PC9JQkFOPgogICAgICAgIDwvSWQ+CiAgICAgIDwvRGJ0ckFjY3Q+CiAgICAgIDxEYnRyQWd0PgogICAgICAgIDxGaW5JbnN0bklkPgogICAgICAgICAgPEJJQ0ZJPlBPRklDSEJFWFhYPC9CSUNGST4KICAgICAgICA8L0Zpbkluc3RuSWQ+CiAgICAgIDwvRGJ0ckFndD4KICAgICAgPENocmdCcj5TTEVWPC9DaHJnQnI+CiAgICAgIDxDZHRUcmZUeEluZj4KICAgICAgICA8UG10SWQ+CiAgICAgICAgICA8SW5zdHJJZD5JTlNULTIwMjYwNDI3LTIyMDcxOS01RUVGPC9JbnN0cklkPgogICAgICAgICAgPEVuZFRvRW5kSWQ+RTJFLTIwMjYwNDI3LTIyMDcxOS01RUVGPC9FbmRUb0VuZElkPgogICAgICAgIDwvUG10SWQ+CiAgICAgICAgPEFtdD4KICAgICAgICAgIDxJbnN0ZEFtdCBDY3k9IkNIRiI+MTAwLjAwPC9JbnN0ZEFtdD4KICAgICAgICA8L0FtdD4KICAgICAgICA8Q2R0ckFndD4KICAgICAgICAgIDxGaW5JbnN0bklkPgogICAgICAgICAgICA8QklDRkk+UE9GSUNIQkVYWFg8L0JJQ0ZJPgogICAgICAgICAgPC9GaW5JbnN0bklkPgogICAgICAgIDwvQ2R0ckFndD4KICAgICAgICA8Q2R0cj4KICAgICAgICAgIDxObT5Qb3N0RmluYW5jZSBUZXN0IENyZWRpdG9yPC9ObT4KICAgICAgICA8L0NkdHI+CiAgICAgICAgPENkdHJBY2N0PgogICAgICAgICAgPElkPgogICAgICAgICAgICA8SUJBTj5DSDkzMDA3NjIwMTE2MjM4NTI5NTc8L0lCQU4+CiAgICAgICAgICA8L0lkPgogICAgICAgIDwvQ2R0ckFjY3Q+CiAgICAgICAgPFJtdEluZj4KICAgICAgICAgIDxVc3RyZD5UZXN0IHBheW1lbnQ8L1VzdHJkPgogICAgICAgIDwvUm10SW5mPgogICAgICA8L0NkdFRyZlR4SW5mPgogICAgPC9QbXRJbmY+CiAgPC9Dc3RtckNkdFRyZkluaXRuPgo8L0RvY3VtZW50Pgo="
+              pain008SepaDirectDebitOrder:
+                summary: SEPA direct debit order upload (pain.008.001.08)
+                description: Example BTU request for a SEPA direct debit order.
+                value:
+                  fileName: "pain.008.001.08.xml"
+                  serviceName: "SDD"
+                  scope: "CH"
+                  msgName: "pain.008"
+                  signatureFlag: true
+                  signatureFlagEds: true
+                  fileContent: "PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPERvY3VtZW50IHhtbG5zPSJ1cm46aXNvOnN0ZDppc286MjAwMjI6dGVjaDp4c2Q6cGFpbi4wMDguMDAxLjA4Ij4KICA8Q3N0bXJEcmN0RGJ0SW5pdG4+CiAgICA8R3JwSGRyPgogICAgICA8TXNnSWQ+TVNHLTIwMjYwNDI3LTIyMDczMi1GNjAyPC9Nc2dJZD4KICAgICAgPENyZUR0VG0+MjAyNi0wNC0yN1QyMjowNzozMjwvQ3JlRHRUbT4KICAgICAgPE5iT2ZUeHM+MTwvTmJPZlR4cz4KICAgICAgPEN0cmxTdW0+NjU0My4xNDwvQ3RybFN1bT4KICAgICAgPEluaXRnUHR5PgogICAgICAgIDxObT5Qb3N0RmluYW5jZSBUZXN0IENyZWRpdG9yPC9ObT4KICAgICAgPC9Jbml0Z1B0eT4KICAgIDwvR3JwSGRyPgogICAgPFBtdEluZj4KICAgICAgPFBtdEluZklkPlBNVC0yMDI2MDQyNy0yMjA3MzItRjYwMjwvUG10SW5mSWQ+CiAgICAgIDxQbXRNdGQ+REQ8L1BtdE10ZD4KICAgICAgPE5iT2ZUeHM+MTwvTmJPZlR4cz4KICAgICAgPEN0cmxTdW0+NjU0My4xNDwvQ3RybFN1bT4KICAgICAgPFBtdFRwSW5mPgogICAgICAgIDxTdmNMdmw+CiAgICAgICAgICA8Q2Q+U0VQQTwvQ2Q+CiAgICAgICAgPC9TdmNMdmw+CiAgICAgICAgPExjbEluc3RybT4KICAgICAgICAgIDxDZD5DT1JFPC9DZD4KICAgICAgICA8L0xjbEluc3RybT4KICAgICAgICA8U2VxVHA+RlJTVDwvU2VxVHA+CiAgICAgIDwvUG10VHBJbmY+CiAgICAgIDxSZXFkQ29sbHRuRHQ+MjAyNi0wNC0yNzwvUmVxZENvbGx0bkR0PgogICAgICA8Q2R0cj4KICAgICAgICA8Tm0+Q3JlZGl0b3IgTmFtZTwvTm0+CiAgICAgIDwvQ2R0cj4KICAgICAgPENkdHJBY2N0PgogICAgICAgIDxJZD4KICAgICAgICAgIDxJQkFOPkRFODcyMDA1MDAwMDEyMzQ1Njc4OTA8L0lCQU4+CiAgICAgICAgPC9JZD4KICAgICAgPC9DZHRyQWNjdD4KICAgICAgPENkdHJBZ3Q+CiAgICAgICAgPEZpbkluc3RuSWQ+CiAgICAgICAgICA8QklDRkk+QkFOS0RFRkZYWFg8L0JJQ0ZJPgogICAgICAgIDwvRmluSW5zdG5JZD4KICAgICAgPC9DZHRyQWd0PgogICAgICA8Q2hyZ0JyPlNMRVY8L0NocmdCcj4KICAgICAgPENkdHJTY2htZUlkPgogICAgICAgIDxJZD4KICAgICAgICAgIDxQcnZ0SWQ+CiAgICAgICAgICAgIDxPdGhyPgogICAgICAgICAgICAgIDxJZD5ERTAwWlpaMDAwOTk5OTk5OTk8L0lkPgogICAgICAgICAgICAgIDxTY2htZU5tPgogICAgICAgICAgICAgICAgPFBydHJ5PlNFUEE8L1BydHJ5PgogICAgICAgICAgICAgIDwvU2NobWVObT4KICAgICAgICAgICAgPC9PdGhyPgogICAgICAgICAgPC9QcnZ0SWQ+CiAgICAgICAgPC9JZD4KICAgICAgPC9DZHRyU2NobWVJZD4KICAgICAgPERyY3REYnRUeEluZj4KICAgICAgICA8UG10SWQ+CiAgICAgICAgICA8SW5zdHJJZD5JTlNULTIwMjYwNDI3LTIyMDczMi1GNjAyPC9JbnN0cklkPgogICAgICAgICAgPEVuZFRvRW5kSWQ+RTJFLTIwMjYwNDI3LTIyMDczMi1GNjAyPC9FbmRUb0VuZElkPgogICAgICAgIDwvUG10SWQ+CiAgICAgICAgPEluc3RkQW10IENjeT0iRVVSIj42NTQzLjE0PC9JbnN0ZEFtdD4KICAgICAgICA8RHJjdERidFR4PgogICAgICAgICAgPE1uZHRSbHRkSW5mPgogICAgICAgICAgICA8TW5kdElkPk1hbmRhdGUtSWQ8L01uZHRJZD4KICAgICAgICAgICAgPER0T2ZTZ250cj4yMDI2LTA0LTI3PC9EdE9mU2dudHI+CiAgICAgICAgICAgIDxBbWRtbnRJbmQ+dHJ1ZTwvQW1kbW50SW5kPgogICAgICAgICAgICA8QW1kbW50SW5mRHRscz4KICAgICAgICAgICAgICA8T3JnbmxDZHRyU2NobWVJZD4KICAgICAgICAgICAgICAgIDxObT5PcmlnaW5hbCBDcmVkaXRvciBOYW1lPC9ObT4KICAgICAgICAgICAgICAgIDxJZD4KICAgICAgICAgICAgICAgICAgPFBydnRJZD4KICAgICAgICAgICAgICAgICAgICA8T3Rocj4KICAgICAgICAgICAgICAgICAgICAgIDxJZD5BQTAwWlpaT3JpZ2luYWxDcmVkaXRvcklEPC9JZD4KICAgICAgICAgICAgICAgICAgICAgIDxTY2htZU5tPgogICAgICAgICAgICAgICAgICAgICAgICA8UHJ0cnk+U0VQQTwvUHJ0cnk+CiAgICAgICAgICAgICAgICAgICAgICA8L1NjaG1lTm0+CiAgICAgICAgICAgICAgICAgICAgPC9PdGhyPgogICAgICAgICAgICAgICAgICA8L1BydnRJZD4KICAgICAgICAgICAgICAgIDwvSWQ+CiAgICAgICAgICAgICAgPC9PcmdubENkdHJTY2htZUlkPgogICAgICAgICAgICA8L0FtZG1udEluZkR0bHM+CiAgICAgICAgICA8L01uZHRSbHRkSW5mPgogICAgICAgIDwvRHJjdERidFR4PgogICAgICAgIDxEYnRyQWd0PgogICAgICAgICAgPEZpbkluc3RuSWQ+CiAgICAgICAgICAgIDxCSUNGST5SQUlGQ0gyMjAwNTwvQklDRkk+CiAgICAgICAgICA8L0Zpbkluc3RuSWQ+CiAgICAgICAgPC9EYnRyQWd0PgogICAgICAgIDxEYnRyPgogICAgICAgICAgPE5tPkRlYnRvciBOYW1lPC9ObT4KICAgICAgICAgIDxQc3RsQWRyPgogICAgICAgICAgICA8U3RydE5tPk11c3RlcmxhbmRzdHJhw59lIDQ4PC9TdHJ0Tm0+CiAgICAgICAgICAgIDxQc3RDZD44MDA1PC9Qc3RDZD4KICAgICAgICAgICAgPFR3bk5tPlp1ZXJpY2g8L1R3bk5tPgogICAgICAgICAgICA8Q3RyeT5DSDwvQ3RyeT4KICAgICAgICAgIDwvUHN0bEFkcj4KICAgICAgICA8L0RidHI+CiAgICAgICAgPERidHJBY2N0PgogICAgICAgICAgPElkPgogICAgICAgICAgICA8SUJBTj5DSDcyODAwMDUwMDAwODg4Nzc3NjY8L0lCQU4+CiAgICAgICAgICA8L0lkPgogICAgICAgIDwvRGJ0ckFjY3Q+CiAgICAgICAgPFVsdG10RGJ0cj4KICAgICAgICAgIDxObT5VbHRpbWF0ZSBEZWJ0b3IgTmFtZTwvTm0+CiAgICAgICAgPC9VbHRtdERidHI+CiAgICAgICAgPFJtdEluZj4KICAgICAgICAgIDxVc3RyZD5VbnN0cnVjdHVyZWQgUmVtaXR0YW5jZSBJbmZvcm1hdGlvbjwvVXN0cmQ+CiAgICAgICAgPC9SbXRJbmY+CiAgICAgIDwvRHJjdERidFR4SW5mPgogICAgPC9QbXRJbmY+CiAgPC9Dc3RtckRyY3REYnRJbml0bj4KPC9Eb2N1bWVudD4K"
       responses:
         '200':
           description: File uploaded successfully
@@ -363,6 +548,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BTUResponse'
+              examples:
+                successfulBtuUpload:
+                  summary: Successful BTU file upload
+                  description: Example response when the BTU file upload completes successfully.
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "SUCCESS"
+                    message: "BTU upload completed successfully"
+                    transactionId: "fe4eabb517d3455d165a532fea059d0c"
+                    orderId: "AAAX"
+                    receiptCode: null
         '401':
           description: Unauthorized or missing EBICS scope
           content:
@@ -370,23 +566,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: EBICS backend error (see message for details)
+          description: |
+            Internal server error. If `EBICS_INVALID_ORDER_IDENTIFIER` is returned, the user must
+            first call the HTD/HAA operation to retrieve a valid list of supported BTF formats for
+            the BTU parameters.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BTUResponse'
+              examples:
+                ebicsInvalidOrderIdentifier:
+                  summary: BTU execution error
+                  description: |
+                    Example when the bank rejects the BTF (e.g. unknown or disallowed BTF format). The
+                    error text includes `[EBICS_INVALID_ORDER_IDENTIFIER]`. Use BTF parameters from HTD/HAA. 
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "ERROR"
+                    message: "Failed to execute BTU: Error in executing BTU :: ZKB03305 :: Error during BTU execution for H005: ZKB03305 :: [EBICS_INVALID_ORDER_IDENTIFIER] Auftragsart unzulässig"
+                    transactionId: null
+                    orderId: null
+                    receiptCode: null
 
   /client/ebics/v3/btd:
     post:
       summary: BTD – Download file
       description: |
-        Download a file from the bank via EBICS H005 BTD.
+        Download a file (e.g. statement, report, etc.) from the bank via EBICS H005 BTD.
 
         Call **HTD** first to retrieve the exact BTF (Business Transaction Format) parameters subscribed for your account.
 
         **Common BTF parameters in European Banks:**
         | serviceName | msgName | msgNameVersion | containerType | description |
-        |---|---|---|---|
+        |---|---|---|---|---|
         | EOP | camt.053 | 04 or 08 | ZIP | End of day statements |
         | STM | camt.052 | 04 or 08 | ZIP | Intraday statements |
         | REP | camt.054 | 04 or 08 | ZIP | Credit/Debit notifications |
@@ -399,15 +611,47 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/BTDRequest'
-            example:
-              serviceName: "EOP"
-              scope: "CH"
-              serviceOption: null
-              containerType: "ZIP"
-              msgName: "camt.053"
-              msgNameVersion: "04"
-              startDate: "2026-01-01"
-              endDate: "2026-04-19"
+            examples:
+              camt053StatementActual:
+                summary: Daily account statement request (Actual)
+                description: Camt053 v08 statement (actual download of not-yet downloaded files from bank).
+                value:
+                  serviceName: "EOP"
+                  scope: "CH"
+                  msgName: "camt.053"
+                  msgNameVersion: "08"
+                  containerType: "ZIP"
+              camt053StatementHistorical:
+                summary: Daily account statement request (Historical)
+                description: Camt053 v08 statement (historical download for given date range).
+                value:
+                  serviceName: "EOP"
+                  scope: "CH"
+                  msgName: "camt.053"
+                  msgNameVersion: "08"
+                  containerType: "ZIP"
+                  startDate: "2026-04-01"
+                  endDate: "2026-04-20"
+              camt052IntradayReportActual:
+                summary: Intraday account report request (Actual)
+                description: Camt052 v08 statement (actual download of not-yet downloaded files from bank).
+                value:
+                  serviceName: "STM"
+                  scope: "CH"
+                  msgName: "camt.052"
+                  msgNameVersion: "08"
+                  containerType: "ZIP"
+              camt052IntradayReportHistorical:
+                summary: Intraday account report request (Historical)
+                description: Camt052 v08 statement (historical download for given date range).
+                value:
+                  serviceName: "STM"
+                  scope: "CH"
+                  msgName: "camt.052"
+                  msgNameVersion: "08"
+                  containerType: "ZIP"
+                  startDate: "2026-04-20"
+                  endDate: "2026-04-20"
       responses:
         '200':
           description: File downloaded successfully
@@ -415,6 +659,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BTDResponse'
+              examples:
+                successfulBtdDownloadDataAvailable:
+                  summary: Successful BTD download - data available
+                  description: Example response when BTD completes successfully and file data is available (signed cloud URL).
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "SUCCESS"
+                    message: "BTD download completed successfully"
+                    cloudUrl: "https://storage.googleapis.com/billte-ebics-client-file-uploads/ebicsDocs/BTD/BTD_2026-05-01T19%3A38%3A28.336061Z_ZKB03305.zip?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=billte-ebics-storage%40billte-ebics-client.iam.gserviceaccount.com%2F20260501%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260501T193829Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=5e2da1915627ed0e4ff5936220c12a1f4e241e96681431f449521b8da9d3c6f33288ed1ebb3bf0561c73d77e8a6e167e5822b743b3de098037d9c6b03d751e6316b1a15fbe"
+                    partialFilePath: "ebicsDocs/BTD/BTD_2026-05-01T19:38:28.336061Z_ZKB03305.zip"
+                    transactionId: null
+                    orderId: null
+                    dataAvailabilityStatus: "AVAILABLE"
+                    headerReturnCode: "000000"
+                    headerReturnText: "[EBICS_OK] OK"
+                    bodyReturnCode: "000000"
+                    bodyReturnText: "000000"
+                    bodyReturnSymbolicName: "EBICS_OK"
+                unsuccessfulBtdDownloadNoData:
+                  summary: Unsuccessful BTD download - data not available
+                  description: Example 200 response when the operation succeeds but no download data exists for the requested date range.
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "SUCCESS"
+                    message: "No data available for the requested date range"
+                    cloudUrl: null
+                    partialFilePath: null
+                    transactionId: null
+                    orderId: null
+                    dataAvailabilityStatus: "NO_DATA"
+                    headerReturnCode: null
+                    headerReturnText: null
+                    bodyReturnCode: "090005"
+                    bodyReturnText: "No download data available"
+                    bodyReturnSymbolicName: "EBICS_NO_DOWNLOAD_DATA_AVAILABLE"
         '401':
           description: Unauthorized or missing EBICS scope
           content:
@@ -422,11 +701,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: EBICS backend error (see message for details)
+          description: |
+            Internal server error. If `EBICS_INVALID_ORDER_IDENTIFIER` is returned, the user must
+            first call the HTD/HAA operation to retrieve a valid list of supported BTF formats for
+            the BTD parameters.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/BTDResponse'
+              examples:
+                ebicsInvalidOrderIdentifier:
+                  summary: BTD execution error
+                  description: |
+                    Example when the bank rejects the BTF (e.g. unknown or disallowed BTF format). The
+                    error text includes `[EBICS_INVALID_ORDER_IDENTIFIER]`. User BTF parameters from HTD/HAA.
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "ERROR"
+                    message: "Failed to execute BTD: Error in executing BTD :: ZKB03305 :: Error during BTD execution: [EBICS_INVALID_ORDER_IDENTIFIER] Auftragsart unzulässig"
+                    fileName: null
+                    filePath: null
+                    cloudUrl: null
+                    partialFilePath: null
+                    transactionId: null
+                    orderId: null
+                    dataAvailabilityStatus: null
+                    headerReturnCode: null
+                    headerReturnText: null
+                    bodyReturnCode: null
+                    bodyReturnText: null
+                    bodyReturnSymbolicName: null
 
 tags:
   - name: Authentication
