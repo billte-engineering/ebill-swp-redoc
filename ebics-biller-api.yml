@@ -8,7 +8,7 @@ info:
     1. Call **POST /swp/v1/billers/authenticate** with your `billerPid` and `billerSecret`.
     2. The response contains a JWT `token`. Pass it as `Authorization: Bearer <token>` on every EBICS call.
     3. The JWT encodes your granted **scopes** (`EBILL`, `EBICS`, or both) based on your account status.
-       - `EBICS` scope is required to call any `/ebics/v1/v3/*` endpoint.
+       - `EBICS` scope is required to call any `/client/ebics/*` endpoint.
        - A biller with `ebicsStatus = ACTIVE` will have `EBICS` in their token scopes.
     4. You do **not** need to pass `ebicsUserId` or `billerId` — these are resolved internally from your JWT.
   version: 1.1.0
@@ -337,7 +337,7 @@ paths:
         - `EBILL` — if your biller is in `EbillOnboarded` status
         - `EBICS` — if your biller has `ebicsStatus = ACTIVE`
 
-        The `EBICS` scope is required to call any `/ebics/v1/v3/*` endpoint.
+        The `EBICS` scope is required to call any `/client/ebics/*` endpoint.
       operationId: authenticateBiller
       tags: [Authentication]
       security: []
