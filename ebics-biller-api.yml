@@ -4,6 +4,24 @@ info:
   description: |
     Biller-facing EBICS API exposed by eBillGuardian.
 
+    The EBICS Biller API allows billers to interact with their bank over EBICS (Electronic Banking Internet Communication Standard, version 3.0 / H005) without operating their own EBICS client. Billte's eBillGuardian acts as a managed EBICS client on behalf of the biller, exposing a thin, JWT-secured REST surface for the most common business transaction formats.
+
+    Examples and extra information - https://github.com/billte-engineering/ebill-swp-redoc.
+
+    Supported operations include:
+
+    * **HTD** – list subscribed BTF formats and bank accounts
+    * **BTU** – upload payment / direct-debit orders to the bank
+    * **BTD** – download statements, reports and notifications from the bank
+    * **HAA** – list available BTF order types at the bank
+    * **HAC** – download customer acknowledgements (status of previous orders)
+
+    ### General Note
+
+    This documentation has been compiled with the greatest care, but may nevertheless contain errors or inaccuracies. Billte cannot assume any legal responsibility or any liability for erroneous information or its consequences.
+
+    If you notice any errors in this documentation or have any suggestions for improvements, we would be grateful to receive your feedback; please open an issue on our repository: https://github.com/billte-engineering/ebill-swp-redoc.
+
     ### Environments
 
     - **Production environment [code:P] -**
@@ -25,6 +43,9 @@ info:
        - `EBICS` scope is required to call any `/client/ebics/*` endpoint.
        - A biller with `ebicsStatus = ACTIVE` will have `EBICS` in their token scopes.
     4. You do **not** need to pass `ebicsUserId` or `billerId` — these are resolved internally from your JWT.
+  contact:
+    name: EBICS Biller API
+    url: https://guard-api.ebill.billte.ch
   version: 1.1.0
 
 servers:
@@ -340,6 +361,108 @@ components:
               msgNameFormat:
                 type: string
                 nullable: true
+        accounts:
+          type: array
+          description: List of bank accounts subscribed for this biller at the bank.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Internal account identifier
+                example: "12345"
+              currency:
+                type: string
+                example: "CHF"
+              description:
+                type: string
+                nullable: true
+              accountHolder:
+                type: string
+                example: "Mustermann AG"
+              structuredAccountNumbers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                      example: "CH3900700115651849173"
+                    international:
+                      type: boolean
+              nationalAccountNumbers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                    international:
+                      type: boolean
+              structuredBankCodes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                      example: "RAIFCH22XXX"
+                    international:
+                      type: boolean
+                    prefix:
+                      type: string
+                      nullable: true
+              nationalBankCodes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value:
+                      type: string
+                      example: "81356"
+                    format:
+                      type: string
+                      example: "other"
+
+    HAARequest:
+      type: object
+      description: Retrieve the list of available BTF order types at the bank (H005 HAA v3).
+      properties: {}
+
+    HAAResponse:
+      type: object
+      description: Pass-through response from the EBICS HAA operation. Shape is defined by the underlying EBICS service and may evolve.
+      additionalProperties: true
+      properties:
+        ebicsUserId:
+          type: string
+          example: "ZKB03305"
+        status:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+
+    HACRequest:
+      type: object
+      description: Retrieve customer acknowledgements / status of previous orders (H005 HAC v3).
+      properties: {}
+
+    HACResponse:
+      type: object
+      description: Pass-through response from the EBICS HAC operation. Shape is defined by the underlying EBICS service and may evolve.
+      additionalProperties: true
+      properties:
+        ebicsUserId:
+          type: string
+          example: "ZKB03305"
+        status:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
 
 paths:
   # ════════════════════════════════════════════
@@ -512,11 +635,24 @@ paths:
                           - value: "81356"
                             format: "other"
         '401':
-          description: Unauthorized or missing EBICS scope
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: "Unauthorized: missing EBICS scope"
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: "Unauthorized: billerPid is not valid or biller is not active"
 
   /client/ebics/v3/btu:
     post:
@@ -578,11 +714,24 @@ paths:
                     orderId: "AAAX"
                     receiptCode: null
         '401':
-          description: Unauthorized or missing EBICS scope
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: "Unauthorized: missing EBICS scope"
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: "Unauthorized: billerPid is not valid or biller is not active"
         '500':
           description: |
             Internal server error. If `EBICS_INVALID_ORDER_IDENTIFIER` is returned, the user must
@@ -713,11 +862,24 @@ paths:
                     bodyReturnText: "No download data available"
                     bodyReturnSymbolicName: "EBICS_NO_DOWNLOAD_DATA_AVAILABLE"
         '401':
-          description: Unauthorized or missing EBICS scope
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: "Unauthorized: missing EBICS scope"
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: "Unauthorized: billerPid is not valid or biller is not active"
         '500':
           description: |
             Internal server error. If `EBICS_INVALID_ORDER_IDENTIFIER` is returned, the user must
@@ -737,8 +899,6 @@ paths:
                     ebicsUserId: "ZKB03305"
                     status: "ERROR"
                     message: "Failed to execute BTD: Error in executing BTD :: ZKB03305 :: Error during BTD execution: [EBICS_INVALID_ORDER_IDENTIFIER] Auftragsart unzulässig"
-                    fileName: null
-                    filePath: null
                     cloudUrl: null
                     partialFilePath: null
                     transactionId: null
@@ -749,6 +909,96 @@ paths:
                     bodyReturnCode: null
                     bodyReturnText: null
                     bodyReturnSymbolicName: null
+
+  /client/ebics/v3/haa:
+    post:
+      summary: HAA – List available BTF order types at the bank
+      description: |
+        Returns the list of BTF (Business Transaction Format) order types currently available at the bank for this biller.
+
+        Use this together with **HTD** to discover which order types you can use in subsequent BTU/BTD requests.
+
+        The request body is empty — `ebicsUserId` and `billerId` are resolved internally from your JWT.
+      operationId: v3Haa
+      tags: [EBICS v3]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HAARequest'
+            example: {}
+      responses:
+        '200':
+          description: HAA executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HAAResponse'
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: "Unauthorized: missing EBICS scope"
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: "Unauthorized: billerPid is not valid or biller is not active"
+
+  /client/ebics/v3/hac:
+    post:
+      summary: HAC – Download customer acknowledgements
+      description: |
+        Returns customer acknowledgements (status of previously submitted orders) from the bank.
+
+        Useful for reconciling the status of BTU uploads after the fact.
+
+        The request body is empty — `ebicsUserId` and `billerId` are resolved internally from your JWT.
+      operationId: v3Hac
+      tags: [EBICS v3]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HACRequest'
+            example: {}
+      responses:
+        '200':
+          description: HAC executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HACResponse'
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: "Unauthorized: missing EBICS scope"
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: "Unauthorized: billerPid is not valid or biller is not active"
 
 tags:
   - name: Authentication
