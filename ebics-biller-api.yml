@@ -4,6 +4,20 @@ info:
   description: |
     Biller-facing EBICS API exposed by eBillGuardian.
 
+    ### Environments
+
+    - **Production environment [code:P] -**
+
+      `baseUrl` : https://guard-api.ebill.billte.ch
+
+    - **Stable staging environment [code:XP] -**
+
+      `baseUrl` : https://guard-api-xp.ebill.billte.ch
+
+    - **Unstable staging environment [code:XE] -**
+
+      `baseUrl` : https://guard-api-xe.ebill.billte.ch
+
     ## Authentication flow
     1. Call **POST /swp/v1/billers/authenticate** with your `billerPid` and `billerSecret`.
     2. The response contains a JWT `token`. Pass it as `Authorization: Bearer <token>` on every EBICS call.
@@ -14,8 +28,12 @@ info:
   version: 1.1.0
 
 servers:
-  - url: https://api.billte.ch
-    description: Production
+  - url: https://guard-api.ebill.billte.ch
+    description: Production [code:P]
+  - url: https://guard-api-xp.ebill.billte.ch
+    description: Stable staging [code:XP]
+  - url: https://guard-api-xe.ebill.billte.ch
+    description: Unstable staging [code:XE]
 
 security:
   - bearerAuth: []
@@ -714,7 +732,7 @@ paths:
                   summary: BTD execution error
                   description: |
                     Example when the bank rejects the BTF (e.g. unknown or disallowed BTF format). The
-                    error text includes `[EBICS_INVALID_ORDER_IDENTIFIER]`. User BTF parameters from HTD/HAA.
+                    error text includes `[EBICS_INVALID_ORDER_IDENTIFIER]`. Use BTF parameters from HTD/HAA.
                   value:
                     ebicsUserId: "ZKB03305"
                     status: "ERROR"
