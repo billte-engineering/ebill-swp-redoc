@@ -42,6 +42,11 @@ info:
   version: 1.0.0
 servers:
 - url: https://guard-api.ebill.billte.ch/swp/v1
+  description: Production [code:P]
+- url: https://guard-api-xp.ebill.billte.ch/swp/v1
+  description: Stable staging [code:XP]
+- url: https://guard-api-xe.ebill.billte.ch/swp/v1
+  description: Unstable staging [code:XE]
 tags:
 - name: Billers
   description: "All operations that are associated with a biller are located within\
