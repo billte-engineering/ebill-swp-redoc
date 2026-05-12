@@ -47,16 +47,12 @@ paths:
                 summary: Intraday account report request (Actual)
                 description: Camt052 v08 Statement (Actual download of not-yet downloaded
                   files from bank.)
-                value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
+                value: {}
               historicalMinimal:
                 summary: Intraday account report request (Historical)
                 description: Camt052 v08 Statement (Historical Download for given
                   date range)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
                   startDate: '2026-04-20'
                   endDate: '2026-04-20'
       responses:
@@ -490,16 +486,12 @@ paths:
                 summary: Daily account statement request (Actual)
                 description: Camt053 v08 Statement (Actual download of not-yet downloaded
                   files from bank.)
-                value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
+                value: {}
               historicalMinimal:
                 summary: Daily account statement request (Historical)
                 description: Camt053 v08 Statement (Historical Download for given
                   date range)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
                   startDate: '2026-04-01'
                   endDate: '2026-04-20'
       responses:
@@ -934,16 +926,12 @@ paths:
                 summary: Credit/Debit Notifications request (Actual)
                 description: Camt054 v08 Credit/Debit Notifications (Actual download
                   of not-yet downloaded files from bank.)
-                value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
+                value: {}
               historicalMinimal:
                 summary: Credit/Debit Notifications request (Historical)
                 description: Camt054 v08 Credit/Debit Notifications (Historical Download
                   for given date range)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
                   startDate: '2026-04-01'
                   endDate: '2026-04-20'
       responses:
@@ -1377,16 +1365,12 @@ paths:
                 summary: Intraday account report request (Actual)
                 description: Camt052 v08 Statement (Actual download of not-yet downloaded
                   files from bank.)
-                value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
+                value: {}
               historicalMinimal:
                 summary: Intraday account report request (Historical)
                 description: Camt052 v08 Statement (Historical Download for given
                   date range)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
                   startDate: '2026-04-20'
                   endDate: '2026-04-20'
       responses:
@@ -2064,16 +2048,12 @@ paths:
                 summary: Daily account statement request (Actual)
                 description: Camt053 v08 Statement (Actual download of not-yet downloaded
                   files from bank.)
-                value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
+                value: {}
               historicalMinimal:
                 summary: Daily account statement request (Historical)
                 description: Camt053 v08 Statement (Historical Download for given
                   date range)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
                   startDate: '2026-04-01'
                   endDate: '2026-04-20'
       responses:
@@ -2727,7 +2707,8 @@ paths:
         ```
         The structure and element names are equivalents of the original XML ISO 20022 elements.
         The response structure is unified for camt.054.001.04 and camt.054.001.08.
-        The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.      operationId: v3C54Iso
+        The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.
+      operationId: v3C54Iso
       tags:
       - EBICS v3
       requestBody:
@@ -2745,16 +2726,12 @@ paths:
                 summary: Credit/Debit Notifications request (Actual)
                 description: Camt054 v08 Credit/Debit Notifications (Actual download
                   of not-yet downloaded files from bank.)
-                value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
+                value: {}
               historicalMinimal:
                 summary: Credit/Debit Notifications request (Historical)
                 description: Camt054 v08 Credit/Debit Notifications (Historical Download
                   for given date range)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: billte-ch
                   startDate: '2026-04-01'
                   endDate: '2026-04-20'
       responses:
@@ -3059,16 +3036,6 @@ components:
           type: string
           nullable: true
           description: Optional correlation id; often set server-side.
-        ebicsUserId:
-          type: string
-          description: EBICS user id (direct EBICS client). When proxied through eBillGuardian,
-            this may be resolved from the JWT.
-          example: ZKB03305
-        billerId:
-          type: string
-          description: Biller tenant id (direct client). May be resolved from JWT
-            when proxied.
-          example: billte-ch
         startDate:
           type: string
           format: date

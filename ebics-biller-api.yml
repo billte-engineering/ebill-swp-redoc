@@ -15,7 +15,7 @@ info:
     * **BTD** – download statements, reports and notifications from the bank
     * **HAA** – BTFs / order types with data ready to retrieve from the bank (retrievable downloads)
     * **HAC** – customer acknowledgements (pain.002; status reasons for prior orders / BTU)
-    * **C52 / C53 / C54 – ISO & canonical parse** – download CAMT.052 / .053 / .054 via BTD without cloud upload and return either ISO-shaped or compact canonical JSON (see `ebics-biller-camt-api.yaml`, included from `POST /client/ebics/v3/C5x-iso` and `…/C5x-canonical` in the main spec)
+    * **C52 / C53 / C54 – ISO & canonical parse** – download CAMT.052 / .053 / .054 via BTD without cloud upload and return either ISO-shaped or compact canonical JSON
 
     ### General Note
 

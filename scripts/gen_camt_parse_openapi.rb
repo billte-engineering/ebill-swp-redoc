@@ -58,25 +58,18 @@ EX = {
   "c54_iso_08" => example_json("C54_ISO_RICH_054_001_08_EXAMPLE")
 }.freeze
 
-REQ_ACTUAL = {
-  "ebicsUserId" => "ZKB03305",
-  "billerId" => "billte-ch"
-}.freeze
+REQ_ACTUAL = {}.freeze
 
 def clone_json(obj)
   JSON.parse(JSON.generate(obj))
 end
 
 REQ_HIST_C52 = {
-  "ebicsUserId" => "ZKB03305",
-  "billerId" => "billte-ch",
   "startDate" => "2026-04-20",
   "endDate" => "2026-04-20"
 }.freeze
 
 REQ_HIST_C53_C54 = {
-  "ebicsUserId" => "ZKB03305",
-  "billerId" => "billte-ch",
   "startDate" => "2026-04-01",
   "endDate" => "2026-04-20"
 }.freeze
@@ -212,8 +205,6 @@ schemas = {
     MD
     "properties" => {
       "requestId" => { "type" => "string", "nullable" => true, "description" => "Optional correlation id; often set server-side." },
-      "ebicsUserId" => { "type" => "string", "description" => "EBICS user id (direct EBICS client). When proxied through eBillGuardian, this may be resolved from the JWT.", "example" => "ZKB03305" },
-      "billerId" => { "type" => "string", "description" => "Biller tenant id (direct client). May be resolved from JWT when proxied.", "example" => "billte-ch" },
       "startDate" => { "type" => "string", "format" => "date", "nullable" => true, "description" => "Historical range start (inclusive)." },
       "endDate" => { "type" => "string", "format" => "date", "nullable" => true, "description" => "Historical range end (inclusive)." },
       "serviceName" => { "type" => "string", "nullable" => true, "description" => "BTF service name (defaults per order type if omitted)." },
