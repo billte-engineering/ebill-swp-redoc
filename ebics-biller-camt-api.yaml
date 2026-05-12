@@ -1,0 +1,3829 @@
+---
+openapi: 3.0.3
+info:
+  title: EBICS Biller API — CAMT parse (fragment)
+  version: 1.0.0
+  description: |-
+    **Fragment** merged into the main EBICS Biller OpenAPI via `$ref` from `ebics-biller-api.yml`.
+
+    Contains CAMT **C52 / C53 / C54** `*-iso` and `*-canonical` path definitions and their schemas (`CamtBtdDerivedParseRequest`, `CamtCanonicalParseResponse` with nested `CamtCanonical*` canonical payload types, `CamtIsoParseResponse`).
+
+    `ErrorResponse` for HTTP 401 is referenced from `ebics-biller-api.yml`.
+
+    Regenerate from Java examples: `RUBYOPT='-EUTF-8:UTF-8' ruby scripts/gen_camt_parse_openapi.rb` (run from repo root `ebill-swp-redoc/`).
+paths:
+  "/client/ebics/v3/C52-canonical":
+    post:
+      summary: C52 - Download canonical shape
+      description: |-
+        Downloads intraday account statements (CAMT.052) via EBICS BTD operation and 
+        returns compact canonical JSON representation of the camt.052 content.
+
+        Main entities in the response are following:
+        ```text
+        document
+        ├── account
+        ├── balances[]
+        └── entities[]
+            └── transactions[]
+        ```
+        The response structure is unified for all camt types: `camt.052`, `camt.053` and `camt.054` and their versions: `04` and `08`.
+        The structure is universal simplification of the complex ISO20022 XML camt documentstructure, providing convinient way to use single UI layout to display all camt types and versions.
+      operationId: v3C52Canonical
+      tags:
+      - EBICS v3
+      requestBody:
+        required: true
+        description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
+          containerType — defaults apply (STM, CH, camt.052, 08, ZIP). Actual vs historical
+          download follows the same rule as BTD: without dates = actual; with startDate/endDate
+          = historical.'
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CamtBtdDerivedParseRequest"
+            examples:
+              actualMinimal:
+                summary: Intraday account report request (Actual)
+                description: Camt052 v08 Statement (Actual download of not-yet downloaded
+                  files from bank.)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+              historicalMinimal:
+                summary: Intraday account report request (Historical)
+                description: Camt052 v08 Statement (Historical Download for given
+                  date range)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+                  startDate: '2026-04-20'
+                  endDate: '2026-04-20'
+      responses:
+        '200':
+          description: Parsed successfully or BTD returned with error payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtCanonicalParseResponse"
+              examples:
+                camt052Canonical00104:
+                  summary: CAMT.052.001.04 — canonical JSON
+                  description: This is example of mapping a camt.052.001.04 to canonical
+                    JSON
+                  value:
+                    parseResult:
+                      documents:
+                      - sourceZipEntry: rich-052-001-04.xml
+                        originalMessageId: AAAASESS-FP-STAT001
+                        documentType: CAMT052
+                        documentId: AAAASESS-FP-RPT001
+                        electronicSequenceNumber: '42'
+                        legalSequenceNumber: '7'
+                        pagination:
+                          pageNumber: '2'
+                          lastPage: false
+                        creationDateTime: '2010-10-18T17:00:00+01:00'
+                        period:
+                          from: '2010-10-18T08:00:00+01:00'
+                          to: '2010-10-18T17:00:00+01:00'
+                        additionalInfo: Report-level additional narrative
+                        account:
+                          iban: SE3550000000054910000003
+                          othrId: SE-BANKDOM-5566778899
+                        accountName: Operating account FINPETROL
+                        accountOwner:
+                          name: FINPETROL
+                          partyId: 556677-8899
+                          country: SE
+                        accountCurrency: SEK
+                        accountServicerBic: AAAASESS
+                        accountServicer:
+                          bic: AAAASESS
+                          name: AAAA BANKEN
+                        balances:
+                        - type: OPBD
+                          subType: SUB-OP-PRTRY
+                          amount: '500000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-15'
+                          availability:
+                          - amount: '250000'
+                            currency: SEK
+                            date: '2010-10-16'
+                          - amount: '100000'
+                            currency: SEK
+                            date: NBR_DAYS:2
+                        - type: CUST_CLOSING
+                          subType: INTM
+                          amount: '435678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-18'
+                        entries:
+                        - entryReference: NTRY-CR-FULL-001
+                          amount: '105678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: BOOK
+                          bookingStatus: camt.052.001.04
+                          isReversal: false
+                          numberOfTransactions: 1
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T13:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: PAYM
+                          bankTransactionCodeStructured:
+                            domain: PAYM
+                            family: RCDT
+                            subFamily: BOOK
+                          additionalEntryInformation: Incoming payment with full transaction
+                            details
+                          transactions:
+                          - instructionId: INSTR-SE-1001
+                            endToEndId: MUELL/FINP/RA12345
+                            transactionId: TX-CR-SE-01
+                            clearingSystemReference: CLR-SE-556677
+                            accountServicerReference: ASR-TX-CR-001
+                            mandateId: MANDATE-DD-SE-2020
+                            checkNumber: CHQ-SE-009988
+                            amount: '105678.50'
+                            currency: SEK
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '9800.00'
+                              currency: EUR
+                            transactionAmount:
+                              amount: '105678.50'
+                              currency: SEK
+                            exchangeRate: 10.7835 EUR→SEK
+                            charges:
+                            - amount: '15.00'
+                              currency: SEK
+                              type: COMM
+                            - amount: '10.50'
+                              currency: SEK
+                              type: OURCHG
+                            counterpartyName: MUELLER GmbH
+                            counterpartyIban: DE89370400440532013000
+                            debtor:
+                              name: MUELLER GmbH
+                              iban: DE89370400440532013000
+                              partyId: DE-ORG-998877
+                              country: DE
+                              address:
+                                streetName: Hauptstrasse 5
+                                postCode: D-10115
+                                townName: Berlin
+                                country: DE
+                            ultimateDebtor:
+                              name: Ultimate Debtor AG
+                              country: AT
+                            remittanceUnstructured: Invoice MUELL-2020-88; Service
+                              period Q4
+                            remittanceStructured:
+                              reference: RF18539007547034
+                              invoicee: Invoicee Oy
+                              invoicer: Invoicer AB
+                              additionalRemittanceInformation:
+                              - Additional remittance line one
+                              - Additional remittance line two
+                            bankTransactionCodeStructured:
+                              proprietary: TX-PRTRY-CD
+                              proprietaryIssuer: AAAA
+                        - entryReference: NTRY-DB-BATCH-002
+                          amount: '200000'
+                          currency: SEK
+                          creditDebitIndicator: DBIT
+                          entryStatus: PDNG
+                          isReversal: true
+                          numberOfTransactions: 20
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T10:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: BANK-PROPR-DBIT
+                          bankTransactionCodeStructured:
+                            proprietary: BANK-PROPR-DBIT
+                            proprietaryIssuer: AAAA
+                          transactions:
+                          - endToEndId: E2E-BATCH-SAMPLE
+                            accountServicerReference: AAAASESS-FP-ACCR-01
+                            amount: '200000'
+                            currency: SEK
+                            creditDebitIndicator: DBIT
+                            counterpartyName: Supplier Consolidated AB
+                            counterpartyIban: SE7280000812790000096986
+                            creditor:
+                              name: Supplier Consolidated AB
+                              iban: SE7280000812790000096986
+                              address:
+                                streetName: Exportgatan 3
+                                townName: Göteborg
+                                country: SE
+                            ultimateCreditor:
+                              name: Ultimate Creditor Group
+                              partyId: PRVT-ULT-CDTR-01
+                              country: 'NO'
+                            remittanceUnstructured: Batch supplier payment ref FINP-0055
+                        - entryReference: NTRY-FX-003
+                          amount: '30000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: INFO
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T15:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: TREA
+                          bankTransactionCodeStructured:
+                            domain: TREA
+                            family: '0002'
+                            subFamily: '0000'
+                          transactions:
+                          - instructionId: FP-004567-FX
+                            endToEndId: AAAASS1085FINPSS
+                            accountServicerReference: AAAASESS-FP-CONF-FX
+                            amount: '3255'
+                            currency: EUR
+                            creditDebitIndicator: CRDT
+                camt052Canonical00108:
+                  summary: CAMT.052.001.08 — canonical JSON
+                  description: This is example of mapping a camt.052.001.08 to canonical
+                    JSON
+                  value:
+                    parseResult:
+                      documents:
+                      - sourceZipEntry: rich-052-001-08.xml
+                        originalMessageId: AAAASESS-FP-STAT001
+                        documentType: CAMT052
+                        documentId: AAAASESS-FP-RPT001
+                        electronicSequenceNumber: '42'
+                        legalSequenceNumber: '7'
+                        pagination:
+                          pageNumber: '2'
+                          lastPage: false
+                        creationDateTime: '2010-10-18T17:00:00+01:00'
+                        period:
+                          from: '2010-10-18T08:00:00+01:00'
+                          to: '2010-10-18T17:00:00+01:00'
+                        additionalInfo: Report-level additional narrative
+                        account:
+                          iban: SE3550000000054910000003
+                          othrId: SE-BANKDOM-5566778899
+                        accountName: Operating account FINPETROL
+                        accountOwner:
+                          name: FINPETROL
+                          partyId: 556677-8899
+                          country: SE
+                        accountCurrency: SEK
+                        accountServicerBic: AAAASESS
+                        accountServicer:
+                          bic: AAAASESS
+                          name: AAAA BANKEN
+                        balances:
+                        - type: OPBD
+                          subType: SUB-OP-PRTRY
+                          amount: '500000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-15'
+                          availability:
+                          - amount: '250000'
+                            currency: SEK
+                            date: '2010-10-16'
+                          - amount: '100000'
+                            currency: SEK
+                            date: NBR_DAYS:2
+                        - type: CUST_CLOSING
+                          subType: INTM
+                          amount: '435678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-18'
+                        entries:
+                        - entryReference: NTRY-CR-FULL-001
+                          amount: '105678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: BOOK
+                          bookingStatus: camt.052.001.08
+                          isReversal: false
+                          numberOfTransactions: 1
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T13:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: PAYM
+                          bankTransactionCodeStructured:
+                            domain: PAYM
+                            family: RCDT
+                            subFamily: BOOK
+                          additionalEntryInformation: Incoming payment with full transaction
+                            details
+                          transactions:
+                          - instructionId: INSTR-SE-1001
+                            endToEndId: MUELL/FINP/RA12345
+                            uetr: 550e8400-e29b-41d4-a716-446655440000
+                            transactionId: TX-CR-SE-01
+                            clearingSystemReference: CLR-SE-556677
+                            accountServicerReference: ASR-TX-CR-001
+                            mandateId: MANDATE-DD-SE-2020
+                            checkNumber: CHQ-SE-009988
+                            amount: '105678.50'
+                            currency: SEK
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '9800.00'
+                              currency: EUR
+                            transactionAmount:
+                              amount: '105678.50'
+                              currency: SEK
+                            exchangeRate: 10.7835 EUR→SEK
+                            charges:
+                            - amount: '15.00'
+                              currency: SEK
+                              type: COMM
+                            - amount: '10.50'
+                              currency: SEK
+                              type: OURCHG
+                            counterpartyName: MUELLER GmbH
+                            counterpartyIban: DE89370400440532013000
+                            debtor:
+                              name: MUELLER GmbH
+                              iban: DE89370400440532013000
+                              partyId: DE-ORG-998877
+                              country: DE
+                              address:
+                                streetName: Hauptstrasse 5
+                                postCode: D-10115
+                                townName: Berlin
+                                country: DE
+                            ultimateDebtor:
+                              name: Ultimate Debtor AG
+                              country: AT
+                            remittanceUnstructured: Invoice MUELL-2020-88; Service
+                              period Q4
+                            remittanceStructured:
+                              reference: RF18539007547034
+                              invoicee: Invoicee Oy
+                              invoicer: Invoicer AB
+                              additionalRemittanceInformation:
+                              - Additional remittance line one
+                              - Additional remittance line two
+                            bankTransactionCodeStructured:
+                              proprietary: TX-PRTRY-CD
+                              proprietaryIssuer: AAAA
+                        - entryReference: NTRY-DB-BATCH-002
+                          amount: '200000'
+                          currency: SEK
+                          creditDebitIndicator: DBIT
+                          entryStatus: PDNG
+                          isReversal: true
+                          numberOfTransactions: 20
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T10:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: BANK-PROPR-DBIT
+                          bankTransactionCodeStructured:
+                            proprietary: BANK-PROPR-DBIT
+                            proprietaryIssuer: AAAA
+                          transactions:
+                          - endToEndId: E2E-BATCH-SAMPLE
+                            uetr: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+                            accountServicerReference: AAAASESS-FP-ACCR-01
+                            amount: '200000'
+                            currency: SEK
+                            creditDebitIndicator: DBIT
+                            counterpartyName: Supplier Consolidated AB
+                            counterpartyIban: SE7280000812790000096986
+                            creditor:
+                              name: Supplier Consolidated AB
+                              iban: SE7280000812790000096986
+                              address:
+                                streetName: Exportgatan 3
+                                townName: Göteborg
+                                country: SE
+                            ultimateCreditor:
+                              name: Ultimate Creditor Group
+                              partyId: PRVT-ULT-CDTR-01
+                              country: 'NO'
+                            remittanceUnstructured: Batch supplier payment ref FINP-0055
+                        - entryReference: NTRY-FX-003
+                          amount: '30000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: INFO
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T15:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: TREA
+                          bankTransactionCodeStructured:
+                            domain: TREA
+                            family: '0002'
+                            subFamily: '0000'
+                          transactions:
+                          - instructionId: FP-004567-FX
+                            endToEndId: AAAASS1085FINPSS
+                            uetr: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                            accountServicerReference: AAAASESS-FP-CONF-FX
+                            amount: '3255'
+                            currency: EUR
+                            creditDebitIndicator: CRDT
+        '401':
+          description: |-
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": "ebics-biller-api.yml#/components/schemas/ErrorResponse"
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT
+                    was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not
+                      active'
+        '500':
+          description: Unexpected server error or BTD error payload (`status` = `ERROR`).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtCanonicalParseResponse"
+  "/client/ebics/v3/C53-canonical":
+    post:
+      summary: C53 - Download canonical shape
+      description: |-
+        Downloads end of day account statements (CAMT.053) via EBICS BTD operation and
+        returns compact canonical JSON representation of the camt.053 content.
+
+        Main entities in the response are following:
+        ```text
+        document
+        ├── account
+        ├── balances[]
+        └── entities[]
+            └── transactions[]
+        ```
+        The response structure is unified for all camt types: `camt.052`, `camt.053` and `camt.054` and their versions: `04` and `08`.
+        The structure is universal simplification of the complex ISO 20022 XML camt document structure, providing a convenient way to use a single UI layout to display all camt types and versions.
+      operationId: v3C53Canonical
+      tags:
+      - EBICS v3
+      requestBody:
+        required: true
+        description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
+          containerType — defaults apply (EOP, CH, camt.053, 08, ZIP). Actual vs historical
+          download follows the same rule as BTD: without dates = actual; with startDate/endDate
+          = historical.'
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CamtBtdDerivedParseRequest"
+            examples:
+              actualMinimal:
+                summary: Daily account statement request (Actual)
+                description: Camt053 v08 Statement (Actual download of not-yet downloaded
+                  files from bank.)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+              historicalMinimal:
+                summary: Daily account statement request (Historical)
+                description: Camt053 v08 Statement (Historical Download for given
+                  date range)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+                  startDate: '2026-04-01'
+                  endDate: '2026-04-20'
+      responses:
+        '200':
+          description: Parsed successfully or BTD returned with error payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtCanonicalParseResponse"
+              examples:
+                camt053Canonical00104:
+                  summary: CAMT.053.001.04 — canonical JSON
+                  description: This is example of mapping a camt.053.001.04 to canonical
+                    JSON
+                  value:
+                    parseResult:
+                      documents:
+                      - sourceZipEntry: rich-053-001-04.xml
+                        originalMessageId: AAAASESS-FP-STAT001
+                        documentType: CAMT053
+                        documentId: AAAASESS-FP-STAT001
+                        electronicSequenceNumber: '42'
+                        legalSequenceNumber: '7'
+                        pagination:
+                          pageNumber: '2'
+                          lastPage: false
+                        creationDateTime: '2010-10-18T17:00:00+01:00'
+                        period:
+                          from: '2010-10-18T08:00:00+01:00'
+                          to: '2010-10-18T17:00:00+01:00'
+                        additionalInfo: Statement-level additional narrative
+                        account:
+                          iban: SE3550000000054910000003
+                          othrId: SE-BANKDOM-5566778899
+                        accountName: Operating account FINPETROL
+                        accountOwner:
+                          name: FINPETROL
+                          partyId: 556677-8899
+                          country: SE
+                        accountCurrency: SEK
+                        accountServicerBic: AAAASESS
+                        accountServicer:
+                          bic: AAAASESS
+                          name: AAAA BANKEN
+                        balances:
+                        - type: OPBD
+                          subType: SUB-OP-PRTRY
+                          amount: '500000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-15'
+                          availability:
+                          - amount: '250000'
+                            currency: SEK
+                            date: '2010-10-16'
+                          - amount: '100000'
+                            currency: SEK
+                            date: NBR_DAYS:2
+                        - type: CUST_CLOSING
+                          subType: INTM
+                          amount: '435678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-18'
+                        entries:
+                        - entryReference: NTRY-CR-FULL-001
+                          amount: '105678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: BOOK
+                          bookingStatus: camt.053.001.04
+                          isReversal: false
+                          numberOfTransactions: 1
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T13:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: PAYM
+                          bankTransactionCodeStructured:
+                            domain: PAYM
+                            family: RCDT
+                            subFamily: BOOK
+                          additionalEntryInformation: Incoming payment with full transaction
+                            details
+                          transactions:
+                          - instructionId: INSTR-SE-1001
+                            endToEndId: MUELL/FINP/RA12345
+                            transactionId: TX-CR-SE-01
+                            clearingSystemReference: CLR-SE-556677
+                            accountServicerReference: ASR-TX-CR-001
+                            mandateId: MANDATE-DD-SE-2020
+                            checkNumber: CHQ-SE-009988
+                            amount: '105678.50'
+                            currency: SEK
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '9800.00'
+                              currency: EUR
+                            transactionAmount:
+                              amount: '105678.50'
+                              currency: SEK
+                            exchangeRate: 10.7835 EUR→SEK
+                            charges:
+                            - amount: '15.00'
+                              currency: SEK
+                              type: COMM
+                            - amount: '10.50'
+                              currency: SEK
+                              type: OURCHG
+                            counterpartyName: MUELLER GmbH
+                            counterpartyIban: DE89370400440532013000
+                            debtor:
+                              name: MUELLER GmbH
+                              iban: DE89370400440532013000
+                              partyId: DE-ORG-998877
+                              country: DE
+                              address:
+                                streetName: Hauptstrasse 5
+                                postCode: D-10115
+                                townName: Berlin
+                                country: DE
+                            ultimateDebtor:
+                              name: Ultimate Debtor AG
+                              country: AT
+                            remittanceUnstructured: Invoice MUELL-2020-88; Service
+                              period Q4
+                            remittanceStructured:
+                              reference: RF18539007547034
+                              invoicee: Invoicee Oy
+                              invoicer: Invoicer AB
+                              additionalRemittanceInformation:
+                              - Additional remittance line one
+                              - Additional remittance line two
+                            bankTransactionCodeStructured:
+                              proprietary: TX-PRTRY-CD
+                              proprietaryIssuer: AAAA
+                        - entryReference: NTRY-DB-BATCH-002
+                          amount: '200000'
+                          currency: SEK
+                          creditDebitIndicator: DBIT
+                          entryStatus: PDNG
+                          isReversal: true
+                          numberOfTransactions: 20
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T10:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: BANK-PROPR-DBIT
+                          bankTransactionCodeStructured:
+                            proprietary: BANK-PROPR-DBIT
+                            proprietaryIssuer: AAAA
+                          transactions:
+                          - endToEndId: E2E-BATCH-SAMPLE
+                            accountServicerReference: AAAASESS-FP-ACCR-01
+                            amount: '200000'
+                            currency: SEK
+                            creditDebitIndicator: DBIT
+                            counterpartyName: Supplier Consolidated AB
+                            counterpartyIban: SE7280000812790000096986
+                            creditor:
+                              name: Supplier Consolidated AB
+                              iban: SE7280000812790000096986
+                              address:
+                                streetName: Exportgatan 3
+                                townName: Göteborg
+                                country: SE
+                            ultimateCreditor:
+                              name: Ultimate Creditor Group
+                              partyId: PRVT-ULT-CDTR-01
+                              country: 'NO'
+                            remittanceUnstructured: Batch supplier payment ref FINP-0055
+                        - entryReference: NTRY-FX-003
+                          amount: '30000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: INFO
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T15:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: TREA
+                          bankTransactionCodeStructured:
+                            domain: TREA
+                            family: '0002'
+                            subFamily: '0000'
+                          transactions:
+                          - instructionId: FP-004567-FX
+                            endToEndId: AAAASS1085FINPSS
+                            accountServicerReference: AAAASESS-FP-CONF-FX
+                            amount: '3255'
+                            currency: EUR
+                            creditDebitIndicator: CRDT
+                camt053Canonical00108:
+                  summary: CAMT.053.001.08 — canonical JSON
+                  description: This is example of mapping a camt.053.001.08 to canonical
+                    JSON
+                  value:
+                    parseResult:
+                      documents:
+                      - sourceZipEntry: rich-053-001-08.xml
+                        originalMessageId: AAAASESS-FP-STAT001
+                        documentType: CAMT053
+                        documentId: AAAASESS-FP-STAT001
+                        electronicSequenceNumber: '42'
+                        legalSequenceNumber: '7'
+                        pagination:
+                          pageNumber: '2'
+                          lastPage: false
+                        creationDateTime: '2010-10-18T17:00:00+01:00'
+                        period:
+                          from: '2010-10-18T08:00:00+01:00'
+                          to: '2010-10-18T17:00:00+01:00'
+                        additionalInfo: Statement-level additional narrative
+                        account:
+                          iban: SE3550000000054910000003
+                          othrId: SE-BANKDOM-5566778899
+                        accountName: Operating account FINPETROL
+                        accountOwner:
+                          name: FINPETROL
+                          partyId: 556677-8899
+                          country: SE
+                        accountCurrency: SEK
+                        accountServicerBic: AAAASESS
+                        accountServicer:
+                          bic: AAAASESS
+                          name: AAAA BANKEN
+                        balances:
+                        - type: OPBD
+                          subType: SUB-OP-PRTRY
+                          amount: '500000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-15'
+                          availability:
+                          - amount: '250000'
+                            currency: SEK
+                            date: '2010-10-16'
+                          - amount: '100000'
+                            currency: SEK
+                            date: NBR_DAYS:2
+                        - type: CUST_CLOSING
+                          subType: INTM
+                          amount: '435678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          asOfDate: '2010-10-18'
+                        entries:
+                        - entryReference: NTRY-CR-FULL-001
+                          amount: '105678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: BOOK
+                          bookingStatus: camt.053.001.08
+                          isReversal: false
+                          numberOfTransactions: 1
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T13:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: PAYM
+                          bankTransactionCodeStructured:
+                            domain: PAYM
+                            family: RCDT
+                            subFamily: BOOK
+                          additionalEntryInformation: Incoming payment with full transaction
+                            details
+                          transactions:
+                          - instructionId: INSTR-SE-1001
+                            endToEndId: MUELL/FINP/RA12345
+                            uetr: 550e8400-e29b-41d4-a716-446655440000
+                            transactionId: TX-CR-SE-01
+                            clearingSystemReference: CLR-SE-556677
+                            accountServicerReference: ASR-TX-CR-001
+                            mandateId: MANDATE-DD-SE-2020
+                            checkNumber: CHQ-SE-009988
+                            amount: '105678.50'
+                            currency: SEK
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '9800.00'
+                              currency: EUR
+                            transactionAmount:
+                              amount: '105678.50'
+                              currency: SEK
+                            exchangeRate: 10.7835 EUR→SEK
+                            charges:
+                            - amount: '15.00'
+                              currency: SEK
+                              type: COMM
+                            - amount: '10.50'
+                              currency: SEK
+                              type: OURCHG
+                            counterpartyName: MUELLER GmbH
+                            counterpartyIban: DE89370400440532013000
+                            debtor:
+                              name: MUELLER GmbH
+                              iban: DE89370400440532013000
+                              partyId: DE-ORG-998877
+                              country: DE
+                              address:
+                                streetName: Hauptstrasse 5
+                                postCode: D-10115
+                                townName: Berlin
+                                country: DE
+                            ultimateDebtor:
+                              name: Ultimate Debtor AG
+                              country: AT
+                            remittanceUnstructured: Invoice MUELL-2020-88; Service
+                              period Q4
+                            remittanceStructured:
+                              reference: RF18539007547034
+                              invoicee: Invoicee Oy
+                              invoicer: Invoicer AB
+                              additionalRemittanceInformation:
+                              - Additional remittance line one
+                              - Additional remittance line two
+                            bankTransactionCodeStructured:
+                              proprietary: TX-PRTRY-CD
+                              proprietaryIssuer: AAAA
+                        - entryReference: NTRY-DB-BATCH-002
+                          amount: '200000'
+                          currency: SEK
+                          creditDebitIndicator: DBIT
+                          entryStatus: PDNG
+                          isReversal: true
+                          numberOfTransactions: 20
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T10:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: BANK-PROPR-DBIT
+                          bankTransactionCodeStructured:
+                            proprietary: BANK-PROPR-DBIT
+                            proprietaryIssuer: AAAA
+                          transactions:
+                          - endToEndId: E2E-BATCH-SAMPLE
+                            uetr: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+                            accountServicerReference: AAAASESS-FP-ACCR-01
+                            amount: '200000'
+                            currency: SEK
+                            creditDebitIndicator: DBIT
+                            counterpartyName: Supplier Consolidated AB
+                            counterpartyIban: SE7280000812790000096986
+                            creditor:
+                              name: Supplier Consolidated AB
+                              iban: SE7280000812790000096986
+                              address:
+                                streetName: Exportgatan 3
+                                townName: Göteborg
+                                country: SE
+                            ultimateCreditor:
+                              name: Ultimate Creditor Group
+                              partyId: PRVT-ULT-CDTR-01
+                              country: 'NO'
+                            remittanceUnstructured: Batch supplier payment ref FINP-0055
+                        - entryReference: NTRY-FX-003
+                          amount: '30000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: INFO
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T15:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: TREA
+                          bankTransactionCodeStructured:
+                            domain: TREA
+                            family: '0002'
+                            subFamily: '0000'
+                          transactions:
+                          - instructionId: FP-004567-FX
+                            endToEndId: AAAASS1085FINPSS
+                            uetr: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                            accountServicerReference: AAAASESS-FP-CONF-FX
+                            amount: '3255'
+                            currency: EUR
+                            creditDebitIndicator: CRDT
+        '401':
+          description: |-
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": "ebics-biller-api.yml#/components/schemas/ErrorResponse"
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT
+                    was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not
+                      active'
+        '500':
+          description: Unexpected server error or BTD error payload (`status` = `ERROR`).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtCanonicalParseResponse"
+  "/client/ebics/v3/C54-canonical":
+    post:
+      summary: C54 - Download canonical shape
+      description: |-
+        Downloads credit/debit notifications (CAMT.054) via EBICS BTD operation and
+        returns compact canonical JSON representation of the camt.054 content.
+
+        Main entities in the response are following:
+        ```text
+        document
+        ├── account
+        ├── balances[]
+        └── entities[]
+            └── transactions[]
+        ```
+        The response structure is unified for all camt types: `camt.052`, `camt.053` and `camt.054` and their versions: `04` and `08`.
+        The structure is universal simplification of the complex ISO 20022 XML camt document structure, providing a convenient way to use a single UI layout to display all camt types and versions.
+        For debit/credit notifications, the same layout carries notification-specific fields (for example `relatedAccount`, `transactionsSummary`) and `balances` only when the underlying message contains them.
+      operationId: v3C54Canonical
+      tags:
+      - EBICS v3
+      requestBody:
+        required: true
+        description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
+          containerType — defaults apply (REP, CH, camt.054, 08, ZIP). Actual vs historical
+          download follows the same rule as BTD: without dates = actual; with startDate/endDate
+          = historical.'
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CamtBtdDerivedParseRequest"
+            examples:
+              actualMinimal:
+                summary: Credit/Debit Notifications request (Actual)
+                description: Camt054 v08 Credit/Debit Notifications (Actual download
+                  of not-yet downloaded files from bank.)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+              historicalMinimal:
+                summary: Credit/Debit Notifications request (Historical)
+                description: Camt054 v08 Credit/Debit Notifications (Historical Download
+                  for given date range)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+                  startDate: '2026-04-01'
+                  endDate: '2026-04-20'
+      responses:
+        '200':
+          description: Parsed successfully or BTD returned with error payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtCanonicalParseResponse"
+              examples:
+                camt054Canonical00104:
+                  summary: CAMT.054.001.04 — canonical JSON
+                  description: This is example of mapping a camt.054.001.04 to canonical
+                    JSON
+                  value:
+                    parseResult:
+                      documents:
+                      - sourceZipEntry: rich-054-001-04.xml
+                        originalMessageId: AAAASESS-FP-N54-GRP
+                        documentType: CAMT054
+                        documentId: AAAASESS-FP-N54-001
+                        electronicSequenceNumber: '42'
+                        legalSequenceNumber: '7'
+                        pagination:
+                          pageNumber: '2'
+                          lastPage: false
+                        creationDateTime: '2010-10-18T17:00:00+01:00'
+                        period:
+                          from: '2010-10-18T08:00:00+01:00'
+                          to: '2010-10-18T17:00:00+01:00'
+                        additionalInfo: Notification-level additional narrative for
+                          CAMT.054.001.04 rich fixture
+                        account:
+                          iban: SE3550000000054910000003
+                          othrId: SE-BANKDOM-5566778899
+                        accountName: Operating account FINPETROL
+                        accountOwner:
+                          name: FINPETROL
+                          partyId: 556677-8899
+                          country: SE
+                        accountCurrency: SEK
+                        accountServicerBic: AAAASESS
+                        accountServicer:
+                          bic: AAAASESS
+                          name: AAAA BANKEN
+                        entries:
+                        - entryReference: NTRY-CR-FULL-001
+                          amount: '105678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: BOOK
+                          bookingStatus: camt.054.001.04
+                          isReversal: false
+                          numberOfTransactions: 1
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T13:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: PAYM
+                          bankTransactionCodeStructured:
+                            domain: PAYM
+                            family: RCDT
+                            subFamily: BOOK
+                          additionalEntryInformation: Incoming payment with full transaction
+                            details
+                          transactions:
+                          - instructionId: INSTR-SE-1001
+                            endToEndId: MUELL/FINP/RA12345
+                            transactionId: TX-CR-SE-01
+                            clearingSystemReference: CLR-SE-556677
+                            accountServicerReference: ASR-TX-CR-001
+                            mandateId: MANDATE-DD-SE-2020
+                            checkNumber: CHQ-SE-009988
+                            amount: '105678.50'
+                            currency: SEK
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '9800.00'
+                              currency: EUR
+                            transactionAmount:
+                              amount: '105678.50'
+                              currency: SEK
+                            exchangeRate: 10.7835 EUR→SEK
+                            charges:
+                            - amount: '15.00'
+                              currency: SEK
+                              type: COMM
+                            - amount: '10.50'
+                              currency: SEK
+                              type: OURCHG
+                            counterpartyName: MUELLER GmbH
+                            counterpartyIban: DE89370400440532013000
+                            debtor:
+                              name: MUELLER GmbH
+                              iban: DE89370400440532013000
+                              partyId: DE-ORG-998877
+                              country: DE
+                              address:
+                                streetName: Hauptstrasse 5
+                                postCode: D-10115
+                                townName: Berlin
+                                country: DE
+                            ultimateDebtor:
+                              name: Ultimate Debtor AG
+                              country: AT
+                            remittanceUnstructured: Invoice MUELL-2020-88; Service
+                              period Q4
+                            remittanceStructured:
+                              reference: RF18539007547034
+                              invoicee: Invoicee Oy
+                              invoicer: Invoicer AB
+                              additionalRemittanceInformation:
+                              - Additional remittance line one
+                              - Additional remittance line two
+                            bankTransactionCodeStructured:
+                              proprietary: TX-PRTRY-CD
+                              proprietaryIssuer: AAAA
+                        - entryReference: NTRY-DB-BATCH-002
+                          amount: '200000'
+                          currency: SEK
+                          creditDebitIndicator: DBIT
+                          entryStatus: PDNG
+                          isReversal: true
+                          numberOfTransactions: 20
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T10:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: BANK-PROPR-DBIT
+                          bankTransactionCodeStructured:
+                            proprietary: BANK-PROPR-DBIT
+                            proprietaryIssuer: AAAA
+                          transactions:
+                          - endToEndId: E2E-BATCH-SAMPLE
+                            accountServicerReference: AAAASESS-FP-ACCR-01
+                            amount: '200000'
+                            currency: SEK
+                            creditDebitIndicator: DBIT
+                            counterpartyName: Supplier Consolidated AB
+                            counterpartyIban: SE7280000812790000096986
+                            creditor:
+                              name: Supplier Consolidated AB
+                              iban: SE7280000812790000096986
+                              address:
+                                streetName: Exportgatan 3
+                                townName: Göteborg
+                                country: SE
+                            ultimateCreditor:
+                              name: Ultimate Creditor Group
+                              partyId: PRVT-ULT-CDTR-01
+                              country: 'NO'
+                            remittanceUnstructured: Batch supplier payment ref FINP-0055
+                        - entryReference: NTRY-FX-003
+                          amount: '30000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: INFO
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T15:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: TREA
+                          bankTransactionCodeStructured:
+                            domain: TREA
+                            family: '0002'
+                            subFamily: '0000'
+                          transactions:
+                          - instructionId: FP-004567-FX
+                            endToEndId: AAAASS1085FINPSS
+                            accountServicerReference: AAAASESS-FP-CONF-FX
+                            amount: '3255'
+                            currency: EUR
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '3255'
+                              currency: EUR
+                            exchangeRate: 0.1085 EUR→SEK
+                        relatedAccount:
+                          othrId: NTF-RLTD-SE-8899
+                        copyDuplicateIndicator: DUPL
+                        reportingSource: SOLE
+                        transactionsSummary:
+                          totalNumberOfEntries: '3'
+                          totalSum: 335678.5
+                          totalNetEntryAmount: 64321.5
+                          totalNetCreditDebitIndicator: DBIT
+                          creditEntriesNumber: '2'
+                          creditSum: 135678.5
+                          debitEntriesNumber: '1'
+                          debitSum: 200000
+                camt054Canonical00108:
+                  summary: CAMT.054.001.08 — canonical JSON
+                  description: This is example of mapping a camt.054.001.08 to canonical
+                    JSON
+                  value:
+                    parseResult:
+                      documents:
+                      - sourceZipEntry: rich-054-001-08.xml
+                        originalMessageId: AAAASESS-FP-N54-GRP
+                        documentType: CAMT054
+                        documentId: AAAASESS-FP-N54-001
+                        electronicSequenceNumber: '42'
+                        legalSequenceNumber: '7'
+                        pagination:
+                          pageNumber: '2'
+                          lastPage: false
+                        creationDateTime: '2010-10-18T17:00:00+01:00'
+                        period:
+                          from: '2010-10-18T08:00:00+01:00'
+                          to: '2010-10-18T17:00:00+01:00'
+                        additionalInfo: Notification-level additional narrative for
+                          CAMT.054.001.08 rich fixture
+                        account:
+                          iban: SE3550000000054910000003
+                          othrId: SE-BANKDOM-5566778899
+                        accountName: Operating account FINPETROL
+                        accountOwner:
+                          name: FINPETROL
+                          partyId: 556677-8899
+                          country: SE
+                        accountCurrency: SEK
+                        accountServicerBic: AAAASESS
+                        accountServicer:
+                          bic: AAAASESS
+                          name: AAAA BANKEN
+                        entries:
+                        - entryReference: NTRY-CR-FULL-001
+                          amount: '105678.50'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: BOOK
+                          bookingStatus: camt.054.001.08
+                          isReversal: false
+                          numberOfTransactions: 1
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T13:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: PAYM
+                          bankTransactionCodeStructured:
+                            domain: PAYM
+                            family: RCDT
+                            subFamily: BOOK
+                          additionalEntryInformation: Incoming payment with full transaction
+                            details
+                          transactions:
+                          - instructionId: INSTR-SE-1001
+                            endToEndId: MUELL/FINP/RA12345
+                            uetr: 550e8400-e29b-41d4-a716-446655440000
+                            transactionId: TX-CR-SE-01
+                            clearingSystemReference: CLR-SE-556677
+                            accountServicerReference: ASR-TX-CR-001
+                            mandateId: MANDATE-DD-SE-2020
+                            checkNumber: CHQ-SE-009988
+                            amount: '105678.50'
+                            currency: SEK
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '9800.00'
+                              currency: EUR
+                            transactionAmount:
+                              amount: '105678.50'
+                              currency: SEK
+                            exchangeRate: 10.7835 EUR→SEK
+                            charges:
+                            - amount: '15.00'
+                              currency: SEK
+                              type: COMM
+                            - amount: '10.50'
+                              currency: SEK
+                              type: OURCHG
+                            counterpartyName: MUELLER GmbH
+                            counterpartyIban: DE89370400440532013000
+                            debtor:
+                              name: MUELLER GmbH
+                              iban: DE89370400440532013000
+                              partyId: DE-ORG-998877
+                              country: DE
+                              address:
+                                streetName: Hauptstrasse 5
+                                postCode: D-10115
+                                townName: Berlin
+                                country: DE
+                            ultimateDebtor:
+                              name: Ultimate Debtor AG
+                              country: AT
+                            remittanceUnstructured: Invoice MUELL-2020-88; Service
+                              period Q4
+                            remittanceStructured:
+                              reference: RF18539007547034
+                              invoicee: Invoicee Oy
+                              invoicer: Invoicer AB
+                              additionalRemittanceInformation:
+                              - Additional remittance line one
+                              - Additional remittance line two
+                            bankTransactionCodeStructured:
+                              proprietary: TX-PRTRY-CD
+                              proprietaryIssuer: AAAA
+                        - entryReference: NTRY-DB-BATCH-002
+                          amount: '200000'
+                          currency: SEK
+                          creditDebitIndicator: DBIT
+                          entryStatus: PDNG
+                          isReversal: true
+                          numberOfTransactions: 20
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T10:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: BANK-PROPR-DBIT
+                          bankTransactionCodeStructured:
+                            proprietary: BANK-PROPR-DBIT
+                            proprietaryIssuer: AAAA
+                          transactions:
+                          - endToEndId: E2E-BATCH-SAMPLE
+                            uetr: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+                            accountServicerReference: AAAASESS-FP-ACCR-01
+                            amount: '200000'
+                            currency: SEK
+                            creditDebitIndicator: DBIT
+                            counterpartyName: Supplier Consolidated AB
+                            counterpartyIban: SE7280000812790000096986
+                            creditor:
+                              name: Supplier Consolidated AB
+                              iban: SE7280000812790000096986
+                              address:
+                                streetName: Exportgatan 3
+                                townName: Göteborg
+                                country: SE
+                            ultimateCreditor:
+                              name: Ultimate Creditor Group
+                              partyId: PRVT-ULT-CDTR-01
+                              country: 'NO'
+                            remittanceUnstructured: Batch supplier payment ref FINP-0055
+                        - entryReference: NTRY-FX-003
+                          amount: '30000'
+                          currency: SEK
+                          creditDebitIndicator: CRDT
+                          entryStatus: INFO
+                          entryDetailsPresent: true
+                          bookingDateTime: '2010-10-18T15:15:00+01:00'
+                          valueDate: '2010-10-18'
+                          bankTransactionCode: TREA
+                          bankTransactionCodeStructured:
+                            domain: TREA
+                            family: '0002'
+                            subFamily: '0000'
+                          transactions:
+                          - instructionId: FP-004567-FX
+                            endToEndId: AAAASS1085FINPSS
+                            uetr: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                            accountServicerReference: AAAASESS-FP-CONF-FX
+                            amount: '3255'
+                            currency: EUR
+                            creditDebitIndicator: CRDT
+                            instructedAmount:
+                              amount: '3255'
+                              currency: EUR
+                            exchangeRate: 0.1085 EUR→SEK
+                        relatedAccount:
+                          iban: DE89370400440532013000
+                        copyDuplicateIndicator: COPY
+                        reportingSource: INTR
+                        transactionsSummary:
+                          totalNumberOfEntries: '3'
+                          totalSum: 335678.5
+                          totalNetEntryAmount: 64321.5
+                          totalNetCreditDebitIndicator: DBIT
+                          creditEntriesNumber: '2'
+                          creditSum: 135678.5
+                          debitEntriesNumber: '1'
+                          debitSum: 200000
+        '401':
+          description: |-
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": "ebics-biller-api.yml#/components/schemas/ErrorResponse"
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT
+                    was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not
+                      active'
+        '500':
+          description: Unexpected server error or BTD error payload (`status` = `ERROR`).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtCanonicalParseResponse"
+  "/client/ebics/v3/C52-iso":
+    post:
+      summary: C52 - Download ISO shape
+      description: |-
+        Downloads CAMT.052 via EBICS BTD operation and 
+        returns compact ISO-shaped JSON representation of the camt.052 content.
+        
+        Main entities in the response are following:
+        ```text
+        Document
+        └── BkToCstmrAcctRpt[]
+            └── Rpt[]
+                └── Acct
+                └── Bal[]
+                └── Ntry[]
+                    └── NtryDtls[]
+                        └── TxDtls[]
+        ```
+        The structure and elements names eqivalents of original XML ISO20022 elements.  
+        The response structure is unified for camt.052.001.04 and camt.052.001.08.
+        The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.
+      operationId: v3C52Iso
+      tags:
+      - EBICS v3
+      requestBody:
+        required: true
+        description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
+          containerType — defaults apply (STM, CH, camt.052, 08, ZIP). Actual vs historical
+          download follows the same rule as BTD: without dates = actual; with startDate/endDate
+          = historical.'
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CamtBtdDerivedParseRequest"
+            examples:
+              actualMinimal:
+                summary: Intraday account report request (Actual)
+                description: Camt052 v08 Statement (Actual download of not-yet downloaded
+                  files from bank.)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+              historicalMinimal:
+                summary: Intraday account report request (Historical)
+                description: Camt052 v08 Statement (Historical Download for given
+                  date range)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+                  startDate: '2026-04-20'
+                  endDate: '2026-04-20'
+      responses:
+        '200':
+          description: Parsed successfully or BTD returned with error payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtIsoParseResponse"
+              examples:
+                camt052Iso00104:
+                  summary: CAMT.052.001.04 — ISO-shaped JSON
+                  description: This is example of mapping a camt.052.001.04 to ISO-shaped
+                    JSON
+                  value:
+                    files:
+                    - zipEntryName: rich-052-001-04.xml
+                      schemaNamespace: urn:iso:std:iso:20022:tech:xsd:camt.052.001.04
+                      Document:
+                        BkToCstmrAcctRpt:
+                          GrpHdr:
+                            MsgId: AAAASESS-FP-STAT001
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlInf: Group header additional information
+                          Rpt:
+                          - Id: AAAASESS-FP-RPT001
+                            RptPgntn:
+                              PgNb: '2'
+                              LastPgInd: false
+                            ElctrncSeqNb: '42'
+                            LglSeqNb: '7'
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            FrToDt:
+                              FrDtTm: '2010-10-18T08:00:00+01:00'
+                              ToDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlRptInf: Report-level additional narrative
+                            Acct:
+                              Id:
+                                IBAN: SE3550000000054910000003
+                                Othr:
+                                  Id: SE-BANKDOM-5566778899
+                              Ccy: SEK
+                              Nm: Operating account FINPETROL
+                              Ownr:
+                                Nm: FINPETROL
+                                PstlAdr:
+                                  StrtNm: Industrigatan 12
+                                  PstCd: SE-11151
+                                  TwnNm: Stockholm
+                                  Ctry: SE
+                                CtryOfRes: SE
+                                Id:
+                                  OrgId:
+                                    Othr:
+                                      Id: 556677-8899
+                              Svcr:
+                                FinInstnId:
+                                  BICFI: AAAASESS
+                                  Nm: AAAA BANKEN
+                                  PstlAdr:
+                                    Ctry: SE
+                            Bal:
+                            - Tp:
+                                CdOrPrtry:
+                                  Cd: OPBD
+                                SubTp:
+                                  Prtry: SUB-OP-PRTRY
+                              Amt:
+                                value: '500000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-15'
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-16'
+                                Amt:
+                                  value: '250000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              - Dt:
+                                  NbOfDays: '2'
+                                Amt:
+                                  value: '100000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                            - Tp:
+                                CdOrPrtry:
+                                  Prtry: CUST_CLOSING
+                                SubTp:
+                                  Cd: INTM
+                              Amt:
+                                value: '435678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-18'
+                            Ntry:
+                            - NtryRef: NTRY-CR-FULL-001
+                              Amt:
+                                value: '105678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              RvslInd: false
+                              Sts:
+                                Cd: BOOK
+                              BookgDt:
+                                DtTm: '2010-10-18T13:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CN_98765/01
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-19'
+                                Amt:
+                                  value: '105678.50'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              BkTxCd:
+                                Domn:
+                                  Cd: PAYM
+                                  Fmly:
+                                    Cd: RCDT
+                                    SubFmlyCd: BOOK
+                              AddtlInfInd:
+                                MsgNmId: camt.052.001.04
+                                MsgId: BOOKING-STATUS-REF-01
+                              AddtlNtryInf: Incoming payment with full transaction
+                                details
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-BATCH-MSG
+                                  PmtInfId: FINP-BATCH-PMT-001
+                                  NbOfTxs: '1'
+                                TxDtls:
+                                - Refs:
+                                    AcctSvcrRef: ASR-TX-CR-001
+                                    InstrId: INSTR-SE-1001
+                                    EndToEndId: MUELL/FINP/RA12345
+                                    TxId: TX-CR-SE-01
+                                    MndtId: MANDATE-DD-SE-2020
+                                    ChqNb: CHQ-SE-009988
+                                    ClrSysRef: CLR-SE-556677
+                                  Amt:
+                                    value: '105678.50'
+                                    Ccy: SEK
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    InstdAmt:
+                                      Amt:
+                                        value: '9800.00'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        TrgtCcy: SEK
+                                        XchgRate: '10.7835'
+                                    TxAmt:
+                                      Amt:
+                                        value: '105678.50'
+                                        Ccy: SEK
+                                  Avlbty:
+                                  - Dt:
+                                      NbOfDays: '0'
+                                    Amt:
+                                      value: '105678.50'
+                                      Ccy: SEK
+                                    CdtDbtInd: CRDT
+                                  BkTxCd:
+                                    Prtry:
+                                      Cd: TX-PRTRY-CD
+                                      Issr: AAAA
+                                  Chrgs:
+                                    TtlChrgsAndTaxAmt:
+                                      value: '25.50'
+                                      Ccy: SEK
+                                    Rcrd:
+                                    - Amt:
+                                        value: '15.00'
+                                        Ccy: SEK
+                                      CdtDbtInd: DBIT
+                                      Tp:
+                                        Cd: COMM
+                                    - Amt:
+                                        value: '10.50'
+                                        Ccy: SEK
+                                      Tp:
+                                        Prtry:
+                                          Id: OURCHG
+                                          Issr: AAAA
+                                  RmtInf:
+                                    Ustrd:
+                                    - Invoice MUELL-2020-88; Service period Q4
+                                    Strd:
+                                    - CdtrRefInf:
+                                        Ref: RF18539007547034
+                                      Invcr:
+                                        Nm: Invoicer AB
+                                        PstlAdr:
+                                          AdrLine:
+                                          - Box 100
+                                          - SE-111 22 Stockholm
+                                      Invcee:
+                                        Nm: Invoicee Oy
+                                      AddtlRmtInf:
+                                      - Additional remittance line one
+                                      - Additional remittance line two
+                                  RltdPties:
+                                    Dbtr:
+                                      Nm: MUELLER GmbH
+                                      PstlAdr:
+                                        StrtNm: Hauptstrasse 5
+                                        PstCd: D-10115
+                                        TwnNm: Berlin
+                                        Ctry: DE
+                                      CtryOfRes: DE
+                                      Id:
+                                        OrgId:
+                                          Othr:
+                                            Id: DE-ORG-998877
+                                    DbtrAcct:
+                                      Id:
+                                        IBAN: DE89370400440532013000
+                                    UltmtDbtr:
+                                      Nm: Ultimate Debtor AG
+                                      CtryOfRes: AT
+                            - NtryRef: NTRY-DB-BATCH-002
+                              Amt:
+                                value: '200000'
+                                Ccy: SEK
+                              CdtDbtInd: DBIT
+                              RvslInd: true
+                              Sts:
+                                Cd: PDNG
+                              BookgDt:
+                                DtTm: '2010-10-18T10:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-ACCR-01
+                              BkTxCd:
+                                Prtry:
+                                  Cd: BANK-PROPR-DBIT
+                                  Issr: AAAA
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-0055
+                                  PmtInfId: FINP-0055/001
+                                  NbOfTxs: '20'
+                                TxDtls:
+                                - Refs:
+                                    EndToEndId: E2E-BATCH-SAMPLE
+                                  Amt:
+                                    value: '200000'
+                                    Ccy: SEK
+                                  CdtDbtInd: DBIT
+                                  RmtInf:
+                                    Ustrd:
+                                    - Batch supplier payment ref FINP-0055
+                                  RltdPties:
+                                    Cdtr:
+                                      Nm: Supplier Consolidated AB
+                                      PstlAdr:
+                                        StrtNm: Exportgatan 3
+                                        TwnNm: Göteborg
+                                        Ctry: SE
+                                    CdtrAcct:
+                                      Id:
+                                        IBAN: SE7280000812790000096986
+                                    UltmtCdtr:
+                                      Nm: Ultimate Creditor Group
+                                      CtryOfRes: 'NO'
+                                      Id:
+                                        PrvtId:
+                                          Othr:
+                                            Id: PRVT-ULT-CDTR-01
+                            - NtryRef: NTRY-FX-003
+                              Amt:
+                                value: '30000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Sts:
+                                Cd: INFO
+                              BookgDt:
+                                DtTm: '2010-10-18T15:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CONF-FX
+                              BkTxCd:
+                                Domn:
+                                  Cd: TREA
+                                  Fmly:
+                                    Cd: '0002'
+                                    SubFmlyCd: '0000'
+                              NtryDtls:
+                              - TxDtls:
+                                - Refs:
+                                    InstrId: FP-004567-FX
+                                    EndToEndId: AAAASS1085FINPSS
+                                  Amt:
+                                    value: '3255'
+                                    Ccy: EUR
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    CntrValAmt:
+                                      Amt:
+                                        value: '3255'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        XchgRate: '0.1085'
+                camt052Iso00108:
+                  summary: CAMT.052.001.08 — ISO-shaped JSON
+                  description: This is example of mapping a camt.052.001.08 to ISO-shaped
+                    JSON
+                  value:
+                    files:
+                    - zipEntryName: rich-052-001-08.xml
+                      schemaNamespace: urn:iso:std:iso:20022:tech:xsd:camt.052.001.08
+                      Document:
+                        BkToCstmrAcctRpt:
+                          GrpHdr:
+                            MsgId: AAAASESS-FP-STAT001
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlInf: Group header additional information
+                          Rpt:
+                          - Id: AAAASESS-FP-RPT001
+                            RptPgntn:
+                              PgNb: '2'
+                              LastPgInd: false
+                            ElctrncSeqNb: '42'
+                            LglSeqNb: '7'
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            FrToDt:
+                              FrDtTm: '2010-10-18T08:00:00+01:00'
+                              ToDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlRptInf: Report-level additional narrative
+                            Acct:
+                              Id:
+                                IBAN: SE3550000000054910000003
+                                Othr:
+                                  Id: SE-BANKDOM-5566778899
+                              Ccy: SEK
+                              Nm: Operating account FINPETROL
+                              Ownr:
+                                Nm: FINPETROL
+                                PstlAdr:
+                                  StrtNm: Industrigatan 12
+                                  PstCd: SE-11151
+                                  TwnNm: Stockholm
+                                  Ctry: SE
+                                CtryOfRes: SE
+                                Id:
+                                  OrgId:
+                                    Othr:
+                                      Id: 556677-8899
+                              Svcr:
+                                FinInstnId:
+                                  BICFI: AAAASESS
+                                  Nm: AAAA BANKEN
+                                  PstlAdr:
+                                    Ctry: SE
+                            Bal:
+                            - Tp:
+                                CdOrPrtry:
+                                  Cd: OPBD
+                                SubTp:
+                                  Prtry: SUB-OP-PRTRY
+                              Amt:
+                                value: '500000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-15'
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-16'
+                                Amt:
+                                  value: '250000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              - Dt:
+                                  NbOfDays: '2'
+                                Amt:
+                                  value: '100000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                            - Tp:
+                                CdOrPrtry:
+                                  Prtry: CUST_CLOSING
+                                SubTp:
+                                  Cd: INTM
+                              Amt:
+                                value: '435678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-18'
+                            Ntry:
+                            - NtryRef: NTRY-CR-FULL-001
+                              Amt:
+                                value: '105678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              RvslInd: false
+                              Sts:
+                                Cd: BOOK
+                              BookgDt:
+                                DtTm: '2010-10-18T13:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CN_98765/01
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-19'
+                                Amt:
+                                  value: '105678.50'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              BkTxCd:
+                                Domn:
+                                  Cd: PAYM
+                                  Fmly:
+                                    Cd: RCDT
+                                    SubFmlyCd: BOOK
+                              AddtlInfInd:
+                                MsgNmId: camt.052.001.08
+                                MsgId: BOOKING-STATUS-REF-01
+                              AddtlNtryInf: Incoming payment with full transaction
+                                details
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-BATCH-MSG
+                                  PmtInfId: FINP-BATCH-PMT-001
+                                  NbOfTxs: '1'
+                                TxDtls:
+                                - Refs:
+                                    AcctSvcrRef: ASR-TX-CR-001
+                                    InstrId: INSTR-SE-1001
+                                    EndToEndId: MUELL/FINP/RA12345
+                                    UETR: 550e8400-e29b-41d4-a716-446655440000
+                                    TxId: TX-CR-SE-01
+                                    MndtId: MANDATE-DD-SE-2020
+                                    ChqNb: CHQ-SE-009988
+                                    ClrSysRef: CLR-SE-556677
+                                  Amt:
+                                    value: '105678.50'
+                                    Ccy: SEK
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    InstdAmt:
+                                      Amt:
+                                        value: '9800.00'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        TrgtCcy: SEK
+                                        XchgRate: '10.7835'
+                                    TxAmt:
+                                      Amt:
+                                        value: '105678.50'
+                                        Ccy: SEK
+                                  Avlbty:
+                                  - Dt:
+                                      NbOfDays: '0'
+                                    Amt:
+                                      value: '105678.50'
+                                      Ccy: SEK
+                                    CdtDbtInd: CRDT
+                                  BkTxCd:
+                                    Prtry:
+                                      Cd: TX-PRTRY-CD
+                                      Issr: AAAA
+                                  Chrgs:
+                                    TtlChrgsAndTaxAmt:
+                                      value: '25.50'
+                                      Ccy: SEK
+                                    Rcrd:
+                                    - Amt:
+                                        value: '15.00'
+                                        Ccy: SEK
+                                      CdtDbtInd: DBIT
+                                      Tp:
+                                        Cd: COMM
+                                    - Amt:
+                                        value: '10.50'
+                                        Ccy: SEK
+                                      Tp:
+                                        Prtry:
+                                          Id: OURCHG
+                                          Issr: AAAA
+                                  RmtInf:
+                                    Ustrd:
+                                    - Invoice MUELL-2020-88; Service period Q4
+                                    Strd:
+                                    - CdtrRefInf:
+                                        Ref: RF18539007547034
+                                      Invcr:
+                                        Nm: Invoicer AB
+                                        PstlAdr:
+                                          AdrLine:
+                                          - Box 100
+                                          - SE-111 22 Stockholm
+                                      Invcee:
+                                        Nm: Invoicee Oy
+                                      AddtlRmtInf:
+                                      - Additional remittance line one
+                                      - Additional remittance line two
+                                  RltdPties:
+                                    Dbtr:
+                                      Nm: MUELLER GmbH
+                                      PstlAdr:
+                                        StrtNm: Hauptstrasse 5
+                                        PstCd: D-10115
+                                        TwnNm: Berlin
+                                        Ctry: DE
+                                      CtryOfRes: DE
+                                      Id:
+                                        OrgId:
+                                          Othr:
+                                            Id: DE-ORG-998877
+                                    DbtrAcct:
+                                      Id:
+                                        IBAN: DE89370400440532013000
+                                    UltmtDbtr:
+                                      Nm: Ultimate Debtor AG
+                                      CtryOfRes: AT
+                            - NtryRef: NTRY-DB-BATCH-002
+                              Amt:
+                                value: '200000'
+                                Ccy: SEK
+                              CdtDbtInd: DBIT
+                              RvslInd: true
+                              Sts:
+                                Cd: PDNG
+                              BookgDt:
+                                DtTm: '2010-10-18T10:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-ACCR-01
+                              BkTxCd:
+                                Prtry:
+                                  Cd: BANK-PROPR-DBIT
+                                  Issr: AAAA
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-0055
+                                  PmtInfId: FINP-0055/001
+                                  NbOfTxs: '20'
+                                TxDtls:
+                                - Refs:
+                                    EndToEndId: E2E-BATCH-SAMPLE
+                                    UETR: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+                                  Amt:
+                                    value: '200000'
+                                    Ccy: SEK
+                                  CdtDbtInd: DBIT
+                                  RmtInf:
+                                    Ustrd:
+                                    - Batch supplier payment ref FINP-0055
+                                  RltdPties:
+                                    Cdtr:
+                                      Nm: Supplier Consolidated AB
+                                      PstlAdr:
+                                        StrtNm: Exportgatan 3
+                                        TwnNm: Göteborg
+                                        Ctry: SE
+                                    CdtrAcct:
+                                      Id:
+                                        IBAN: SE7280000812790000096986
+                                    UltmtCdtr:
+                                      Nm: Ultimate Creditor Group
+                                      CtryOfRes: 'NO'
+                                      Id:
+                                        PrvtId:
+                                          Othr:
+                                            Id: PRVT-ULT-CDTR-01
+                            - NtryRef: NTRY-FX-003
+                              Amt:
+                                value: '30000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Sts:
+                                Prtry: INFO
+                              BookgDt:
+                                DtTm: '2010-10-18T15:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CONF-FX
+                              BkTxCd:
+                                Domn:
+                                  Cd: TREA
+                                  Fmly:
+                                    Cd: '0002'
+                                    SubFmlyCd: '0000'
+                              NtryDtls:
+                              - TxDtls:
+                                - Refs:
+                                    InstrId: FP-004567-FX
+                                    EndToEndId: AAAASS1085FINPSS
+                                    UETR: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                                  Amt:
+                                    value: '3255'
+                                    Ccy: EUR
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    CntrValAmt:
+                                      Amt:
+                                        value: '3255'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        XchgRate: '0.1085'
+        '401':
+          description: |-
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": "ebics-biller-api.yml#/components/schemas/ErrorResponse"
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT
+                    was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not
+                      active'
+        '500':
+          description: Unexpected server error or BTD error payload (`status` = `ERROR`).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtIsoParseResponse"
+  "/client/ebics/v3/C53-iso":
+    post:
+      summary: C53 - Download ISO shape
+      description: |-
+        Downloads end of day account statements (CAMT.053) via EBICS BTD operation and
+        returns ISO-shaped JSON representation of the camt.053 content.
+
+        Main entities in the response are following:
+        ```text
+        Document
+        └── BkToCstmrStmt
+            └── Stmt[]
+                └── Acct
+                └── Bal[]
+                └── Ntry[]
+                    └── NtryDtls[]
+                        └── TxDtls[]
+        ```
+        The structure and element names are equivalents of the original XML ISO 20022 elements.
+        The response structure is unified for camt.053.001.04 and camt.053.001.08.
+        The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.
+      operationId: v3C53Iso
+      tags:
+      - EBICS v3
+      requestBody:
+        required: true
+        description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
+          containerType — defaults apply (EOP, CH, camt.053, 08, ZIP). Actual vs historical
+          download follows the same rule as BTD: without dates = actual; with startDate/endDate
+          = historical.'
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CamtBtdDerivedParseRequest"
+            examples:
+              actualMinimal:
+                summary: Daily account statement request (Actual)
+                description: Camt053 v08 Statement (Actual download of not-yet downloaded
+                  files from bank.)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+              historicalMinimal:
+                summary: Daily account statement request (Historical)
+                description: Camt053 v08 Statement (Historical Download for given
+                  date range)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+                  startDate: '2026-04-01'
+                  endDate: '2026-04-20'
+      responses:
+        '200':
+          description: Parsed successfully or BTD returned with error payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtIsoParseResponse"
+              examples:
+                camt053Iso00104:
+                  summary: CAMT.053.001.04 — ISO-shaped JSON
+                  description: This is example of mapping a camt.053.001.04 to ISO-shaped
+                    JSON
+                  value:
+                    files:
+                    - zipEntryName: rich-053-001-04.xml
+                      schemaNamespace: urn:iso:std:iso:20022:tech:xsd:camt.053.001.04
+                      Document:
+                        BkToCstmrStmt:
+                          GrpHdr:
+                            MsgId: AAAASESS-FP-STAT001
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlInf: Group header additional information
+                          Stmt:
+                          - Id: AAAASESS-FP-STAT001
+                            StmtPgntn:
+                              PgNb: '2'
+                              LastPgInd: false
+                            ElctrncSeqNb: '42'
+                            LglSeqNb: '7'
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlStmtInf: Statement-level additional narrative
+                            Acct:
+                              Id:
+                                IBAN: SE3550000000054910000003
+                                Othr:
+                                  Id: SE-BANKDOM-5566778899
+                              Ccy: SEK
+                              Nm: Operating account FINPETROL
+                              Ownr:
+                                Nm: FINPETROL
+                                PstlAdr:
+                                  StrtNm: Industrigatan 12
+                                  PstCd: SE-11151
+                                  TwnNm: Stockholm
+                                  Ctry: SE
+                                CtryOfRes: SE
+                                Id:
+                                  OrgId:
+                                    Othr:
+                                      Id: 556677-8899
+                              Svcr:
+                                FinInstnId:
+                                  BICFI: AAAASESS
+                                  Nm: AAAA BANKEN
+                                  PstlAdr:
+                                    Ctry: SE
+                            Bal:
+                            - Tp:
+                                CdOrPrtry:
+                                  Cd: OPBD
+                                SubTp:
+                                  Prtry: SUB-OP-PRTRY
+                              Amt:
+                                value: '500000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-15'
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-16'
+                                Amt:
+                                  value: '250000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              - Dt:
+                                  NbOfDays: '2'
+                                Amt:
+                                  value: '100000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                            - Tp:
+                                CdOrPrtry:
+                                  Prtry: CUST_CLOSING
+                                SubTp:
+                                  Cd: INTM
+                              Amt:
+                                value: '435678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-18'
+                            Ntry:
+                            - NtryRef: NTRY-CR-FULL-001
+                              Amt:
+                                value: '105678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              RvslInd: false
+                              Sts:
+                                Cd: BOOK
+                              BookgDt:
+                                DtTm: '2010-10-18T13:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CN_98765/01
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-19'
+                                Amt:
+                                  value: '105678.50'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              BkTxCd:
+                                Domn:
+                                  Cd: PAYM
+                                  Fmly:
+                                    Cd: RCDT
+                                    SubFmlyCd: BOOK
+                              AddtlInfInd:
+                                MsgNmId: camt.053.001.04
+                                MsgId: BOOKING-STATUS-REF-01
+                              AddtlNtryInf: Incoming payment with full transaction
+                                details
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-BATCH-MSG
+                                  PmtInfId: FINP-BATCH-PMT-001
+                                  NbOfTxs: '1'
+                                TxDtls:
+                                - Refs:
+                                    AcctSvcrRef: ASR-TX-CR-001
+                                    InstrId: INSTR-SE-1001
+                                    EndToEndId: MUELL/FINP/RA12345
+                                    TxId: TX-CR-SE-01
+                                    MndtId: MANDATE-DD-SE-2020
+                                    ChqNb: CHQ-SE-009988
+                                    ClrSysRef: CLR-SE-556677
+                                  Amt:
+                                    value: '105678.50'
+                                    Ccy: SEK
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    InstdAmt:
+                                      Amt:
+                                        value: '9800.00'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        TrgtCcy: SEK
+                                        XchgRate: '10.7835'
+                                    TxAmt:
+                                      Amt:
+                                        value: '105678.50'
+                                        Ccy: SEK
+                                  Avlbty:
+                                  - Dt:
+                                      NbOfDays: '0'
+                                    Amt:
+                                      value: '105678.50'
+                                      Ccy: SEK
+                                    CdtDbtInd: CRDT
+                                  BkTxCd:
+                                    Prtry:
+                                      Cd: TX-PRTRY-CD
+                                      Issr: AAAA
+                                  Chrgs:
+                                    TtlChrgsAndTaxAmt:
+                                      value: '25.50'
+                                      Ccy: SEK
+                                    Rcrd:
+                                    - Amt:
+                                        value: '15.00'
+                                        Ccy: SEK
+                                      CdtDbtInd: DBIT
+                                      Tp:
+                                        Cd: COMM
+                                    - Amt:
+                                        value: '10.50'
+                                        Ccy: SEK
+                                      Tp:
+                                        Prtry:
+                                          Id: OURCHG
+                                          Issr: AAAA
+                                  RmtInf:
+                                    Ustrd:
+                                    - Invoice MUELL-2020-88; Service period Q4
+                                    Strd:
+                                    - CdtrRefInf:
+                                        Ref: RF18539007547034
+                                      Invcr:
+                                        Nm: Invoicer AB
+                                        PstlAdr:
+                                          AdrLine:
+                                          - Box 100
+                                          - SE-111 22 Stockholm
+                                      Invcee:
+                                        Nm: Invoicee Oy
+                                      AddtlRmtInf:
+                                      - Additional remittance line one
+                                      - Additional remittance line two
+                                  RltdPties:
+                                    Dbtr:
+                                      Nm: MUELLER GmbH
+                                      PstlAdr:
+                                        StrtNm: Hauptstrasse 5
+                                        PstCd: D-10115
+                                        TwnNm: Berlin
+                                        Ctry: DE
+                                      CtryOfRes: DE
+                                      Id:
+                                        OrgId:
+                                          Othr:
+                                            Id: DE-ORG-998877
+                                    DbtrAcct:
+                                      Id:
+                                        IBAN: DE89370400440532013000
+                                    UltmtDbtr:
+                                      Nm: Ultimate Debtor AG
+                                      CtryOfRes: AT
+                            - NtryRef: NTRY-DB-BATCH-002
+                              Amt:
+                                value: '200000'
+                                Ccy: SEK
+                              CdtDbtInd: DBIT
+                              RvslInd: true
+                              Sts:
+                                Cd: PDNG
+                              BookgDt:
+                                DtTm: '2010-10-18T10:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-ACCR-01
+                              BkTxCd:
+                                Prtry:
+                                  Cd: BANK-PROPR-DBIT
+                                  Issr: AAAA
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-0055
+                                  PmtInfId: FINP-0055/001
+                                  NbOfTxs: '20'
+                                TxDtls:
+                                - Refs:
+                                    EndToEndId: E2E-BATCH-SAMPLE
+                                  Amt:
+                                    value: '200000'
+                                    Ccy: SEK
+                                  CdtDbtInd: DBIT
+                                  RmtInf:
+                                    Ustrd:
+                                    - Batch supplier payment ref FINP-0055
+                                  RltdPties:
+                                    Cdtr:
+                                      Nm: Supplier Consolidated AB
+                                      PstlAdr:
+                                        StrtNm: Exportgatan 3
+                                        TwnNm: Göteborg
+                                        Ctry: SE
+                                    CdtrAcct:
+                                      Id:
+                                        IBAN: SE7280000812790000096986
+                                    UltmtCdtr:
+                                      Nm: Ultimate Creditor Group
+                                      CtryOfRes: 'NO'
+                                      Id:
+                                        PrvtId:
+                                          Othr:
+                                            Id: PRVT-ULT-CDTR-01
+                            - NtryRef: NTRY-FX-003
+                              Amt:
+                                value: '30000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Sts:
+                                Cd: INFO
+                              BookgDt:
+                                DtTm: '2010-10-18T15:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CONF-FX
+                              BkTxCd:
+                                Domn:
+                                  Cd: TREA
+                                  Fmly:
+                                    Cd: '0002'
+                                    SubFmlyCd: '0000'
+                              NtryDtls:
+                              - TxDtls:
+                                - Refs:
+                                    InstrId: FP-004567-FX
+                                    EndToEndId: AAAASS1085FINPSS
+                                  Amt:
+                                    value: '3255'
+                                    Ccy: EUR
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    CntrValAmt:
+                                      Amt:
+                                        value: '3255'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        XchgRate: '0.1085'
+                camt053Iso00108:
+                  summary: CAMT.053.001.08 — ISO-shaped JSON
+                  description: This is example of mapping a camt.053.001.08 to ISO-shaped
+                    JSON
+                  value:
+                    files:
+                    - zipEntryName: rich-053-001-08.xml
+                      schemaNamespace: urn:iso:std:iso:20022:tech:xsd:camt.053.001.08
+                      Document:
+                        BkToCstmrStmt:
+                          GrpHdr:
+                            MsgId: AAAASESS-FP-STAT001
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlInf: Group header additional information
+                          Stmt:
+                          - Id: AAAASESS-FP-STAT001
+                            StmtPgntn:
+                              PgNb: '2'
+                              LastPgInd: false
+                            ElctrncSeqNb: '42'
+                            LglSeqNb: '7'
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlStmtInf: Statement-level additional narrative
+                            Acct:
+                              Id:
+                                IBAN: SE3550000000054910000003
+                                Othr:
+                                  Id: SE-BANKDOM-5566778899
+                              Ccy: SEK
+                              Nm: Operating account FINPETROL
+                              Ownr:
+                                Nm: FINPETROL
+                                PstlAdr:
+                                  StrtNm: Industrigatan 12
+                                  PstCd: SE-11151
+                                  TwnNm: Stockholm
+                                  Ctry: SE
+                                CtryOfRes: SE
+                                Id:
+                                  OrgId:
+                                    Othr:
+                                      Id: 556677-8899
+                              Svcr:
+                                FinInstnId:
+                                  BICFI: AAAASESS
+                                  Nm: AAAA BANKEN
+                                  PstlAdr:
+                                    Ctry: SE
+                            Bal:
+                            - Tp:
+                                CdOrPrtry:
+                                  Cd: OPBD
+                                SubTp:
+                                  Prtry: SUB-OP-PRTRY
+                              Amt:
+                                value: '500000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-15'
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-16'
+                                Amt:
+                                  value: '250000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              - Dt:
+                                  NbOfDays: '2'
+                                Amt:
+                                  value: '100000'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                            - Tp:
+                                CdOrPrtry:
+                                  Prtry: CUST_CLOSING
+                                SubTp:
+                                  Cd: INTM
+                              Amt:
+                                value: '435678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Dt:
+                                Dt: '2010-10-18'
+                            Ntry:
+                            - NtryRef: NTRY-CR-FULL-001
+                              Amt:
+                                value: '105678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              RvslInd: false
+                              Sts:
+                                Cd: BOOK
+                              BookgDt:
+                                DtTm: '2010-10-18T13:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CN_98765/01
+                              Avlbty:
+                              - Dt:
+                                  ActlDt: '2010-10-19'
+                                Amt:
+                                  value: '105678.50'
+                                  Ccy: SEK
+                                CdtDbtInd: CRDT
+                              BkTxCd:
+                                Domn:
+                                  Cd: PAYM
+                                  Fmly:
+                                    Cd: RCDT
+                                    SubFmlyCd: BOOK
+                              AddtlInfInd:
+                                MsgNmId: camt.053.001.08
+                                MsgId: BOOKING-STATUS-REF-01
+                              AddtlNtryInf: Incoming payment with full transaction
+                                details
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-BATCH-MSG
+                                  PmtInfId: FINP-BATCH-PMT-001
+                                  NbOfTxs: '1'
+                                TxDtls:
+                                - Refs:
+                                    AcctSvcrRef: ASR-TX-CR-001
+                                    InstrId: INSTR-SE-1001
+                                    EndToEndId: MUELL/FINP/RA12345
+                                    UETR: 550e8400-e29b-41d4-a716-446655440000
+                                    TxId: TX-CR-SE-01
+                                    MndtId: MANDATE-DD-SE-2020
+                                    ChqNb: CHQ-SE-009988
+                                    ClrSysRef: CLR-SE-556677
+                                  Amt:
+                                    value: '105678.50'
+                                    Ccy: SEK
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    InstdAmt:
+                                      Amt:
+                                        value: '9800.00'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        TrgtCcy: SEK
+                                        XchgRate: '10.7835'
+                                    TxAmt:
+                                      Amt:
+                                        value: '105678.50'
+                                        Ccy: SEK
+                                  Avlbty:
+                                  - Dt:
+                                      NbOfDays: '0'
+                                    Amt:
+                                      value: '105678.50'
+                                      Ccy: SEK
+                                    CdtDbtInd: CRDT
+                                  BkTxCd:
+                                    Prtry:
+                                      Cd: TX-PRTRY-CD
+                                      Issr: AAAA
+                                  Chrgs:
+                                    TtlChrgsAndTaxAmt:
+                                      value: '25.50'
+                                      Ccy: SEK
+                                    Rcrd:
+                                    - Amt:
+                                        value: '15.00'
+                                        Ccy: SEK
+                                      CdtDbtInd: DBIT
+                                      Tp:
+                                        Cd: COMM
+                                    - Amt:
+                                        value: '10.50'
+                                        Ccy: SEK
+                                      Tp:
+                                        Prtry:
+                                          Id: OURCHG
+                                          Issr: AAAA
+                                  RmtInf:
+                                    Ustrd:
+                                    - Invoice MUELL-2020-88; Service period Q4
+                                    Strd:
+                                    - CdtrRefInf:
+                                        Ref: RF18539007547034
+                                      Invcr:
+                                        Nm: Invoicer AB
+                                        PstlAdr:
+                                          AdrLine:
+                                          - Box 100
+                                          - SE-111 22 Stockholm
+                                      Invcee:
+                                        Nm: Invoicee Oy
+                                      AddtlRmtInf:
+                                      - Additional remittance line one
+                                      - Additional remittance line two
+                                  RltdPties:
+                                    Dbtr:
+                                      Nm: MUELLER GmbH
+                                      PstlAdr:
+                                        StrtNm: Hauptstrasse 5
+                                        PstCd: D-10115
+                                        TwnNm: Berlin
+                                        Ctry: DE
+                                      CtryOfRes: DE
+                                      Id:
+                                        OrgId:
+                                          Othr:
+                                            Id: DE-ORG-998877
+                                    DbtrAcct:
+                                      Id:
+                                        IBAN: DE89370400440532013000
+                                    UltmtDbtr:
+                                      Nm: Ultimate Debtor AG
+                                      CtryOfRes: AT
+                            - NtryRef: NTRY-DB-BATCH-002
+                              Amt:
+                                value: '200000'
+                                Ccy: SEK
+                              CdtDbtInd: DBIT
+                              RvslInd: true
+                              Sts:
+                                Cd: PDNG
+                              BookgDt:
+                                DtTm: '2010-10-18T10:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-ACCR-01
+                              BkTxCd:
+                                Prtry:
+                                  Cd: BANK-PROPR-DBIT
+                                  Issr: AAAA
+                              NtryDtls:
+                              - Btch:
+                                  MsgId: FINP-0055
+                                  PmtInfId: FINP-0055/001
+                                  NbOfTxs: '20'
+                                TxDtls:
+                                - Refs:
+                                    EndToEndId: E2E-BATCH-SAMPLE
+                                    UETR: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+                                  Amt:
+                                    value: '200000'
+                                    Ccy: SEK
+                                  CdtDbtInd: DBIT
+                                  RmtInf:
+                                    Ustrd:
+                                    - Batch supplier payment ref FINP-0055
+                                  RltdPties:
+                                    Cdtr:
+                                      Nm: Supplier Consolidated AB
+                                      PstlAdr:
+                                        StrtNm: Exportgatan 3
+                                        TwnNm: Göteborg
+                                        Ctry: SE
+                                    CdtrAcct:
+                                      Id:
+                                        IBAN: SE7280000812790000096986
+                                    UltmtCdtr:
+                                      Nm: Ultimate Creditor Group
+                                      CtryOfRes: 'NO'
+                                      Id:
+                                        PrvtId:
+                                          Othr:
+                                            Id: PRVT-ULT-CDTR-01
+                            - NtryRef: NTRY-FX-003
+                              Amt:
+                                value: '30000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Sts:
+                                Prtry: INFO
+                              BookgDt:
+                                DtTm: '2010-10-18T15:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CONF-FX
+                              BkTxCd:
+                                Domn:
+                                  Cd: TREA
+                                  Fmly:
+                                    Cd: '0002'
+                                    SubFmlyCd: '0000'
+                              NtryDtls:
+                              - TxDtls:
+                                - Refs:
+                                    InstrId: FP-004567-FX
+                                    EndToEndId: AAAASS1085FINPSS
+                                    UETR: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                                  Amt:
+                                    value: '3255'
+                                    Ccy: EUR
+                                  CdtDbtInd: CRDT
+                                  AmtDtls:
+                                    CntrValAmt:
+                                      Amt:
+                                        value: '3255'
+                                        Ccy: EUR
+                                      CcyXchg:
+                                        SrcCcy: EUR
+                                        XchgRate: '0.1085'
+        '401':
+          description: |-
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": "ebics-biller-api.yml#/components/schemas/ErrorResponse"
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT
+                    was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not
+                      active'
+        '500':
+          description: Unexpected server error or BTD error payload (`status` = `ERROR`).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtIsoParseResponse"
+  "/client/ebics/v3/C54-iso":
+    post:
+      summary: C54 - Download ISO shape
+      description: |-
+        Downloads credit/debit notifications (CAMT.054) via EBICS BTD operation and
+        returns ISO-shaped JSON representation of the camt.054 content.
+
+        Main entities in the response are following:
+        ```text
+        Document
+        └── BkToCstmrDbtCdtNtfctn
+            └── Ntfctn[]
+                └── Acct
+                └── RltdAcct
+                └── TxsSummry
+                └── Ntry[]
+                    └── NtryDtls[]
+                        └── TxDtls[]
+        ```
+        The structure and element names are equivalents of the original XML ISO 20022 elements.
+        The response structure is unified for camt.054.001.04 and camt.054.001.08.
+        The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.      operationId: v3C54Iso
+      tags:
+      - EBICS v3
+      requestBody:
+        required: true
+        description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
+          containerType — defaults apply (REP, CH, camt.054, 08, ZIP). Actual vs historical
+          download follows the same rule as BTD: without dates = actual; with startDate/endDate
+          = historical.'
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CamtBtdDerivedParseRequest"
+            examples:
+              actualMinimal:
+                summary: Credit/Debit Notifications request (Actual)
+                description: Camt054 v08 Credit/Debit Notifications (Actual download
+                  of not-yet downloaded files from bank.)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+              historicalMinimal:
+                summary: Credit/Debit Notifications request (Historical)
+                description: Camt054 v08 Credit/Debit Notifications (Historical Download
+                  for given date range)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: billte-ch
+                  startDate: '2026-04-01'
+                  endDate: '2026-04-20'
+      responses:
+        '200':
+          description: Parsed successfully or BTD returned with error payload
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtIsoParseResponse"
+              examples:
+                camt054Iso00104:
+                  summary: CAMT.054.001.04 — ISO-shaped JSON
+                  description: This is example of mapping a camt.054.001.04 to ISO-shaped
+                    JSON
+                  value:
+                    files:
+                    - zipEntryName: rich-054-001-04.xml
+                      schemaNamespace: urn:iso:std:iso:20022:tech:xsd:camt.054.001.04
+                      Document:
+                        BkToCstmrDbtCdtNtfctn:
+                          GrpHdr:
+                            MsgId: AAAASESS-FP-N54-GRP
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlInf: CAMT054 group header additional information
+                          Ntfctn:
+                          - Id: AAAASESS-FP-N54-001
+                            NtfctnPgntn:
+                              PgNb: '2'
+                              LastPgInd: false
+                            ElctrncSeqNb: '42'
+                            LglSeqNb: '7'
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            FrToDt:
+                              FrDtTm: '2010-10-18T08:00:00+01:00'
+                              ToDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlNtfctnInf: Notification-level additional narrative
+                              for CAMT.054.001.04 rich fixture
+                            CpyDplctInd: DUPL
+                            RptgSrc:
+                              Cd: SOLE
+                            Acct:
+                              Id:
+                                IBAN: SE3550000000054910000003
+                                Othr:
+                                  Id: SE-BANKDOM-5566778899
+                              Ccy: SEK
+                              Nm: Operating account FINPETROL
+                              Ownr:
+                                Nm: FINPETROL
+                                PstlAdr:
+                                  StrtNm: Industrigatan 12
+                                  PstCd: SE-11151
+                                  TwnNm: Stockholm
+                                  Ctry: SE
+                                CtryOfRes: SE
+                              Svcr:
+                                FinInstnId:
+                                  BICFI: AAAASESS
+                                  Nm: AAAA BANKEN
+                                  PstlAdr:
+                                    Ctry: SE
+                            RltdAcct:
+                              Id:
+                                Othr:
+                                  Id: NTF-RLTD-SE-8899
+                            TxsSummry:
+                              TtlNtries:
+                                NbOfNtries: '3'
+                                Sum: '335678.50'
+                                TtlNetNtry:
+                                  Amt: '64321.50'
+                                  CdtDbtInd: DBIT
+                              TtlCdtNtries:
+                                NbOfNtries: '2'
+                                Sum: '135678.50'
+                              TtlDbtNtries:
+                                NbOfNtries: '1'
+                                Sum: '200000'
+                            Ntry:
+                            - NtryRef: NTRY-CR-FULL-001
+                              Amt:
+                                value: '105678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              RvslInd: false
+                              Sts:
+                                Cd: BOOK
+                              BookgDt:
+                                DtTm: '2010-10-18T13:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CN_98765/01
+                              BkTxCd:
+                                Domn:
+                                  Cd: PAYM
+                                  Fmly:
+                                    Cd: RCDT
+                                    SubFmlyCd: BOOK
+                              AddtlNtryInf: Incoming payment with full transaction
+                                details
+                            - NtryRef: NTRY-DB-BATCH-002
+                              Amt:
+                                value: '200000'
+                                Ccy: SEK
+                              CdtDbtInd: DBIT
+                              RvslInd: true
+                              Sts:
+                                Cd: PDNG
+                              BookgDt:
+                                DtTm: '2010-10-18T10:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-ACCR-01
+                              BkTxCd:
+                                Prtry:
+                                  Cd: BANK-PROPR-DBIT
+                                  Issr: AAAA
+                            - NtryRef: NTRY-FX-003
+                              Amt:
+                                value: '30000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Sts:
+                                Cd: INFO
+                              BookgDt:
+                                DtTm: '2010-10-18T15:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CONF-FX
+                              BkTxCd:
+                                Domn:
+                                  Cd: TREA
+                                  Fmly:
+                                    Cd: '0002'
+                                    SubFmlyCd: '0000'
+                camt054Iso00108:
+                  summary: CAMT.054.001.08 — ISO-shaped JSON
+                  description: This is example of mapping a camt.054.001.08 to ISO-shaped
+                    JSON
+                  value:
+                    files:
+                    - zipEntryName: rich-054-001-08.xml
+                      schemaNamespace: urn:iso:std:iso:20022:tech:xsd:camt.054.001.08
+                      Document:
+                        BkToCstmrDbtCdtNtfctn:
+                          GrpHdr:
+                            MsgId: AAAASESS-FP-N54-GRP
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlInf: CAMT054 group header additional information
+                          Ntfctn:
+                          - Id: AAAASESS-FP-N54-001
+                            NtfctnPgntn:
+                              PgNb: '2'
+                              LastPgInd: false
+                            ElctrncSeqNb: '42'
+                            LglSeqNb: '7'
+                            CreDtTm: '2010-10-18T17:00:00+01:00'
+                            FrToDt:
+                              FrDtTm: '2010-10-18T08:00:00+01:00'
+                              ToDtTm: '2010-10-18T17:00:00+01:00'
+                            AddtlNtfctnInf: Notification-level additional narrative
+                              for CAMT.054.001.08 rich fixture
+                            CpyDplctInd: COPY
+                            RptgSrc:
+                              Prtry: INTR
+                            Acct:
+                              Id:
+                                IBAN: SE3550000000054910000003
+                                Othr:
+                                  Id: SE-BANKDOM-5566778899
+                              Ccy: SEK
+                              Nm: Operating account FINPETROL
+                              Ownr:
+                                Nm: FINPETROL
+                                PstlAdr:
+                                  StrtNm: Industrigatan 12
+                                  PstCd: SE-11151
+                                  TwnNm: Stockholm
+                                  Ctry: SE
+                                CtryOfRes: SE
+                              Svcr:
+                                FinInstnId:
+                                  BICFI: AAAASESS
+                                  Nm: AAAA BANKEN
+                                  PstlAdr:
+                                    Ctry: SE
+                            RltdAcct:
+                              Id:
+                                IBAN: DE89370400440532013000
+                            TxsSummry:
+                              TtlNtries:
+                                NbOfNtries: '3'
+                                Sum: '335678.50'
+                                TtlNetNtry:
+                                  Amt: '64321.50'
+                                  CdtDbtInd: DBIT
+                              TtlCdtNtries:
+                                NbOfNtries: '2'
+                                Sum: '135678.50'
+                              TtlDbtNtries:
+                                NbOfNtries: '1'
+                                Sum: '200000'
+                            Ntry:
+                            - NtryRef: NTRY-CR-FULL-001
+                              Amt:
+                                value: '105678.50'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              RvslInd: false
+                              Sts:
+                                Cd: BOOK
+                              BookgDt:
+                                DtTm: '2010-10-18T13:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CN_98765/01
+                              BkTxCd:
+                                Domn:
+                                  Cd: PAYM
+                                  Fmly:
+                                    Cd: RCDT
+                                    SubFmlyCd: BOOK
+                              AddtlNtryInf: Incoming payment with full transaction
+                                details
+                            - NtryRef: NTRY-DB-BATCH-002
+                              Amt:
+                                value: '200000'
+                                Ccy: SEK
+                              CdtDbtInd: DBIT
+                              RvslInd: true
+                              Sts:
+                                Cd: PDNG
+                              BookgDt:
+                                DtTm: '2010-10-18T10:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-ACCR-01
+                              BkTxCd:
+                                Prtry:
+                                  Cd: BANK-PROPR-DBIT
+                                  Issr: AAAA
+                            - NtryRef: NTRY-FX-003
+                              Amt:
+                                value: '30000'
+                                Ccy: SEK
+                              CdtDbtInd: CRDT
+                              Sts:
+                                Prtry: INFO
+                              BookgDt:
+                                DtTm: '2010-10-18T15:15:00+01:00'
+                              ValDt:
+                                Dt: '2010-10-18'
+                              AcctSvcrRef: AAAASESS-FP-CONF-FX
+                              BkTxCd:
+                                Domn:
+                                  Cd: TREA
+                                  Fmly:
+                                    Cd: '0002'
+                                    SubFmlyCd: '0000'
+        '401':
+          description: |-
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": "ebics-biller-api.yml#/components/schemas/ErrorResponse"
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT
+                    was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not
+                      active'
+        '500':
+          description: Unexpected server error or BTD error payload (`status` = `ERROR`).
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CamtIsoParseResponse"
+components:
+  schemas:
+    CamtBtdDerivedParseRequest:
+      type: object
+      description: |-
+        Request body for CAMT C52/C53/C54 **ISO** or **canonical** parse operations (mirrors EBICS client `BaseBTDRequest` / `C52Request` / `C53Request` / `C54Request`).
+
+        **Defaults when omitted** depend on the order type (see each path):
+        - **C52**: `serviceName` STM, `scope` CH, `msgName` camt.052, `msgNameVersion` 08, `containerType` ZIP
+        - **C53**: `serviceName` EOP, `scope` CH, `msgName` camt.053, `msgNameVersion` 08, `containerType` ZIP
+        - **C54**: `serviceName` REP, `scope` CH, `msgName` camt.054, `msgNameVersion` 08, `containerType` ZIP
+
+        **Actual vs historical**: same rule as BTD — omit both dates for *actual* (not-yet-downloaded) data; send `startDate` and `endDate` together for a historical window (`yyyy-MM-dd`).
+      properties:
+        requestId:
+          type: string
+          nullable: true
+          description: Optional correlation id; often set server-side.
+        ebicsUserId:
+          type: string
+          description: EBICS user id (direct EBICS client). When proxied through eBillGuardian,
+            this may be resolved from the JWT.
+          example: ZKB03305
+        billerId:
+          type: string
+          description: Biller tenant id (direct client). May be resolved from JWT
+            when proxied.
+          example: billte-ch
+        startDate:
+          type: string
+          format: date
+          nullable: true
+          description: Historical range start (inclusive).
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: Historical range end (inclusive).
+        serviceName:
+          type: string
+          nullable: true
+          description: BTF service name (defaults per order type if omitted).
+        scope:
+          type: string
+          nullable: true
+          description: BTF scope (default CH).
+        msgName:
+          type: string
+          nullable: true
+          description: ISO message name (default camt.052 / .053 / .054 per path).
+        msgNameVersion:
+          type: string
+          nullable: true
+          description: Message version (default 08).
+        msgNameFormat:
+          type: string
+          nullable: true
+          description: Message format (default XML in client).
+        containerType:
+          type: string
+          nullable: true
+          description: Container type (default ZIP).
+    CamtCanonicalPostalAddress:
+      type: object
+      description: |-
+        Flattened postal address (`CanonicalPostalAddress`). Source: ISO 20022 `PstlAdr` on party elements
+        (e.g. `…/RltdPties/Dbtr/Pty/PstlAdr`, `…/Cdtr/Pty/PstlAdr` under `TxDtls`; v04/v08 type names differ in XSD).
+      properties:
+        department:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/Dept`.
+        subDepartment:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/SubDept`.
+        streetName:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/StrtNm`.
+        buildingNumber:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/BldgNb`.
+        postCode:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/PstCd`.
+        townName:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/TwnNm`.
+        countrySubdivision:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/CtrySubDvsn` (v08 also maps `DstrctNm` when `CtrySubDvsn` absent).
+        country:
+          type: string
+          nullable: true
+          description: ISO `PstlAdr/Ctry`.
+        addressLines:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: ISO `PstlAdr/AdrLine` (repeated).
+    CamtCanonicalParty:
+      type: object
+      description: |-
+        Debtor/creditor (or ultimate) party projection (`CanonicalParty`). Source: `TxDtls/RltdPties` —
+        **CAMT.052/053/054** `Dbtr` / `Cdtr` / `UltmtDbtr` / `UltmtCdtr` with nested `Pty` or `Agt` and optional `DbtrAcct` / `CdtrAcct` (v08 `Party40Choice` + `CashAccount38`; v04 `PartyIdentification43` + `CashAccount24`).
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: ISO `…/Pty/Nm` (v08) or `…/Dbtr|Cdtr|…/Nm` (v04 direct party).
+        iban:
+          type: string
+          nullable: true
+          description: ISO `…/DbtrAcct|CdtrAcct/Id/IBAN` when account is present.
+        bic:
+          type: string
+          nullable: true
+          description: ISO `…/Agt/FinInstnId/BICFI` when party is agent branch (v08 `Party40Choice/Agt`).
+        partyId:
+          type: string
+          nullable: true
+          description: ISO flattened from `…/Pty/Id` (`OrgId/Othr/Id` or `PrvtId/Othr/Id`, v08/v04).
+        country:
+          type: string
+          nullable: true
+          description: ISO `…/Pty/CtryOfRes`.
+        address:
+          nullable: true
+          description: ISO `…/Pty/PstlAdr`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalPostalAddress'
+    CamtCanonicalStructuredRemittance:
+      type: object
+      description: |-
+        First structured remittance slice (`CanonicalStructuredRemittance`). Source: **CAMT.052/053/054** `TxDtls/RmtInf/Strd` (first `Strd` entry only in mapper).
+      properties:
+        reference:
+          type: string
+          nullable: true
+          description: ISO `Strd/CdtrRefInf/Ref`.
+        invoicee:
+          type: string
+          nullable: true
+          description: ISO `Strd/Invcee/Nm`.
+        invoicer:
+          type: string
+          nullable: true
+          description: ISO `Strd/Invcr/Nm`.
+        additionalRemittanceInformation:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: ISO `Strd/AddtlRmtInf` (repeated).
+    CamtCanonicalBankTransactionCode:
+      type: object
+      description: |-
+        Bank transaction code breakdown (`CanonicalBankTransactionCode`). Source: **CAMT.052/053/054**
+        `Ntry/BkTxCd` (entry-level) or `TxDtls/BkTxCd` (transaction-level) — ISO `BkTxCd` (`Domn`/`Prtry` structure).
+      properties:
+        domain:
+          type: string
+          nullable: true
+          description: ISO `BkTxCd/Domn/Cd`.
+        family:
+          type: string
+          nullable: true
+          description: ISO `BkTxCd/Domn/Fmly/Cd`.
+        subFamily:
+          type: string
+          nullable: true
+          description: ISO `BkTxCd/Domn/Fmly/SubFmlyCd`.
+        proprietary:
+          type: string
+          nullable: true
+          description: ISO `BkTxCd/Prtry/Cd`.
+        proprietaryIssuer:
+          type: string
+          nullable: true
+          description: ISO `BkTxCd/Prtry/Issr`.
+    CamtCanonicalMonetaryAmount:
+      type: object
+      description: |-
+        Amount with currency (`CanonicalMonetaryAmount`). Source: **CAMT.052/053/054** `TxDtls/AmtDtls/InstdAmt` or `TxDtls/AmtDtls/TxAmt`
+        (ISO `AmountAndCurrencyExchangeDetails3/Amt` value + `Ccy`).
+      properties:
+        amount:
+          type: string
+          nullable: true
+          description: ISO `Amt/Value` (mapped as decimal string in JSON).
+        currency:
+          type: string
+          nullable: true
+          description: ISO `Amt/Ccy`.
+    CamtCanonicalCharge:
+      type: object
+      description: |-
+        One charge record (`CanonicalCharge`). Source: **CAMT.052/053/054** `TxDtls/Chrgs/Rcrd` (ISO `Charges*` record `Amt`, `Tp`).
+      properties:
+        amount:
+          type: string
+          nullable: true
+          description: ISO `Chrgs/Rcrd/Amt/Value`.
+        currency:
+          type: string
+          nullable: true
+          description: ISO `Chrgs/Rcrd/Amt/Ccy`.
+        type:
+          type: string
+          nullable: true
+          description: ISO `Chrgs/Rcrd/Tp` (`Cd` or `Prtry/Id`).
+    CamtCanonicalTransaction:
+      type: object
+      description: |-
+        Single transaction under an entry (`CanonicalTransaction`). Source: **CAMT.052/053/054**
+        `Ntry/NtryDtls/TxDtls` (flattened from all `NtryDtls` for that `Ntry`). References from `TxDtls/Refs`;
+        counterparties from `TxDtls/RltdPties` (see mapper `counterparty*` for `counterparty*` convenience fields).
+      properties:
+        instructionId:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/InstrId`.
+        endToEndId:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/EndToEndId` (v08 `TransactionReferences6`; v04 `TransactionReferences3` — same tag).
+        uetr:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/UETR` (**CAMT.052/053/054** v08 only; absent on v04 `TransactionReferences3` in mapper).
+        transactionId:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/TxId`.
+        clearingSystemReference:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/ClrSysRef`.
+        accountServicerReference:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/AcctSvcrRef`, else fallback to entry-level `Ntry/AcctSvcrRef`.
+        mandateId:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/MndtId`.
+        checkNumber:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Refs/ChqNb`.
+        amount:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Amt` (`ActiveOrHistoricCurrencyAndAmount` value).
+        currency:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/Amt/@Ccy`.
+        creditDebitIndicator:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/CdtDbtInd`.
+        instructedAmount:
+          nullable: true
+          description: ISO `TxDtls/AmtDtls/InstdAmt`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalMonetaryAmount'
+        transactionAmount:
+          nullable: true
+          description: ISO `TxDtls/AmtDtls/TxAmt`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalMonetaryAmount'
+        exchangeRate:
+          type: string
+          nullable: true
+          description: ISO derived from `TxDtls/AmtDtls` — first non-null `InstdAmt/CcyXchg` or `TxAmt/CcyXchg` (`XchgRate`, `SrcCcy`, `TrgtCcy`) formatted as a single string.
+        charges:
+          type: array
+          items:
+            $ref: '#/components/schemas/CamtCanonicalCharge'
+          nullable: true
+          description: ISO `TxDtls/Chrgs` (`Rcrd` list).
+        counterpartyName:
+          type: string
+          nullable: true
+          description: |-
+            Convenience field from `RltdPties`: for **credit** entry (`Ntry/CdtDbtInd` = CRDT) uses `Dbtr`/`DbtrAcct`;
+            for **debit** uses `Cdtr`/`CdtrAcct` (`Nm` / `Pty/Nm` or agent BIC).
+        counterpartyIban:
+          type: string
+          nullable: true
+          description: Convenience — IBAN from chosen counterparty account (`DbtrAcct` or `CdtrAcct` `Id/IBAN`).
+        counterpartyBic:
+          type: string
+          nullable: true
+          description: Convenience — BIC from `RltdPties/.../Agt/FinInstnId/BICFI` when party is agent (v08).
+        debtor:
+          nullable: true
+          description: ISO `TxDtls/RltdPties/Dbtr` + `DbtrAcct`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalParty'
+        creditor:
+          nullable: true
+          description: ISO `TxDtls/RltdPties/Cdtr` + `CdtrAcct`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalParty'
+        ultimateDebtor:
+          nullable: true
+          description: ISO `TxDtls/RltdPties/UltmtDbtr`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalParty'
+        ultimateCreditor:
+          nullable: true
+          description: ISO `TxDtls/RltdPties/UltmtCdtr`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalParty'
+        remittanceUnstructured:
+          type: string
+          nullable: true
+          description: ISO `TxDtls/RmtInf/Ustrd` (multiple lines joined with `"; "`).
+        remittanceStructured:
+          nullable: true
+          description: ISO `TxDtls/RmtInf/Strd` (first element only).
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalStructuredRemittance'
+        bankTransactionCodeStructured:
+          nullable: true
+          description: ISO `TxDtls/BkTxCd`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalBankTransactionCode'
+    CamtCanonicalBalanceAvailability:
+      type: object
+      description: |-
+        One projected cash availability row (`CanonicalBalanceAvailability`). Source: `Bal/Avlbty`
+        (**CAMT.052/053** only; not used on 054 in this mapper) — v08 `CashAvailability1`; v04 `CashBalanceAvailability2`; `Amt` + `Dt` (`ActlDt` or encoded `NbOfDays`).
+      properties:
+        amount:
+          type: string
+          nullable: true
+          description: ISO `Bal/Avlbty/Amt/Value`.
+        currency:
+          type: string
+          nullable: true
+          description: ISO `Bal/Avlbty/Amt/Ccy`.
+        date:
+          type: string
+          nullable: true
+          description: ISO `Bal/Avlbty/Dt` — `ActlDt` as `yyyy-MM-dd`, or synthetic `NBR_DAYS:{n}` from `NbOfDays`.
+    CamtCanonicalBalance:
+      type: object
+      description: |-
+        Reported balance (`CanonicalBalance`). Source: `Bal` under the account report or statement block (**052/053**;
+        not populated for **054** in the canonical mapper). ISO `CashBalance*` (`Tp`, `Amt`, `CdtDbtInd`, `Dt`, `Avlbty`).
+      properties:
+        type:
+          type: string
+          nullable: true
+          description: ISO `Bal/Tp/CdOrPrtry` (`Cd` or `Prtry`; v04 enum rendered as name when `Cd` used).
+        subType:
+          type: string
+          nullable: true
+          description: ISO `Bal/Tp/SubTp` (`Cd` or `Prtry`).
+        amount:
+          type: string
+          nullable: true
+          description: ISO `Bal/Amt/Value`.
+        currency:
+          type: string
+          nullable: true
+          description: ISO `Bal/Amt/Ccy`.
+        creditDebitIndicator:
+          type: string
+          nullable: true
+          description: ISO `Bal/CdtDbtInd`.
+        asOfDate:
+          type: string
+          nullable: true
+          description: ISO `Bal/Dt/Dt` (date-only branch of `DateAndDateTime*Choice`).
+        asOfDateTime:
+          type: string
+          nullable: true
+          description: ISO `Bal/Dt/DtTm` (date-time branch).
+        availability:
+          type: array
+          items:
+            $ref: '#/components/schemas/CamtCanonicalBalanceAvailability'
+          nullable: true
+          description: ISO `Bal/Avlbty` (repeated).
+    CamtCanonicalEntry:
+      type: object
+      description: |-
+        One `Ntry` (report/statement/notification line) (`CanonicalEntry`). ISO tag `Ntry` (paths relative to the parent `Rpt` / `Stmt` / `Ntfctn` — see `CamtCanonicalDocument`).
+      properties:
+        entryReference:
+          type: string
+          nullable: true
+          description: ISO `Ntry/NtryRef`.
+        amount:
+          type: string
+          nullable: true
+          description: ISO `Ntry/Amt/Value`.
+        currency:
+          type: string
+          nullable: true
+          description: ISO `Ntry/Amt/Ccy`.
+        creditDebitIndicator:
+          type: string
+          nullable: true
+          description: ISO `Ntry/CdtDbtInd`.
+        entryStatus:
+          type: string
+          nullable: true
+          description: ISO `Ntry/Sts` (`Cd` or `Prtry`; v04 may use enum name when coded).
+        bookingStatus:
+          type: string
+          nullable: true
+          description: ISO `Ntry/AddtlInfInd` (`MsgNmId` or `MsgId`).
+        isReversal:
+          type: boolean
+          nullable: true
+          description: ISO `Ntry/RvslInd`.
+        numberOfTransactions:
+          type: integer
+          format: int32
+          nullable: true
+          description: Aggregated sum of `Ntry/NtryDtls/Btch/NbOfTxs` across all `NtryDtls` for the entry.
+        entryDetailsPresent:
+          type: boolean
+          nullable: true
+          description: Derived — `Ntry/NtryDtls` non-empty.
+        bookingDate:
+          type: string
+          nullable: true
+          description: ISO `Ntry/BookgDt/Dt`.
+        bookingDateTime:
+          type: string
+          nullable: true
+          description: ISO `Ntry/BookgDt/DtTm`.
+        valueDate:
+          type: string
+          nullable: true
+          description: ISO `Ntry/ValDt/Dt`.
+        valueDateTime:
+          type: string
+          nullable: true
+          description: ISO `Ntry/ValDt/DtTm`.
+        bankTransactionCode:
+          type: string
+          nullable: true
+          description: ISO shorthand from `Ntry/BkTxCd` (`Prtry/Cd` or `Domn/Cd`).
+        bankTransactionCodeStructured:
+          nullable: true
+          description: ISO full `Ntry/BkTxCd` breakdown.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalBankTransactionCode'
+        additionalEntryInformation:
+          type: string
+          nullable: true
+          description: ISO `Ntry/AddtlNtryInf`.
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CamtCanonicalTransaction'
+          nullable: true
+          description: ISO flattened from `Ntry/NtryDtls/TxDtls` (all details for the entry).
+    CamtCanonicalAccount:
+      type: object
+      description: |-
+        Flattened account identification (`CanonicalAccount`). Source: `Acct/Id` (`IBAN`, `Othr/Id`); on **054** the same pattern applies to `RltdAcct` for `relatedAccount`.
+      properties:
+        iban:
+          type: string
+          nullable: true
+          description: ISO `Acct/Id/IBAN` (or `RltdAcct/Id/IBAN` for related account).
+        othrId:
+          type: string
+          nullable: true
+          description: ISO `Acct/Id/Othr/Id` (or `RltdAcct/Id/Othr/Id`).
+    CamtCanonicalPagination:
+      type: object
+      description: |-
+        Pagination (`CanonicalPagination`). ISO element name depends on message type: `RptPgntn`, `StmtPgntn`, or `NtfctnPgntn`; children `PgNb`, `LastPgInd`.
+      properties:
+        pageNumber:
+          type: string
+          nullable: true
+          description: ISO `PgNb`.
+        lastPage:
+          type: boolean
+          nullable: true
+          description: ISO `LastPgInd`.
+    CamtCanonicalPeriod:
+      type: object
+      description: |-
+        Reporting period (`CanonicalPeriod`). Source: `FrToDt` — v08 `DateTimePeriod1` (`FrDtTm`, `ToDtTm`); v04 `DateTimePeriodDetails` (same tags in XML).
+      properties:
+        from:
+          type: string
+          nullable: true
+          description: ISO `FrToDt/FrDtTm` (mapped to XML date-time string).
+        to:
+          type: string
+          nullable: true
+          description: ISO `FrToDt/ToDtTm`.
+    CamtCanonicalAccountOwner:
+      type: object
+      description: |-
+        Account owner (`CanonicalAccountOwner`). Source: `Acct/Ownr` (`PartyIdentification135` v08 or `PartyIdentification43` v04) — `Nm`, `Id` (flattened), `CtryOfRes`.
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: ISO `Acct/Ownr/Nm`.
+        partyId:
+          type: string
+          nullable: true
+          description: ISO flattened from `Acct/Ownr/Id` (`OrgId/Othr/Id` or `PrvtId/Othr/Id`).
+        country:
+          type: string
+          nullable: true
+          description: ISO `Acct/Ownr/CtryOfRes`.
+    CamtCanonicalAccountServicer:
+      type: object
+      description: |-
+        Account servicer FI (`CanonicalAccountServicer`). Source: `Acct/Svcr/FinInstnId` — `BICFI`, `Nm`. `accountServicerBic` on the document duplicates `FinInstnId/BICFI` for convenience.
+      properties:
+        bic:
+          type: string
+          nullable: true
+          description: ISO `Acct/Svcr/FinInstnId/BICFI`.
+        name:
+          type: string
+          nullable: true
+          description: ISO `Acct/Svcr/FinInstnId/Nm`.
+    CamtCanonicalTransactionsSummary:
+      type: object
+      description: |-
+        **CAMT.054** notification totals (`CanonicalTransactionsSummary`). Source: `TxsSummry`
+        (v08 `TotalTransactions6`; v04 `TotalTransactions4`) — ISO `TtlNtries`, `TtlCdtNtries`, `TtlDbtNtries`.
+        Numeric fields serialize as JSON numbers from Java `BigDecimal`.
+      properties:
+        totalNumberOfEntries:
+          type: string
+          nullable: true
+          description: ISO `TxsSummry/TtlNtries/NbOfNtries`.
+        totalSum:
+          type: number
+          nullable: true
+          description: ISO `TxsSummry/TtlNtries/Sum`.
+        totalNetEntryAmount:
+          type: number
+          nullable: true
+          description: ISO `TxsSummry/TtlNtries/TtlNetNtry/Amt`.
+        totalNetCreditDebitIndicator:
+          type: string
+          nullable: true
+          description: ISO `TxsSummry/TtlNtries/TtlNetNtry/CdtDbtInd`.
+        creditEntriesNumber:
+          type: string
+          nullable: true
+          description: ISO `TxsSummry/TtlCdtNtries/NbOfNtries`.
+        creditSum:
+          type: number
+          nullable: true
+          description: ISO `TxsSummry/TtlCdtNtries/Sum`.
+        debitEntriesNumber:
+          type: string
+          nullable: true
+          description: ISO `TxsSummry/TtlDbtNtries/NbOfNtries`.
+        debitSum:
+          type: number
+          nullable: true
+          description: ISO `TxsSummry/TtlDbtNtries/Sum`.
+    CamtCanonicalDocument:
+      type: object
+      description: |-
+        One logical CAMT payload (`CanonicalCamtDocument`). ISO message roots: **052** `BkToCstmrAcctRpt` → `Rpt`;
+        **053** `BkToCstmrStmt` → `Stmt`; **054** `BkToCstmrDbtCdtNtfctn` → `Ntfctn`. `originalMessageId` is `GrpHdr/MsgId`
+        on that root. Other property paths are relative to `Rpt` / `Stmt` / `Ntfctn` unless noted (e.g. 054-only fields).
+      properties:
+        sourceZipEntry:
+          type: string
+          nullable: true
+          description: Application — name of the XML file inside the BTD ZIP (not an ISO 20022 element).
+        originalMessageId:
+          type: string
+          nullable: true
+          description: ISO `GrpHdr/MsgId` on `BkToCstmrAcctRpt`, `BkToCstmrStmt`, or `BkToCstmrDbtCdtNtfctn`.
+        documentType:
+          type: string
+          nullable: true
+          description: |-
+            Derived CAMT family for JSON (`camt.052` / `camt.053` / `camt.054` via Java `@JsonValue`; examples may show `CAMT052` style).
+            ISO side is the message root (`BkToCstmrAcctRpt`, `BkToCstmrStmt`, `BkToCstmrDbtCdtNtfctn`).
+          example: CAMT052
+        documentId:
+          type: string
+          nullable: true
+          description: ISO `Id`.
+        electronicSequenceNumber:
+          type: string
+          nullable: true
+          description: ISO `ElctrncSeqNb`.
+        legalSequenceNumber:
+          type: string
+          nullable: true
+          description: ISO `LglSeqNb`.
+        pagination:
+          nullable: true
+          description: ISO `RptPgntn`, `StmtPgntn`, or `NtfctnPgntn` (name depends on CAMT type).
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalPagination'
+        creationDateTime:
+          type: string
+          nullable: true
+          description: ISO `CreDtTm`.
+        period:
+          nullable: true
+          description: ISO `FrToDt`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalPeriod'
+        additionalInfo:
+          type: string
+          nullable: true
+          description: ISO `AddtlRptInf` (052), `AddtlStmtInf` (053), or `AddtlNtfctnInf` (054).
+        account:
+          nullable: true
+          description: ISO `Acct` (`Id/IBAN`, `Id/Othr/Id`).
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalAccount'
+        accountName:
+          type: string
+          nullable: true
+          description: ISO `Acct/Nm`.
+        accountOwner:
+          nullable: true
+          description: ISO `Acct/Ownr`.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalAccountOwner'
+        accountCurrency:
+          type: string
+          nullable: true
+          description: ISO `Acct/Ccy`.
+        accountServicerBic:
+          type: string
+          nullable: true
+          description: ISO `Acct/Svcr/FinInstnId/BICFI` (duplicate for convenience).
+        accountServicer:
+          nullable: true
+          description: ISO `Acct/Svcr` (`FinInstnId/BICFI`, `FinInstnId/Nm`).
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalAccountServicer'
+        balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/CamtCanonicalBalance'
+          nullable: true
+          description: ISO `Bal` (052/053 only; omitted for 054 in the mapper).
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/CamtCanonicalEntry'
+          nullable: true
+          description: ISO repeated `Ntry`.
+        relatedAccount:
+          nullable: true
+          description: |-
+            **CAMT.054** only — ISO `RltdAcct` (`Id/IBAN`, `Id/Othr/Id` flattened like main `Acct`).
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalAccount'
+        copyDuplicateIndicator:
+          type: string
+          nullable: true
+          description: "**CAMT.054** only — ISO `CpyDplctInd`."
+        reportingSource:
+          type: string
+          nullable: true
+          description: "**CAMT.054** only — ISO `RptgSrc` (`Cd` or `Prtry` flattened to one string)."
+        transactionsSummary:
+          nullable: true
+          description: "**CAMT.054** only — ISO `TxsSummry`."
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalTransactionsSummary'
+    CamtCanonicalParseResult:
+      type: object
+      description: |-
+        Wrapper for all parsed logical documents (`CanonicalCamtParseResult`). One `documents[]` item per `Rpt` (052),
+        `Stmt` (053), or `Ntfctn` (054) inside each XML from the BTD ZIP (see `CamtCanonicalDocument`).
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CamtCanonicalDocument'
+          nullable: true
+          description: One element per logical report, statement, or notification block after mapping.
+    CamtCanonicalParseResponse:
+      type: object
+      description: |-
+        Parsed CAMT response in **compact canonical** JSON: BTD-style metadata (`status`, `message`, EBICS return codes when present) plus `parseResult` with `documents` (balances, entries, transactions — field set varies slightly by CAMT flavour).
+
+        On failure the service may return HTTP **500** with `status` = `ERROR` and `message` populated.
+      additionalProperties: true
+      properties:
+        ebicsUserId:
+          type: string
+          nullable: true
+        orderType:
+          type: string
+          example: C52
+        status:
+          type: string
+        message:
+          type: string
+          nullable: true
+        dataAvailabilityStatus:
+          type: string
+          nullable: true
+        headerReturnCode:
+          type: string
+          nullable: true
+        headerReturnText:
+          type: string
+          nullable: true
+        bodyReturnCode:
+          type: string
+          nullable: true
+        bodyReturnText:
+          type: string
+          nullable: true
+        bodyReturnSymbolicName:
+          type: string
+          nullable: true
+        parseResult:
+          description: |-
+            Parsed CAMT payload (`CanonicalCamtParseResult`): `documents[]` mirrors one `Rpt` / `Stmt` / `Ntfctn` per item.
+          allOf:
+            - $ref: '#/components/schemas/CamtCanonicalParseResult'
+    CamtIsoParseResponse:
+      type: object
+      description: |-
+        Parsed CAMT response in **ISO element–aligned** JSON: metadata as for canonical responses, plus a `files` array mirroring ZIP entries. Each file has `zipEntryName`, `schemaNamespace`, and a `Document` object whose root follows the XSD (`BkToCstmrAcctRpt` for CAMT.052, `BkToCstmrStmt` for .053, `BkToCstmrDbtCdtNtfctn` for .054).
+
+        **CAMT.054** adds notification-specific structures (`Ntfctn`, `NtfctnPgntn`, etc.).
+      additionalProperties: true
+      properties:
+        ebicsUserId:
+          type: string
+          nullable: true
+        orderType:
+          type: string
+          example: C52
+        status:
+          type: string
+        message:
+          type: string
+          nullable: true
+        dataAvailabilityStatus:
+          type: string
+          nullable: true
+        headerReturnCode:
+          type: string
+          nullable: true
+        headerReturnText:
+          type: string
+          nullable: true
+        bodyReturnCode:
+          type: string
+          nullable: true
+        bodyReturnText:
+          type: string
+          nullable: true
+        bodyReturnSymbolicName:
+          type: string
+          nullable: true
+        files:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+          description: One element per parsed XML inside the BTD ZIP.

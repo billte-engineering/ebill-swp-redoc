@@ -13,8 +13,9 @@ info:
     * **HTD** – list subscribed BTF formats and bank accounts
     * **BTU** – upload payment / direct-debit orders to the bank
     * **BTD** – download statements, reports and notifications from the bank
-    * **HAA** – list available BTF order types at the bank
-    * **HAC** – download customer acknowledgements (status of previous orders)
+    * **HAA** – BTFs / order types with data ready to retrieve from the bank (retrievable downloads)
+    * **HAC** – customer acknowledgements (pain.002; status reasons for prior orders / BTU)
+    * **C52 / C53 / C54 – ISO & canonical parse** – download CAMT.052 / .053 / .054 via BTD without cloud upload and return either ISO-shaped or compact canonical JSON (see `ebics-biller-camt-api.yaml`, included from `POST /client/ebics/v3/C5x-iso` and `…/C5x-canonical` in the main spec)
 
     ### General Note
 
@@ -334,33 +335,7 @@ components:
           type: array
           description: List of subscribed BTF format combinations. Use these exact values in BTU/BTD requests.
           items:
-            type: object
-            properties:
-              serviceName:
-                type: string
-                example: "MCT"
-              scope:
-                type: string
-                example: "CH"
-              serviceOption:
-                type: string
-                nullable: true
-              containerType:
-                type: string
-                nullable: true
-              msgName:
-                type: string
-                example: "pain.001"
-              msgNameVersion:
-                type: string
-                nullable: true
-                example: "03"
-              msgNameVariant:
-                type: string
-                nullable: true
-              msgNameFormat:
-                type: string
-                nullable: true
+            $ref: '#/components/schemas/HtdBusinessTransactionFormat'
         accounts:
           type: array
           description: List of bank accounts subscribed for this biller at the bank.
@@ -424,45 +399,171 @@ components:
                       type: string
                       example: "other"
 
+    HtdBusinessTransactionFormat:
+      type: object
+      description: |
+        One BTF / restricted service descriptor: same dimensions in **HTD** (subscribed formats) and **HAA** (data ready
+        to retrieve); see EBICS 3.0 §9.1.
+      properties:
+        serviceName:
+          type: string
+          nullable: true
+          description: Service name component of the BTF (e.g. MCT, PSR, EOP).
+          example: "MCT"
+        scope:
+          type: string
+          nullable: true
+          description: Country or institution scope (e.g. CH).
+          example: "CH"
+        serviceOption:
+          type: string
+          nullable: true
+          description: Optional service option qualifier when present.
+        containerType:
+          type: string
+          nullable: true
+          description: Container or packaging hint from the bank (e.g. ZIP).
+        msgName:
+          type: string
+          nullable: true
+          description: ISO 20022 message name (e.g. pain.001, pain.002, camt.053).
+          example: "pain.001"
+        msgNameVersion:
+          type: string
+          nullable: true
+          description: Message version identifier when provided.
+          example: "03"
+        msgNameVariant:
+          type: string
+          nullable: true
+          description: Message variant when provided.
+        msgNameFormat:
+          type: string
+          nullable: true
+          description: Message format qualifier when provided.
+
+    HacIdentification:
+      type: object
+      description: |
+        One `OrgId/Othr` entry from HAC **pain.002** `StsRsnInf/Orgtr/Id` (EBICS 3.0 ch.10). Key–value pair for JSON:
+        `schemeProprietary` is the semantic label (ISO 20022 `SchmeNm/Prtry`), `id` is the value (`Othr/Id`). Common
+        `schemeProprietary` examples include `UserID`, `PartnerID`, `OrderID`, `AdminOrderType`, `TimeStamp`,
+        `ServiceName`, `Scope`, `MsgName`; banks may emit further proprietary names.
+      properties:
+        id:
+          type: string
+          description: Value (`Othr/Id`); interpretation depends on `schemeProprietary`.
+          example: "camt.053"
+        schemeProprietary:
+          type: string
+          description: Semantic key (`Othr/SchmeNm/Prtry`); not an exhaustive standardized enum—values are bank-specific.
+          example: "MsgName"
+
+    HacStsRsnInfEntry:
+      type: object
+      description: |
+        One `StsRsnInf` block from HAC **pain.002** (EBICS 3.0 ch.10; ISO 20022 status reason information).
+      properties:
+        originatorName:
+          type: string
+          nullable: true
+          description: Originator name (`StsRsnInf/Orgtr/Nm`).
+        identifications:
+          type: array
+          description: Zero or more entries from `Orgtr/Id/OrgId/Othr`.
+          items:
+            $ref: '#/components/schemas/HacIdentification'
+        reasonCode:
+          type: string
+          nullable: true
+          description: Reason / result code (`StsRsnInf/Rsn`); see EBICS 3.0 ch.10.3.
+        reasonName:
+          type: string
+          nullable: true
+          description: Name from EBICS 3.0 ch.10.3 `ExternalStatusReason1Code` annex when mapped; null if the code is not in the annex.
+        reasonDescription:
+          type: string
+          nullable: true
+          description: Definition from EBICS 3.0 ch.10.3; null if the code is not in the annex.
+        additionalInformation:
+          type: array
+          description: Additional information lines (`StsRsnInf/AddtlInf`).
+          items:
+            type: string
+
     HAARequest:
       type: object
-      description: Retrieve the list of available BTF order types at the bank (H005 HAA v3).
+      description: |
+        EBICS 3.0 H005 **HAA** request: list business transaction formats (BTFs) / services for which the bank currently
+        has data ready to retrieve (available downloads; EBICS 3.0 §9.1). The JSON body is typically an empty object;
+        `ebicsUserId` and `billerId` are resolved from the JWT.
       properties: {}
 
     HAAResponse:
       type: object
-      description: Pass-through response from the EBICS HAA operation. Shape is defined by the underlying EBICS service and may evolve.
-      additionalProperties: true
+      description: |
+        Parsed **HAA** response (EBICS 3.0 §9.1): order types / services for which downloadable data is available at
+        the bank (`services`). On client or transport failure, `status` and `message` may describe the error.
       properties:
         ebicsUserId:
           type: string
+          description: Resolved EBICS user id for this response.
           example: "ZKB03305"
-        status:
-          type: string
-          nullable: true
+        services:
+          type: array
+          description: Services (BTF / restricted service descriptors) with data ready to retrieve; empty when nothing is pending.
+          items:
+            $ref: '#/components/schemas/HtdBusinessTransactionFormat'
         message:
           type: string
           nullable: true
+          description: Human-readable detail from the EBICS client or transport layer; null on success.
+        status:
+          type: string
+          nullable: true
+          description: Client-side status (e.g. `ERROR` on failure); null when the HAA order completed without client-side error.
 
     HACRequest:
       type: object
-      description: Retrieve customer acknowledgements / status of previous orders (H005 HAC v3).
-      properties: {}
+      description: |
+        Request for **HAC** (customer acknowledgement, **pain.002**) — EBICS v3 (H005). Optional date range maps to
+        `StandardOrderParams/DateRange`; **both** `startDate` and `endDate` **must** be set together, or **both** omitted.
+        `ebicsUserId` and `billerId` are resolved from the JWT.
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: Optional start date (inclusive) for historical data retrieval in yyyy-MM-dd format.
+          example: "2026-04-01"
+        endDate:
+          type: string
+          format: date
+          description: Optional end date (inclusive) for historical data retrieval in yyyy-MM-dd format.
+          example: "2026-04-20"
 
     HACResponse:
       type: object
-      description: Pass-through response from the EBICS HAC operation. Shape is defined by the underlying EBICS service and may evolve.
-      additionalProperties: true
+      description: |
+        Parsed **HAC** response (EBICS 3.0 ch.10): **pain.002** with extracted `StsRsnInf` rows in `statusReasons`
+        (originator, optional identifications, reason code, optional EBICS annex name/description, and additional lines).
       properties:
         ebicsUserId:
           type: string
+          description: Resolved EBICS user id for this response.
           example: "ZKB03305"
-        status:
-          type: string
-          nullable: true
+        statusReasons:
+          type: array
+          description: Extracted status reason blocks from **pain.002** (`StsRsnInf`).
+          items:
+            $ref: '#/components/schemas/HacStsRsnInfEntry'
         message:
           type: string
           nullable: true
+          description: Human-readable detail from the EBICS client or transport layer; null on success.
+        status:
+          type: string
+          nullable: true
+          description: Client-side status (e.g. `ERROR` on failure); null when the HAC order completed without client-side error.
 
 paths:
   # ════════════════════════════════════════════
@@ -912,11 +1013,16 @@ paths:
 
   /client/ebics/v3/haa:
     post:
-      summary: HAA – List available BTF order types at the bank
+      summary: HAA – Retrievable download data
       description: |
-        Returns the list of BTF (Business Transaction Format) order types currently available at the bank for this biller.
+        EBICS 3.0 H005 **HAA** (“available downloads” / retrievable order data): lists **business transaction formats (BTFs)
+        for which the bank currently has data ready to retrieve via BTD operation**.
 
-        Use this together with **HTD** to discover which order types you can use in subsequent BTU/BTD requests.
+        **Note** This operation is usefull only for actual data (non-historical downloads). 
+
+        Contrast with **HTD**, which returns the **subscribed** BTF catalogue and account metadata. Use **HTD** to know
+        which BTF parameters are allowed for your user; use **HAA** to see which of those download types
+        actually have pending files **before** you call **BTD** for actual data (or to prioritize polling).
 
         The request body is empty — `ebicsUserId` and `billerId` are resolved internally from your JWT.
       operationId: v3Haa
@@ -930,11 +1036,46 @@ paths:
             example: {}
       responses:
         '200':
-          description: HAA executed successfully
+          description: HAA executed successfully — bank returned available-download descriptors (often under `services`).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HAAResponse'
+              examples:
+                haaWithPendingDownloads:
+                  summary: Services with data ready to download
+                  description: |
+                    Example HAA response showing the BTFs having retrievable data for non-historical downloads (pain.002 and camt.053). 
+                    After calling BTD for actual data, the bank will mark the data as downloaded, and they will not appear in the next HAA response.
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: null
+                    message: null
+                    services:
+                      - serviceName: "PSR"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "pain.002"
+                        msgNameVersion: "10"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                      - serviceName: "EOP"
+                        scope: "CH"
+                        serviceOption: null
+                        containerType: "ZIP"
+                        msgName: "camt.053"
+                        msgNameVersion: "08"
+                        msgNameVariant: null
+                        msgNameFormat: null
+                haaNothingPending:
+                  summary: No pending downloadable data available
+                  describtion: No pending downloadable data available, it means that any call to BTD for actual data (non-historical downloads) will return no data.
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: null
+                    message: null
+                    services: []
         '401':
           description: |
             Unauthorized. Returned when:
@@ -954,16 +1095,43 @@ paths:
                   description: Returned when `ebicsStatus` flips off after the JWT was issued.
                   value:
                     error: "Unauthorized: billerPid is not valid or biller is not active"
+        '500':
+          description: |
+            Internal server error during HAA (downstream EBICS host, transport, or parsing). Matches the EBICS client
+            behaviour of returning HTTP 500 with a JSON body where `status` is `ERROR` and `message` carries details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HAAResponse'
+              examples:
+                haaExecutionError:
+                  summary: HAA execution failed
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "ERROR"
+                    message: "Failed to execute HAA: Error in executing HAA :: ZKB03305 :: …"
+                    services: []
 
   /client/ebics/v3/hac:
     post:
-      summary: HAC – Download customer acknowledgements
+      summary: HAC – Customer acknowledgements (pain.002)
       description: |
-        Returns customer acknowledgements (status of previously submitted orders) from the bank.
+        Returns order statuses (or HACs - Host Customer Acknowledgement) for the given date range.
+        EBICS 3.0 H005 **HAC** (Host Customer Acknowledgement): downloads **customer acknowledgements** as ISO 20022
+        **pain.002** (EBICS 3.0 ch.10). 
+        
+        The EBICS client parses the message and surfaces extracted **`StsRsnInf`**
+        blocks: originator name, optional **`OrgId/Othr`** identifications, **`Rsn/Cd`**, optional EBICS annex
+        **`reasonName` / `reasonDescription`**, and **`AddtlInf`** lines.
 
-        Useful for reconciling the status of BTU uploads after the fact.
+        Typical use: after **BTU**, reconcile **technical / signature** status before relying on **BTD** pain.002 PSR,
+        **C54**, **C52**, or **C53** (see BTU flow in the EBICS client API docs).
 
-        The request body is empty — `ebicsUserId` and `billerId` are resolved internally from your JWT.
+        The request body may be `{}` or include optional inclusive **`yyyy-MM-dd`** `startDate` / `endDate` (see
+        `HACRequest`); `ebicsUserId` and `billerId` are resolved internally from your JWT.
+
+        **Note:** Send **both** dates together for a historical window, or **neither** for delta / “since last HAC”
+        behaviour (bank-dependent). 
       operationId: v3Hac
       tags: [EBICS v3]
       requestBody:
@@ -972,14 +1140,244 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/HACRequest'
-            example: {}
+            examples:
+              hacActualDownload:
+                summary: Actual HAC download
+                description: Download actual HAC order statuses
+                value: {}
+              hacHistoricalDownload:
+                summary: Historical HAC download
+                description: Download historical HAC statuses for the given date range (inclusive).
+                value:
+                  startDate: "2026-04-01"
+                  endDate: "2026-04-20"
       responses:
         '200':
-          description: HAC executed successfully
+          description: |
+            HAC executed successfully — parsed **`statusReasons`** from pain.002 (may be empty if there is nothing new
+            in the requested window / delta).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HACResponse'
+              examples:
+                hacUnsuccessfulUploadDs0g:
+                  summary: Unsuccessful upload example (DS0G)
+                  description: Example of status chain for after pain.001 upload. Order E001 with TS01 then DS0G NotAllowedPayment (EBICS signing rights error).
+                  value:
+                    ebicsUserId: 'ZKB03305'
+                    statusReasons:
+                    - originatorName: Billte AG
+                      identifications:
+                      - id: 'ZKB03305'
+                        schemeProprietary: UserID
+                      - id: '2491234633'
+                        schemeProprietary: PartnerID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: E001
+                        schemeProprietary: OrderID
+                      - id: '2026-03-07T14:29:17Z'
+                        schemeProprietary: TimeStamp
+                      reasonCode: TS01
+                      reasonName: TransmissionSuccessful
+                      reasonDescription: The (technical) transmission of the file was successful.
+                      additionalInformation: []
+                    - originatorName: Billte AG
+                      identifications:
+                      - id: 'ZKB03305'
+                        schemeProprietary: UserID
+                      - id: '2491234633'
+                        schemeProprietary: PartnerID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: E001
+                        schemeProprietary: OrderID
+                      - id: '2026-03-07T14:29:17Z'
+                        schemeProprietary: TimeStamp
+                      reasonCode: DS0G
+                      reasonName: NotAllowedPayment
+                      reasonDescription: Signer is not allowed to sign this operation type. In EBICS this means that the user has no authorisation rights
+                      additionalInformation: []
+                hacSuccessfulUploadPain001:
+                  summary: Successful upload example
+                  description: Example of status chain after pain.001 upload (successful upload). Order AAAP statusses was TS01, DS06, DS01, DS05.
+                  value:
+                    ebicsUserId: "610358DB2"
+                    statusReasons:
+                    - originatorName: TEST Echannels
+                      identifications:
+                      - id: "610358DB2"
+                        schemeProprietary: UserID
+                      - id: "610358DB2"
+                        schemeProprietary: PartnerID
+                      - id: AAAP
+                        schemeProprietary: OrderID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: '2026-03-26T10:32:37.11'
+                        schemeProprietary: TimeStamp
+                      reasonCode: TS01
+                      reasonName: TransmissionSuccessful
+                      reasonDescription: The (technical) transmission of the file was successful.
+                      additionalInformation: []
+                    - originatorName: TEST Echannels
+                      identifications:
+                      - id: "610358DB2"
+                        schemeProprietary: UserID
+                      - id: "610358DB2"
+                        schemeProprietary: PartnerID
+                      - id: AAAP
+                        schemeProprietary: OrderID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: '2026-03-26T10:32:37.11'
+                        schemeProprietary: TimeStamp
+                      reasonCode: DS06
+                      reasonName: TransferOrder
+                      reasonDescription: The order was transferred to EDS
+                      additionalInformation: []
+                    - originatorName: TEST Echannels
+                      identifications:
+                      - id: "610358DB2"
+                        schemeProprietary: UserID
+                      - id: "610358DB2"
+                        schemeProprietary: PartnerID
+                      - id: AAAP
+                        schemeProprietary: OrderID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: '2026-03-26T10:32:37.2033333'
+                        schemeProprietary: TimeStamp
+                      reasonCode: DS01
+                      reasonName: ElectronicSignaturesCorrect
+                      reasonDescription: The Electronic Signature(s) are correct
+                      additionalInformation: []
+                    - originatorName: TEST Echannels
+                      identifications:
+                      - id: "610358DB2"
+                        schemeProprietary: UserID
+                      - id: "610358DB2"
+                        schemeProprietary: PartnerID
+                      - id: AAAP
+                        schemeProprietary: OrderID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: '2026-03-26T10:32:37.22'
+                        schemeProprietary: TimeStamp
+                      reasonCode: DS05
+                      reasonName: OrderForwardedForPostprocessing
+                      reasonDescription: The order was correct and could be forwarded for postprocessing
+                      additionalInformation: []
+                hacMixedDownloadUpload:
+                  summary: Mixed download and upload example
+                  description: Example of status chain for one download operation of pain.002 (no data available) and one upload operation of pain.001, order E000 ending up with status DS04 bank-side content rejection
+                    (unsuccessful upload).
+                  value:
+                    ebicsUserId: 'ZKB03305'
+                    statusReasons:
+                    - originatorName: Billte AG
+                      identifications:
+                      - id: 'ZKB03305'
+                        schemeProprietary: UserID
+                      - id: '2491234633'
+                        schemeProprietary: PartnerID
+                      - id: BTD
+                        schemeProprietary: AdminOrderType
+                      - id: PSR
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: ZIP
+                        schemeProprietary: ContainerType
+                      - id: pain.002
+                        schemeProprietary: MsgName
+                      - id: '2026-03-06T00:31:34Z'
+                        schemeProprietary: TimeStamp
+                      reasonCode: TD01
+                      reasonName: NoDataAvailable
+                      reasonDescription: There is no data available (for download)
+                      additionalInformation: []
+                    - originatorName: Billte AG
+                      identifications:
+                      - id: 'ZKB03305'
+                        schemeProprietary: UserID
+                      - id: '2491234633'
+                        schemeProprietary: PartnerID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: E000
+                        schemeProprietary: OrderID
+                      - id: '2026-03-06T00:45:15Z'
+                        schemeProprietary: TimeStamp
+                      reasonCode: TS01
+                      reasonName: TransmissionSuccessful
+                      reasonDescription: The (technical) transmission of the file was successful.
+                      additionalInformation: []
+                    - originatorName: Billte AG
+                      identifications:
+                      - id: 'ZKB03305'
+                        schemeProprietary: UserID
+                      - id: '2491234633'
+                        schemeProprietary: PartnerID
+                      - id: BTU
+                        schemeProprietary: AdminOrderType
+                      - id: MCT
+                        schemeProprietary: ServiceName
+                      - id: CH
+                        schemeProprietary: Scope
+                      - id: pain.001
+                        schemeProprietary: MsgName
+                      - id: E000
+                        schemeProprietary: OrderID
+                      - id: '2026-03-06T00:45:15Z'
+                        schemeProprietary: TimeStamp
+                      reasonCode: DS04
+                      reasonName: OrderRejected
+                      reasonDescription: The order was rejected by the bank side (for reasons concerning content)
+                      additionalInformation: []
         '401':
           description: |
             Unauthorized. Returned when:
@@ -999,6 +1397,37 @@ paths:
                   description: Returned when `ebicsStatus` flips off after the JWT was issued.
                   value:
                     error: "Unauthorized: billerPid is not valid or biller is not active"
+        '500':
+          description: |
+            Internal server error during HAC (downstream EBICS host, transport, or pain.002 parsing). Matches the EBICS
+            client behaviour of returning HTTP 500 with `status` = `ERROR` and `message` carrying details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HACResponse'
+              examples:
+                hacExecutionError:
+                  summary: HAC execution failed
+                  value:
+                    ebicsUserId: "ZKB03305"
+                    status: "ERROR"
+                    message: "Failed to execute HAC: Error in executing HAC :: ZKB03305 :: …"
+                    statusReasons: []
+
+  # CAMT C52/C53/C54 parse — maintained in ebics-biller-camt-api.yaml
+  "/client/ebics/v3/C52-canonical":
+    $ref: './ebics-biller-camt-api.yaml#/paths/~1client~1ebics~1v3~1C52-canonical'
+  "/client/ebics/v3/C53-canonical":
+    $ref: './ebics-biller-camt-api.yaml#/paths/~1client~1ebics~1v3~1C53-canonical'
+  "/client/ebics/v3/C54-canonical":
+    $ref: './ebics-biller-camt-api.yaml#/paths/~1client~1ebics~1v3~1C54-canonical'
+  "/client/ebics/v3/C52-iso":
+    $ref: './ebics-biller-camt-api.yaml#/paths/~1client~1ebics~1v3~1C52-iso'
+  "/client/ebics/v3/C53-iso":
+    $ref: './ebics-biller-camt-api.yaml#/paths/~1client~1ebics~1v3~1C53-iso'
+  "/client/ebics/v3/C54-iso":
+    $ref: './ebics-biller-camt-api.yaml#/paths/~1client~1ebics~1v3~1C54-iso'
+
 
 tags:
   - name: Authentication
