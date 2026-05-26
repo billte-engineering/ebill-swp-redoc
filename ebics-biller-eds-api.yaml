@@ -1,0 +1,440 @@
+---
+openapi: 3.0.3
+info:
+  title: EBICS Biller API — EDS / VEU signature (fragment)
+  version: 1.0.0
+  description: |-
+    **Fragment** merged into the main EBICS Biller OpenAPI via `$ref` from `ebics-biller-api.yml`.
+
+    Contains **HVU** (list orders waiting for distributed electronic signature), **HVE** (add signature),
+    and **HVS** (cancel order) paths and schemas for EBICS 3.0 H005 EDS/VEU workflows.
+
+    `ErrorResponse` for HTTP 401 is referenced from `ebics-biller-api.yml`.
+paths:
+  "/client/ebics/v3/hvu":
+    post:
+      summary: HVU – List orders waiting for signature
+      description: |-
+        Retrieves the list of orders waiting for electronic distributed signature (EDS/VEU) for EBICS v3 (H005).
+        Orders listed are not processed on the bank site until they are fully signed using **HVE** operation(s)
+        or cancelled using **HVS**.
+
+        Optionally use `serviceFilters` to restrict the result set; omit or leave empty to return all pending EDS orders.
+        Use the **HVU** response (`orderDetails`) to fill **HVE** / **HVS** request parameters (`orderId`, `serviceName`, `msgName`, …).
+
+        The request body is typically `{}` (or includes optional `serviceFilters` only).
+      operationId: v3Hvu
+      tags:
+      - EBICS v3 Signature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/HVURequest"
+            examples:
+              listAllPendingEdsOrders:
+                summary: List all pending EDS orders
+                description: HVU without service filters — returns all orders waiting for signature.
+                value: {}
+      responses:
+        '200':
+          description: HVU executed successfully
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HVUResponseH005"
+              examples:
+                twoPain001OrdersAwaitingSignature:
+                  summary: Two pain.001 orders awaiting signature
+                  description: Example HVU response with two MCT pain.001 v09 orders pending distributed electronic signatures (orderIds A008 and A012).
+                  value:
+                    ebicsUserId: ZKB03305
+                    orderDetails:
+                    - orderId: A008
+                      orderDataSize: 1024
+                      additionalOrderInfo: null
+                      serviceName: MCT
+                      scope: CH
+                      serviceOption: null
+                      msgName: pain.001
+                      msgNameVersion: '09'
+                      msgNameVariant: null
+                      msgNameFormat: null
+                    - orderId: A012
+                      orderDataSize: 2048
+                      additionalOrderInfo: null
+                      serviceName: MCT
+                      scope: CH
+                      serviceOption: null
+                      msgName: pain.001
+                      msgNameVersion: '09'
+                      msgNameVariant: null
+                      msgNameFormat: null
+                    message: null
+                    status: null
+        '400':
+          description: Invalid request parameters
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": ebics-biller-api.yml#/components/schemas/ErrorResponse
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not active'
+        '500':
+          description: Internal server error during HVU execution
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HVUResponseH005"
+              examples:
+                hvuExecutionError:
+                  summary: HVU execution failed
+                  value:
+                    ebicsUserId: ZKB03305
+                    orderDetails: []
+                    status: ERROR
+                    message: 'Failed to execute HVU: Error in executing HVU :: ZKB03305 :: …'
+  "/client/ebics/v3/hve":
+    post:
+      summary: HVE – Sign an order
+      description: |-
+        Add a signature for an existing order in distributed electronic signature (EDS/VEU) processing for EBICS v3 (H005).
+        The order is identified via `orderId` and BTF (Business Transaction Format) fields; the request carries only the
+        signature metadata, not order data.
+
+        For cancellation use **HVS**, not **HVE**.
+
+        Typical flow: **HVU** → **HVE** (one or more signatures) → bank processes the order when fully signed.
+      operationId: v3Hve
+      tags:
+      - EBICS v3 Signature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PendingOrderRequest"
+            examples:
+              signOrderA008:
+                summary: Sign order A008
+                description: Add an electronic signature to the first MCT pain.001 v09 order from the HVU example (orderId A008).
+                value:
+                  orderId: A008
+                  serviceName: MCT
+                  scope: CH
+                  serviceOption: null
+                  msgName: pain.001
+                  msgNameVersion: '09'
+                  msgNameVariant: null
+                  msgNameFormat: null
+      responses:
+        '200':
+          description: HVE executed successfully
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HVEResponseH005"
+              examples:
+                orderA008Signed:
+                  summary: Order A008 signed
+                  description: HVE success after adding a signature to the first pending order from the HVU example (orderId A008).
+                  value:
+                    ebicsUserId: ZKB03305
+                    orderDetail:
+                      orderId: A008
+                      orderDataSize: 1024
+                      additionalOrderInfo: null
+                      serviceName: MCT
+                      scope: CH
+                      serviceOption: null
+                      msgName: pain.001
+                      msgNameVersion: '09'
+                      msgNameVariant: null
+                      msgNameFormat: null
+                    message: null
+                    status: null
+        '400':
+          description: Invalid request parameters
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": ebics-biller-api.yml#/components/schemas/ErrorResponse
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not active'
+        '500':
+          description: Internal server error during HVE execution
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HVEResponseH005"
+              examples:
+                hveExecutionError:
+                  summary: HVE execution failed
+                  value:
+                    ebicsUserId: ZKB03305
+                    orderDetail: null
+                    status: ERROR
+                    message: 'Failed to execute HVE: Error in executing HVE :: ZKB03305 :: …'
+  "/client/ebics/v3/hvs":
+    post:
+      summary: HVS – Cancel an order
+      description: |-
+        Permanently cancels an order in the bank's distributed electronic signature (EDS/VEU) workflow for EBICS v3 (H005).
+        Uses the same identification parameters as **HVE** (`orderId`, `serviceName`, `msgName`, …).
+
+        Typical flow: **HVU** → **HVE** (optional) → **HVS**.
+      operationId: v3Hvs
+      tags:
+      - EBICS v3 Signature
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PendingOrderRequest"
+            examples:
+              cancelOrderA012:
+                summary: Cancel order A012
+                description: Cancel the second MCT pain.001 v09 order from the HVU example (orderId A012).
+                value:
+                  orderId: A012
+                  serviceName: MCT
+                  scope: CH
+                  serviceOption: null
+                  msgName: pain.001
+                  msgNameVersion: '09'
+                  msgNameVariant: null
+                  msgNameFormat: null
+      responses:
+        '200':
+          description: HVS executed successfully
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HVSResponseH005"
+              examples:
+                orderA012Cancelled:
+                  summary: Order A012 cancelled
+                  description: HVS success after cancelling the second pending order from the HVU example (orderId A012).
+                  value:
+                    ebicsUserId: ZKB03305
+                    message: null
+                    status: null
+        '400':
+          description: Invalid request parameters
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": ebics-biller-api.yml#/components/schemas/ErrorResponse
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not active'
+        '500':
+          description: Internal server error during HVS execution
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HVSResponseH005"
+              examples:
+                hvsExecutionError:
+                  summary: HVS execution failed
+                  value:
+                    ebicsUserId: ZKB03305
+                    status: ERROR
+                    message: 'Failed to execute HVS: Error in executing HVS :: ZKB03305 :: …'
+components:
+  schemas:
+    HVURequest:
+      type: object
+      description: |
+        Request for **HVU** (VEU overview) — list orders waiting for distributed electronic signatures (EDS).
+        The request JSON body is typically `{}` or includes optional `serviceFilters` only.
+      properties:
+        serviceFilters:
+          type: array
+          nullable: true
+          description: Optional filters to restrict which pending orders are returned. Omit or leave empty for all pending EDS orders.
+          items:
+            "$ref": "#/components/schemas/HVUServiceFilter"
+    HVUServiceFilter:
+      type: object
+      description: Service filter for HVU requests (BTF service parameters).
+      properties:
+        serviceName:
+          type: string
+          description: BTF service name (e.g. account reporting service family)
+          example: EOP
+        scope:
+          type: string
+          description: BTF scope value defined by the bank for this service
+          example: CH
+        serviceOption:
+          type: string
+          nullable: true
+          description: Optional BTF service option if required by the bank
+          example: XDCI
+    HVUResponseH005:
+      type: object
+      description: HVU (VEU overview) response — orders waiting for distributed electronic signatures.
+      properties:
+        ebicsUserId:
+          type: string
+          description: Resolved EBICS user id for this response.
+          example: ZKB03305
+        orderDetails:
+          type: array
+          description: Pending EDS orders; use entries to build HVE/HVS requests.
+          items:
+            "$ref": "#/components/schemas/PendingOrder"
+        message:
+          type: string
+          nullable: true
+          description: Human-readable detail from the EBICS client or transport layer; null on success.
+        status:
+          type: string
+          nullable: true
+          description: Client-side status (e.g. `ERROR` on failure); null when the HVU order completed without client-side error.
+    PendingOrderRequest:
+      type: object
+      description: |
+        Request for **HVE** (add electronic signature) or **HVS** (EDS cancellation): identifies the order via
+        `orderId` and BTF fields matching an entry from the **HVU** response.
+      required:
+      - orderId
+      properties:
+        orderId:
+          type: string
+          description: EBICS order identifier from HVU (pattern one letter followed by three alphanumeric characters)
+          example: A008
+        serviceName:
+          type: string
+          description: BTF service name
+          example: MCT
+        scope:
+          type: string
+          description: BTF scope
+          example: CH
+        serviceOption:
+          type: string
+          nullable: true
+        msgName:
+          type: string
+          description: Message name of the order format
+          example: pain.001
+        msgNameVersion:
+          type: string
+          description: Message version
+          example: '09'
+        msgNameVariant:
+          type: string
+          nullable: true
+        msgNameFormat:
+          type: string
+          nullable: true
+          description: Message format (e.g. XML)
+    PendingOrder:
+      type: object
+      description: Single order in the HVU response — waiting for distributed electronic signatures (EDS).
+      properties:
+        orderId:
+          type: string
+          description: EBICS order identifier
+          example: A008
+        orderDataSize:
+          type: integer
+          format: int64
+          nullable: true
+        additionalOrderInfo:
+          type: string
+          nullable: true
+        serviceName:
+          type: string
+          example: MCT
+        scope:
+          type: string
+          example: CH
+        serviceOption:
+          type: string
+          nullable: true
+        msgName:
+          type: string
+          example: pain.001
+        msgNameVersion:
+          type: string
+          example: '09'
+        msgNameVariant:
+          type: string
+          nullable: true
+        msgNameFormat:
+          type: string
+          nullable: true
+    HVEResponseH005:
+      type: object
+      description: |
+        HVE response. Per EBICS 3.0.1 §8.3.4.2 the HVE response has no EDS-specific payload; when the bank returns
+        HVU-style order metadata, it may appear in `orderDetail` (implementation-dependent).
+      properties:
+        ebicsUserId:
+          type: string
+          example: ZKB03305
+        orderDetail:
+          "$ref": "#/components/schemas/PendingOrder"
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
+    HVSResponseH005:
+      type: object
+      description: HVS (VEU-Storno) response. Success is typically implied by EBICS return codes with no order payload.
+      properties:
+        ebicsUserId:
+          type: string
+          example: ZKB03305
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+          nullable: true
