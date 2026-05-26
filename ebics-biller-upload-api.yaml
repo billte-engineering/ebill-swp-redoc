@@ -152,8 +152,6 @@ paths:
                 summary: Swiss domestic instant (CHF)
                 description: Swiss domestic instant credit transfer with two CHF transactions; set localInstrument to INST (Instant payment)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: ZKB_BILLER_ID_1
                   fileName: pain.001.001.09-zkb-chf-domestic.xml
                   serviceName: MCT
                   scope: CH
@@ -196,8 +194,6 @@ paths:
                 summary: SEPA instant (CH to DE and CZ)
                 description: SEPA instant payment 2 transactions from CH to DE and CZ; serviceLevel SEPA and localInstrument INST (Instant payment)
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: ZKB_BILLER_ID_1
                   fileName: pain.001.001.09-zkb-sepa.xml
                   serviceName: SCT
                   scope: GLB
@@ -243,8 +239,6 @@ paths:
                 summary: International payment (DE to UAE and Brazil)
                 description: Standard international credit transfer, 2 transactions from Germany to UAE and Brazil (USD + BRL); omit serviceLevel and localInstrument
                 value:
-                  ebicsUserId: ZKB03305
-                  billerId: ZKB_BILLER_ID_1
                   fileName: pain.001.001.09-intl-cgi.xml
                   serviceName: MCT
                   scope: CGI
@@ -507,18 +501,10 @@ components:
           example: Bad Request
     Pain001BTURequest:
       type: object
-      description: BTU request for pain.001 (Customer Credit Transfer Initiation) with structured credit transfer data
+      description: BTU request for pain.001 (Customer Credit Transfer Initiation) with structured credit transfer data.
       required:
       - creditTransfer
       properties:
-        ebicsUserId:
-          type: string
-          description: EBICS user identifier used for authentication at the bank
-          example: ZKB03305
-        billerId:
-          type: string
-          description: Internal biller/tenant identifier used by this application
-          example: billte-ch
         fileName:
           type: string
           description: Logical file name for the uploaded payload (e.g. pain XML file name)

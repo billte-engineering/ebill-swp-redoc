@@ -10,13 +10,15 @@ info:
 
     Supported operations include:
 
-    * **HTD** – list subscribed BTF formats and bank accounts
+
     * **BTU** – upload payment / direct-debit orders to the bank
     * **BTD** – download statements, reports and notifications from the bank
+    * **HTD** – list subscribed BTF formats and bank accounts
     * **HAA** – BTFs / order types with data ready to retrieve from the bank (retrievable downloads)
     * **HAC** – customer acknowledgements (pain.002; status reasons for prior orders / BTU)
-    * **C52 / C53 / C54 – ISO & canonical parse** – download CAMT.052 / .053 / .054 via BTD without cloud upload and return either ISO-shaped or compact canonical JSON
-
+    * **C52 / C53 / C54 – ISO & canonical shaped** – download CAMT.052 / .053 / .054 via BTD and return either ISO-shaped or compact canonical JSON
+    * **HVU / HVE / HVS** – distributed electronic signature (EDS/VEU): list pending orders, add signatures, cancel orders
+    
     ### General Note
 
     This documentation has been compiled with the greatest care, but may nevertheless contain errors or inaccuracies. Billte cannot assume any legal responsibility or any liability for erroneous information or its consequences.
@@ -43,7 +45,6 @@ info:
     3. The JWT encodes your granted **scopes** (`EBILL`, `EBICS`, or both) based on your account status.
        - `EBICS` scope is required to call any `/client/ebics/*` endpoint.
        - A biller with `ebicsStatus = ACTIVE` will have `EBICS` in their token scopes.
-    4. You do **not** need to pass `ebicsUserId` or `billerId` — these are resolved internally from your JWT.
   contact:
     name: EBICS Biller API
     url: https://guard-api.ebill.billte.ch
@@ -213,7 +214,9 @@ components:
 
     HTDRequest:
       type: object
-      description: Retrieve the list of subscribed EBICS BTF formats for this biller (H005 HTD v3).
+      description: |
+        Retrieve the list of subscribed EBICS BTF formats for this biller (H005 HTD v3).
+        The request JSON body is typically an empty object `{}`.
       properties: {}
 
     HTDResponse:
@@ -385,9 +388,7 @@ components:
     HAARequest:
       type: object
       description: |
-        EBICS 3.0 H005 **HAA** request: list business transaction formats (BTFs) / services for which the bank currently
-        has data ready to retrieve (available downloads; EBICS 3.0 §9.1). The JSON body is typically an empty object;
-        `ebicsUserId` and `billerId` are resolved from the JWT.
+        EBICS 3.0 H005 **HAA** request JSON body is typically an empty object `{}`.
       properties: {}
 
     HAAResponse:
@@ -419,7 +420,7 @@ components:
       description: |
         Request for **HAC** (customer acknowledgement, **pain.002**) — EBICS v3 (H005). Optional date range maps to
         `StandardOrderParams/DateRange`; **both** `startDate` and `endDate` **must** be set together, or **both** omitted.
-        `ebicsUserId` and `billerId` are resolved from the JWT.
+        The request body may be `{}` or include only `startDate` / `endDate`.
       properties:
         startDate:
           type: string
@@ -520,6 +521,8 @@ paths:
         Returns the list of EBICS BTF (Business Transaction Formats) subscribed for this biller at the bank.
         Use the returned `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
         values directly in BTU/BTD requests.
+
+        The request body is typically `{}`.
       operationId: v3Htd
       tags: [EBICS v3 Administration]
       requestBody:
@@ -820,7 +823,7 @@ paths:
         which BTF parameters are allowed for your user; use **HAA** to see which of those download types
         actually have pending files **before** you call **BTD** for actual data (or to prioritize polling).
 
-        The request body is empty — `ebicsUserId` and `billerId` are resolved internally from your JWT.
+        The request body is typically `{}`.
       operationId: v3Haa
       tags: [EBICS v3 Administration]
       requestBody:
@@ -924,7 +927,7 @@ paths:
         **C54**, **C52**, or **C53** (see BTU flow in the EBICS client API docs).
 
         The request body may be `{}` or include optional inclusive **`yyyy-MM-dd`** `startDate` / `endDate` (see
-        `HACRequest`); `ebicsUserId` and `billerId` are resolved internally from your JWT.
+        `HACRequest`).
 
         **Note:** Send **both** dates together for a historical window, or **neither** for delta / “since last HAC”
         behaviour (bank-dependent). 
@@ -1209,6 +1212,14 @@ paths:
                     status: "ERROR"
                     message: "Failed to execute HAC: Error in executing HAC :: ZKB03305 :: …"
                     statusReasons: []
+
+  # EDS / VEU signature (HVU, HVE, HVS) — maintained in ebics-biller-eds-api.yaml
+  "/client/ebics/v3/hvu":
+    $ref: './ebics-biller-eds-api.yaml#/paths/~1client~1ebics~1v3~1hvu'
+  "/client/ebics/v3/hve":
+    $ref: './ebics-biller-eds-api.yaml#/paths/~1client~1ebics~1v3~1hve'
+  "/client/ebics/v3/hvs":
+    $ref: './ebics-biller-eds-api.yaml#/paths/~1client~1ebics~1v3~1hvs'
 
   # CAMT C52/C53/C54 parse — maintained in ebics-biller-camt-api.yaml
   "/client/ebics/v3/C52-canonical":
