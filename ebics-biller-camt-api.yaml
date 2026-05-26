@@ -31,7 +31,7 @@ paths:
         The structure is universal simplification of the complex ISO20022 XML camt documentstructure, providing convinient way to use single UI layout to display all camt types and versions.
       operationId: v3C52Canonical
       tags:
-      - EBICS v3
+      - EBICS v3 Download
       requestBody:
         required: true
         description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
@@ -470,7 +470,7 @@ paths:
         The structure is universal simplification of the complex ISO 20022 XML camt document structure, providing a convenient way to use a single UI layout to display all camt types and versions.
       operationId: v3C53Canonical
       tags:
-      - EBICS v3
+      - EBICS v3 Download
       requestBody:
         required: true
         description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
@@ -910,7 +910,7 @@ paths:
         For debit/credit notifications, the same layout carries notification-specific fields (for example `relatedAccount`, `transactionsSummary`) and `balances` only when the underlying message contains them.
       operationId: v3C54Canonical
       tags:
-      - EBICS v3
+      - EBICS v3 Download
       requestBody:
         required: true
         description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
@@ -1349,7 +1349,7 @@ paths:
         The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.
       operationId: v3C52Iso
       tags:
-      - EBICS v3
+      - EBICS v3 Download
       requestBody:
         required: true
         description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
@@ -2032,7 +2032,7 @@ paths:
         The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.
       operationId: v3C53Iso
       tags:
-      - EBICS v3
+      - EBICS v3 Download
       requestBody:
         required: true
         description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,
@@ -2710,7 +2710,7 @@ paths:
         The response structure is different per camt type: `camt.052`, `camt.053` and `camt.054`.
       operationId: v3C54Iso
       tags:
-      - EBICS v3
+      - EBICS v3 Download
       requestBody:
         required: true
         description: 'Minimal payloads omit serviceName, scope, msgName, msgNameVersion,

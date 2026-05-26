@@ -1,0 +1,785 @@
+---
+openapi: 3.0.3
+info:
+  title: EBICS Biller API — BTU upload (fragment)
+  version: 1.0.0
+  description: |-
+    **Fragment** merged into the main EBICS Biller OpenAPI via `$ref` from `ebics-biller-api.yml`.
+
+    Contains the **BTU** (Business Transaction Upload) paths and schemas:
+    - `BTURequest` / `BTUResponse` — raw file upload via `/btu`
+    - `Pain001BTURequest` / `Pain001BTUResponse` — structured pain.001 payment orders via `/pain001`
+
+    `ErrorResponse` for HTTP 401 is referenced from `ebics-biller-api.yml`.
+paths:
+  "/client/ebics/v3/btu":
+    post:
+      summary: BTU – Upload file
+      description: |
+        Upload a file (e.g. payment order, direct debit order) to the bank via EBICS H005 BTU.
+
+        Call **HTD** first to retrieve the exact BTF (Business Transaction Format) parameters subscribed for your account.
+        The `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType` values must match
+        your subscribed configuration exactly.
+      operationId: v3Btu
+      tags:
+      - EBICS v3 Upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/BTURequest"
+            examples:
+              pain001SwissPaymentOrder:
+                summary: Swiss payment order upload (pain.001.001.09)
+                description: Example BTU request for a Swiss payment order.
+                value:
+                  fileName: pain.001.001.09.xml
+                  serviceName: MCT
+                  scope: CH
+                  msgName: pain.001
+                  msgNameVersion: '09'
+                  signatureFlag: true
+                  signatureFlagEds: true
+                  fileContent: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPERvY3VtZW50IHhtbG5zPSJ1cm46aXNvOnN0ZDppc286MjAwMjI6dGVjaDp4c2Q6cGFpbi4wMDEuMDAxLjA5Ij4KICA8Q3N0bXJDZHRUcmZJbml0bj4KICAgIDxHcnBIZHI+CiAgICAgIDxNc2dJZD5NU0ctMjAyNjA0MjctMjIwNzE5LTVFRUY8L01zZ0lkPgogICAgICA8Q3JlRHRUbT4yMDI2LTA0LTI3VDIyOjA3OjE5PC9DcmVEdFRtPgogICAgICA8TmJPZlR4cz4xPC9OYk9mVHhzPgogICAgICA8Q3RybFN1bT4xMDAuMDA8L0N0cmxTdW0+CiAgICAgIDxJbml0Z1B0eT4KICAgICAgICA8Tm0+UG9zdEZpbmFuY2UgVGVzdCBEZWJ0b3I8L05tPgogICAgICA8L0luaXRnUHR5PgogICAgPC9HcnBIZHI+CiAgICA8UG10SW5mPgogICAgICA8UG10SW5mSWQ+UE1ULTIwMjYwNDI3LTIyMDcxOS01RUVGPC9QbXRJbmZJZD4KICAgICAgPFBtdE10ZD5UUkY8L1BtdE10ZD4KICAgICAgPEJ0Y2hCb29rZz50cnVlPC9CdGNoQm9va2c+CiAgICAgIDxOYk9mVHhzPjE8L05iT2ZUeHM+CiAgICAgIDxDdHJsU3VtPjEwMC4wMDwvQ3RybFN1bT4KICAgICAgPFJlcWRFeGN0bkR0PgogICAgICAgIDxEdD4yMDI2LTA0LTI3PC9EdD4KICAgICAgPC9SZXFkRXhjdG5EdD4KICAgICAgPERidHI+CiAgICAgICAgPE5tPlBvc3RGaW5hbmNlIFRlc3QgRGVidG9yPC9ObT4KICAgICAgPC9EYnRyPgogICAgICA8RGJ0ckFjY3Q+CiAgICAgICAgPElkPgogICAgICAgICAgPElCQU4+Q0g5MzAwNzYyMDExNjIzODUyOTU3PC9JQkFOPgogICAgICAgIDwvSWQ+CiAgICAgIDwvRGJ0ckFjY3Q+CiAgICAgIDxEYnRyQWd0PgogICAgICAgIDxGaW5JbnN0bklkPgogICAgICAgICAgPEJJQ0ZJPlBPRklDSEJFWFhYPC9CSUNGST4KICAgICAgICA8L0Zpbkluc3RuSWQ+CiAgICAgIDwvRGJ0ckFndD4KICAgICAgPENocmdCcj5TTEVWPC9DaHJnQnI+CiAgICAgIDxDZHRUcmZUeEluZj4KICAgICAgICA8UG10SWQ+CiAgICAgICAgICA8SW5zdHJJZD5JTlNULTIwMjYwNDI3LTIyMDcxOS01RUVGPC9JbnN0cklkPgogICAgICAgICAgPEVuZFRvRW5kSWQ+RTJFLTIwMjYwNDI3LTIyMDcxOS01RUVGPC9FbmRUb0VuZElkPgogICAgICAgIDwvUG10SWQ+CiAgICAgICAgPEFtdD4KICAgICAgICAgIDxJbnN0ZEFtdCBDY3k9IkNIRiI+MTAwLjAwPC9JbnN0ZEFtdD4KICAgICAgICA8L0FtdD4KICAgICAgICA8Q2R0ckFndD4KICAgICAgICAgIDxGaW5JbnN0bklkPgogICAgICAgICAgICA8QklDRkk+UE9GSUNIQkVYWFg8L0JJQ0ZJPgogICAgICAgICAgPC9GaW5JbnN0bklkPgogICAgICAgIDwvQ2R0ckFndD4KICAgICAgICA8Q2R0cj4KICAgICAgICAgIDxObT5Qb3N0RmluYW5jZSBUZXN0IENyZWRpdG9yPC9ObT4KICAgICAgICA8L0NkdHI+CiAgICAgICAgPENkdHJBY2N0PgogICAgICAgICAgPElkPgogICAgICAgICAgICA8SUJBTj5DSDkzMDA3NjIwMTE2MjM4NTI5NTc8L0lCQU4+CiAgICAgICAgICA8L0lkPgogICAgICAgIDwvQ2R0ckFjY3Q+CiAgICAgICAgPFJtdEluZj4KICAgICAgICAgIDxVc3RyZD5UZXN0IHBheW1lbnQ8L1VzdHJkPgogICAgICAgIDwvUm10SW5mPgogICAgICA8L0NkdFRyZlR4SW5mPgogICAgPC9QbXRJbmY+CiAgPC9Dc3RtckNkdFRyZkluaXRuPgo8L0RvY3VtZW50Pgo=
+              pain008SepaDirectDebitOrder:
+                summary: SEPA direct debit order upload (pain.008.001.08)
+                description: Example BTU request for a SEPA direct debit order.
+                value:
+                  fileName: pain.008.001.08.xml
+                  serviceName: SDD
+                  scope: CH
+                  msgName: pain.008
+                  signatureFlag: true
+                  signatureFlagEds: true
+                  fileContent: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPERvY3VtZW50IHhtbG5zPSJ1cm46aXNvOnN0ZDppc286MjAwMjI6dGVjaDp4c2Q6cGFpbi4wMDguMDAxLjA4Ij4KICA8Q3N0bXJEcmN0RGJ0SW5pdG4+CiAgICA8R3JwSGRyPgogICAgICA8TXNnSWQ+TVNHLTIwMjYwNDI3LTIyMDczMi1GNjAyPC9Nc2dJZD4KICAgICAgPENyZUR0VG0+MjAyNi0wNC0yN1QyMjowNzozMjwvQ3JlRHRUbT4KICAgICAgPE5iT2ZUeHM+MTwvTmJPZlR4cz4KICAgICAgPEN0cmxTdW0+NjU0My4xNDwvQ3RybFN1bT4KICAgICAgPEluaXRnUHR5PgogICAgICAgIDxObT5Qb3N0RmluYW5jZSBUZXN0IENyZWRpdG9yPC9ObT4KICAgICAgPC9Jbml0Z1B0eT4KICAgIDwvR3JwSGRyPgogICAgPFBtdEluZj4KICAgICAgPFBtdEluZklkPlBNVC0yMDI2MDQyNy0yMjA3MzItRjYwMjwvUG10SW5mSWQ+CiAgICAgIDxQbXRNdGQ+REQ8L1BtdE10ZD4KICAgICAgPE5iT2ZUeHM+MTwvTmJPZlR4cz4KICAgICAgPEN0cmxTdW0+NjU0My4xNDwvQ3RybFN1bT4KICAgICAgPFBtdFRwSW5mPgogICAgICAgIDxTdmNMdmw+CiAgICAgICAgICA8Q2Q+U0VQQTwvQ2Q+CiAgICAgICAgPC9TdmNMdmw+CiAgICAgICAgPExjbEluc3RybT4KICAgICAgICAgIDxDZD5DT1JFPC9DZD4KICAgICAgICA8L0xjbEluc3RybT4KICAgICAgICA8U2VxVHA+RlJTVDwvU2VxVHA+CiAgICAgIDwvUG10VHBJbmY+CiAgICAgIDxSZXFkQ29sbHRuRHQ+MjAyNi0wNC0yNzwvUmVxZENvbGx0bkR0PgogICAgICA8Q2R0cj4KICAgICAgICA8Tm0+Q3JlZGl0b3IgTmFtZTwvTm0+CiAgICAgIDwvQ2R0cj4KICAgICAgPENkdHJBY2N0PgogICAgICAgIDxJZD4KICAgICAgICAgIDxJQkFOPkRFODcyMDA1MDAwMDEyMzQ1Njc4OTA8L0lCQU4+CiAgICAgICAgPC9JZD4KICAgICAgPC9DZHRyQWNjdD4KICAgICAgPENkdHJBZ3Q+CiAgICAgICAgPEZpbkluc3RuSWQ+CiAgICAgICAgICA8QklDRkk+QkFOS0RFRkZYWFg8L0JJQ0ZJPgogICAgICAgIDwvRmluSW5zdG5JZD4KICAgICAgPC9DZHRyQWd0PgogICAgICA8Q2hyZ0JyPlNMRVY8L0NocmdCcj4KICAgICAgPENkdHJTY2htZUlkPgogICAgICAgIDxJZD4KICAgICAgICAgIDxQcnZ0SWQ+CiAgICAgICAgICAgIDxPdGhyPgogICAgICAgICAgICAgIDxJZD5ERTAwWlpaMDAwOTk5OTk5OTk8L0lkPgogICAgICAgICAgICAgIDxTY2htZU5tPgogICAgICAgICAgICAgICAgPFBydHJ5PlNFUEE8L1BydHJ5PgogICAgICAgICAgICAgIDwvU2NobWVObT4KICAgICAgICAgICAgPC9PdGhyPgogICAgICAgICAgPC9QcnZ0SWQ+CiAgICAgICAgPC9JZD4KICAgICAgPC9DZHRyU2NobWVJZD4KICAgICAgPERyY3REYnRUeEluZj4KICAgICAgICA8UG10SWQ+CiAgICAgICAgICA8SW5zdHJJZD5JTlNULTIwMjYwNDI3LTIyMDczMi1GNjAyPC9JbnN0cklkPgogICAgICAgICAgPEVuZFRvRW5kSWQ+RTJFLTIwMjYwNDI3LTIyMDczMi1GNjAyPC9FbmRUb0VuZElkPgogICAgICAgIDwvUG10SWQ+CiAgICAgICAgPEluc3RkQW10IENjeT0iRVVSIj42NTQzLjE0PC9JbnN0ZEFtdD4KICAgICAgICA8RHJjdERidFR4PgogICAgICAgICAgPE1uZHRSbHRkSW5mPgogICAgICAgICAgICA8TW5kdElkPk1hbmRhdGUtSWQ8L01uZHRJZD4KICAgICAgICAgICAgPER0T2ZTZ250cj4yMDI2LTA0LTI3PC9EdE9mU2dudHI+CiAgICAgICAgICAgIDxBbWRtbnRJbmQ+dHJ1ZTwvQW1kbW50SW5kPgogICAgICAgICAgICA8QW1kbW50SW5mRHRscz4KICAgICAgICAgICAgICA8T3JnbmxDZHRyU2NobWVJZD4KICAgICAgICAgICAgICAgIDxObT5PcmlnaW5hbCBDcmVkaXRvciBOYW1lPC9ObT4KICAgICAgICAgICAgICAgIDxJZD4KICAgICAgICAgICAgICAgICAgPFBydnRJZD4KICAgICAgICAgICAgICAgICAgICA8T3Rocj4KICAgICAgICAgICAgICAgICAgICAgIDxJZD5BQTAwWlpaT3JpZ2luYWxDcmVkaXRvcklEPC9JZD4KICAgICAgICAgICAgICAgICAgICAgIDxTY2htZU5tPgogICAgICAgICAgICAgICAgICAgICAgICA8UHJ0cnk+U0VQQTwvUHJ0cnk+CiAgICAgICAgICAgICAgICAgICAgICA8L1NjaG1lTm0+CiAgICAgICAgICAgICAgICAgICAgPC9PdGhyPgogICAgICAgICAgICAgICAgICA8L1BydnRJZD4KICAgICAgICAgICAgICAgIDwvSWQ+CiAgICAgICAgICAgICAgPC9PcmdubENkdHJTY2htZUlkPgogICAgICAgICAgICA8L0FtZG1udEluZkR0bHM+CiAgICAgICAgICA8L01uZHRSbHRkSW5mPgogICAgICAgIDwvRHJjdERidFR4PgogICAgICAgIDxEYnRyQWd0PgogICAgICAgICAgPEZpbkluc3RuSWQ+CiAgICAgICAgICAgIDxCSUNGST5SQUlGQ0gyMjAwNTwvQklDRkk+CiAgICAgICAgICA8L0Zpbkluc3RuSWQ+CiAgICAgICAgPC9EYnRyQWd0PgogICAgICAgIDxEYnRyPgogICAgICAgICAgPE5tPkRlYnRvciBOYW1lPC9ObT4KICAgICAgICAgIDxQc3RsQWRyPgogICAgICAgICAgICA8U3RydE5tPk11c3RlcmxhbmRzdHJhw59lIDQ4PC9TdHJ0Tm0+CiAgICAgICAgICAgIDxQc3RDZD44MDA1PC9Qc3RDZD4KICAgICAgICAgICAgPFR3bk5tPlp1ZXJpY2g8L1R3bk5tPgogICAgICAgICAgICA8Q3RyeT5DSDwvQ3RyeT4KICAgICAgICAgIDwvUHN0bEFkcj4KICAgICAgICA8L0RidHI+CiAgICAgICAgPERidHJBY2N0PgogICAgICAgICAgPElkPgogICAgICAgICAgICA8SUJBTj5DSDcyODAwMDUwMDAwODg4Nzc3NjY8L0lCQU4+CiAgICAgICAgICA8L0lkPgogICAgICAgIDwvRGJ0ckFjY3Q+CiAgICAgICAgPFVsdG10RGJ0cj4KICAgICAgICAgIDxObT5VbHRpbWF0ZSBEZWJ0b3IgTmFtZTwvTm0+CiAgICAgICAgPC9VbHRtdERidHI+CiAgICAgICAgPFJtdEluZj4KICAgICAgICAgIDxVc3RyZD5VbnN0cnVjdHVyZWQgUmVtaXR0YW5jZSBJbmZvcm1hdGlvbjwvVXN0cmQ+CiAgICAgICAgPC9SbXRJbmY+CiAgICAgIDwvRHJjdERidFR4SW5mPgogICAgPC9QbXRJbmY+CiAgPC9Dc3RtckRyY3REYnRJbml0bj4KPC9Eb2N1bWVudD4K
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BTUResponse"
+              examples:
+                successfulBtuUpload:
+                  summary: Successful BTU file upload
+                  description: Example response when the BTU file upload completes successfully.
+                  value:
+                    ebicsUserId: ZKB03305
+                    status: SUCCESS
+                    message: BTU upload completed successfully
+                    transactionId: fe4eabb517d3455d165a532fea059d0c
+                    orderId: AAAX
+                    receiptCode: null
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": ebics-biller-api.yml#/components/schemas/ErrorResponse
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not active'
+        '500':
+          description: |
+            Internal server error. If `EBICS_INVALID_ORDER_IDENTIFIER` is returned, the user must
+            first call the HTD/HAA operation to retrieve a valid list of supported BTF formats for
+            the BTU parameters.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BTUResponse"
+              examples:
+                ebicsInvalidOrderIdentifier:
+                  summary: BTU execution error
+                  description: "Example when the bank rejects the BTF (e.g. unknown or disallowed BTF format). The\nerror text includes `[EBICS_INVALID_ORDER_IDENTIFIER]`. Use BTF parameters from HTD/HAA. \n"
+                  value:
+                    ebicsUserId: ZKB03305
+                    status: ERROR
+                    message: 'Failed to execute BTU: Error in executing BTU :: ZKB03305 :: Error during BTU execution for H005: ZKB03305 :: [EBICS_INVALID_ORDER_IDENTIFIER] Auftragsart unzulässig'
+                    transactionId: 
+                    orderId: 
+                    receiptCode: null
+  "/client/ebics/v3/pain001":
+    post:
+      summary: Upload pain.001 payment order
+      description: |-
+        Simplified method to create common pain.001 payment orders.
+
+        Design simplification constraints:
+
+        - One request produces exactly one B-Level (PmtInf) block
+        - Batch booking (BtchBookg) is always true
+        - Support IBAN account numbers, and BIC identifiers (no proprietary)
+
+        Note: Use `/btu` operation directly in case you need advanced control over generated pain.001 xml, like (multiple PmtInf, proprietary account numbers, forwarding agents,..)
+
+        Identifiers (messageId, instructionId, endToEndId, uetr) are optional. In case they are omited or blank, they will be auto-generated
+        The response includes creditTransfer object with the effective ID values used in the generated pain.001.
+        The pain.001 schema (pain.001.001.03 or pain.001.001.09) is selected automatically based on
+        msgName, msgNameVersion and msgNameVariant:
+
+        | msgName | msgNameVersion | msgNameVariant | Selected schema |
+        | --- | --- | --- | --- |
+        | pain.001 | `03` | `001` | pain.001.001.03 |
+        | pain.001 | `03` | omitted | pain.001.001.03 |
+        | pain.001 | `09` | `001` | pain.001.001.09 |
+        | pain.001 | `09` | omitted | pain.001.001.09 |
+        | pain.001 | omitted | omitted | pain.001.001.09 |
+      operationId: v3Pain001
+      tags:
+      - EBICS v3 Upload
+      requestBody:
+        required: true
+        description: pain001 upload request parameters describing BTF (Business Transaction Format) attributes and credit transfer transactions.
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Pain001BTURequest"
+            examples:
+              chfDomesticInstant:
+                summary: Swiss domestic instant (CHF)
+                description: Swiss domestic instant credit transfer with two CHF transactions; set localInstrument to INST (Instant payment)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: ZKB_BILLER_ID_1
+                  fileName: pain.001.001.09-zkb-chf-domestic.xml
+                  serviceName: MCT
+                  scope: CH
+                  msgName: pain.001
+                  msgNameVersion: '09'
+                  signatureFlag: true
+                  signatureFlagEds: false
+                  creditTransfer:
+                    initPartyDebtor:
+                      name: MUSTER AG
+                      iban: CH7280005000088877766
+                      agent:
+                        bic: ZKBKCHZZ80A
+                    transactionsInfo:
+                      executionDate: '2026-05-23'
+                      localInstrument: INST
+                    transactions:
+                    - amount:
+                        currency: CHF
+                        value: 3402.75
+                      creditor:
+                        name: Robert Schneider AG
+                        iban: CH4030000000012345678
+                        agent:
+                          bic: UBSWCHZHXXX
+                      remittanceInformation:
+                        structuredRemittanceInformation:
+                          creditorReference:
+                            code: QRR
+                            reference: '210000000002344789432168991'
+                    - amount:
+                        currency: CHF
+                        value: 1500.0
+                      creditor:
+                        name: Swiss Services GmbH
+                        iban: CH9109000000123456789
+                      remittanceInformation:
+                        unstructuredRemittanceInformation: Invoice INV-2026-0422 payment for services
+              sepaInstant:
+                summary: SEPA instant (CH to DE and CZ)
+                description: SEPA instant payment 2 transactions from CH to DE and CZ; serviceLevel SEPA and localInstrument INST (Instant payment)
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: ZKB_BILLER_ID_1
+                  fileName: pain.001.001.09-zkb-sepa.xml
+                  serviceName: SCT
+                  scope: GLB
+                  msgName: pain.001
+                  msgNameVersion: '09'
+                  signatureFlag: true
+                  signatureFlagEds: false
+                  creditTransfer:
+                    initPartyDebtor:
+                      name: MUSTER AG
+                      iban: CH5481230000001998736
+                      agent:
+                        bic: ZKBKCHZZ80A
+                    transactionsInfo:
+                      executionDate: '2026-05-23'
+                      serviceLevel: SEPA
+                      localInstrument: INST
+                    transactions:
+                    - amount:
+                        currency: EUR
+                        value: 3421.0
+                      creditor:
+                        name: Peter Haller
+                        iban: DE62007620110623852957
+                        agent:
+                          bic: DEUTDEFF
+                      remittanceInformation:
+                        structuredRemittanceInformation:
+                          creditorReference:
+                            code: SCOR
+                            reference: RF712348231
+                    - amount:
+                        currency: EUR
+                        value: 1580.25
+                      creditor:
+                        name: Jan Novak
+                        iban: CZ6808000000001987654321
+                        agent:
+                          bic: KOMBCZPPXXX
+                      remittanceInformation:
+                        unstructuredRemittanceInformation: Invoice INV-2026-0822 service payment
+              internationalUsdUae:
+                summary: International payment (DE to UAE and Brazil)
+                description: Standard international credit transfer, 2 transactions from Germany to UAE and Brazil (USD + BRL); omit serviceLevel and localInstrument
+                value:
+                  ebicsUserId: ZKB03305
+                  billerId: ZKB_BILLER_ID_1
+                  fileName: pain.001.001.09-intl-cgi.xml
+                  serviceName: MCT
+                  scope: CGI
+                  msgName: pain.001
+                  msgNameVersion: '09'
+                  msgNameVariant: '001'
+                  signatureFlag: true
+                  signatureFlagEds: false
+                  creditTransfer:
+                    initPartyDebtor:
+                      name: Peter Haller
+                      iban: DE62007620110623852957
+                      agent:
+                        bic: DEUTDEFF
+                    transactionsInfo:
+                      executionDate: '2026-05-23'
+                    transactions:
+                    - amount:
+                        currency: USD
+                        value: 3421.0
+                      creditor:
+                        name: Gulf Trading Company LLC
+                        iban: AE320290000000009876543
+                        agent:
+                          bic: NBADAEADXXX
+                      remittanceInformation:
+                        unstructuredRemittanceInformation: Invoice INV-2026-0421 international payment
+                    - amount:
+                        currency: BRL
+                        value: 8500.5
+                      creditor:
+                        name: Comercio Brasil Ltda
+                        iban: BR1500000000000010932840814P2
+                        agent:
+                          bic: BBREBRRJXXX
+                      remittanceInformation:
+                        unstructuredRemittanceInformation: Invoice INV-2026-0422 Brazil supplier payment
+      responses:
+        '200':
+          description: pain.001 BTU executed successfully; creditTransfer contains resolved identifiers
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Pain001BTUResponse"
+              examples:
+                successResponse:
+                  summary: Success Response
+                  description: BTU upload succeeded; response echoes creditTransfer with server-generated messageId and paymentIdentification
+                  value:
+                    ebicsUserId: ZKB03305
+                    status: SUCCESS
+                    message: BTU upload completed successfully
+                    transactionId: 9df29c276000aa4461ca5d7139253aa8
+                    orderId: AAAT
+                    receiptCode: null
+                    creditTransfer:
+                      messageId: MSG-20260523143022
+                      initPartyDebtor:
+                        name: MUSTER AG
+                        iban: CH7280005000088877766
+                        agent:
+                          bic: ZKBKCHZZ80A
+                      transactionsInfo:
+                        executionDate: '2026-05-23'
+                        localInstrument: INST
+                      transactions:
+                      - paymentIdentification:
+                          instructionId: INS-20260523143022-001
+                          endToEndId: E2E-20260523143022-001
+                          uetr: a933b87d-7f97-4be7-95e4-d8d11dd9db3f
+                        amount:
+                          currency: CHF
+                          value: 3402.75
+                        creditor:
+                          name: Robert Schneider AG
+                          iban: CH4030000000012345678
+                          agent:
+                            bic: UBSWCHZHXXX
+                        remittanceInformation:
+                          structuredRemittanceInformation:
+                            creditorReference:
+                              code: QRR
+                              reference: '210000000002344789432168991'
+                      - paymentIdentification:
+                          instructionId: INS-20260523143022-002
+                          endToEndId: E2E-20260523143022-002
+                          uetr: b144c98e-8fa8-4cf8-a6f5-e9e22ee0ec40
+                        amount:
+                          currency: CHF
+                          value: 1500.0
+                        creditor:
+                          name: Swiss Services GmbH
+                          iban: CH9109000000123456789
+                        remittanceInformation:
+                          unstructuredRemittanceInformation: Invoice INV-2026-0422 payment for services
+        '400':
+          description: Invalid request, unsupported pain.001 schema combination, or generated XML failed XSD validation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Pain001ValidationErrorResponse"
+              examples:
+                unsupportedPain001Schema:
+                  summary: Unsupported pain.001 schema
+                  description: Returned when BTF attributes do not resolve to pain.001.001.03 or pain.001.001.09 (e.g. msgNameVersion 05 with msgNameVariant 001)
+                  value:
+                    errorMessage: 'Unsupported pain.001 schema: pain.001.001.05. Supported: pain.001.001.03 with msgNameVariant 001 or omitted; pain.001.001.09 with msgNameVariant 001 or omitted; pain.001 with msgNameVersion and msgNameVariant omitted (defaults to v09)'
+                    statusCode: Bad Request
+                pain001XmlSchemaValidationFailed:
+                  summary: pain.001 XML schema validation failed
+                  description: 'Returned when marshalled pain.001 XML does not pass ISO 20022 XSD validation; often caused by invalid creditor.agent.bic (example: BBREBRRJAXXX with msgNameVersion 03)'
+                  value:
+                    errorMessage: 'Generated pain.001 XML failed schema validation (pain.001.001.03): cvc-pattern-valid: Value ''BBREBRRJAXXX'' is not facet-valid with respect to pattern ''[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}'' for type ''BICIdentifier''.'
+                    statusCode: Bad Request
+        '401':
+          description: |
+            Unauthorized. Returned when:
+            - the JWT is missing, invalid, or lacks the `EBICS` scope, or
+            - the biller's `ebicsStatus` is no longer `ACTIVE` after the token was issued.
+          content:
+            application/json:
+              schema:
+                "$ref": ebics-biller-api.yml#/components/schemas/ErrorResponse
+              examples:
+                missingEbicsScope:
+                  summary: JWT is missing the EBICS scope
+                  value:
+                    error: 'Unauthorized: missing EBICS scope'
+                ebicsStatusInactive:
+                  summary: Biller is no longer EBICS-active
+                  description: Returned when `ebicsStatus` flips off after the JWT was issued.
+                  value:
+                    error: 'Unauthorized: billerPid is not valid or biller is not active'
+        '500':
+          description: Internal server error during BTU execution
+components:
+  schemas:
+    BTURequest:
+      type: object
+      description: |
+        Upload a file (e.g. payment order, direct debit order) via EBICS BTU (H005).
+        Use the exact `serviceName`, `scope`, `msgName`, `msgNameVersion`, and `containerType`
+        values from your subscribed BTF (Business Transaction Formats) Call HTD to retrieve them.
+      required:
+      - fileName
+      - serviceName
+      - scope
+      - msgName
+      - fileContent
+      properties:
+        fileName:
+          type: string
+          description: Logical file name for the uploaded payload. Used only for reference on bank side.
+          example: payment.xml
+        serviceName:
+          type: string
+          description: BTF service name (e.g. payment or collection service family)
+          example: MCT
+        scope:
+          type: string
+          description: BTF scope value defined by the bank for this service
+          example: CH
+        serviceOption:
+          type: string
+          nullable: true
+          description: Optional BTF service option if required by the bank
+        msgName:
+          type: string
+          description: Message name of the uploaded format
+          example: pain.001
+        msgNameVersion:
+          type: string
+          description: Message name version
+          example: '03'
+        msgNameVariant:
+          type: string
+          nullable: true
+          description: Message name variant
+          example: '001'
+        msgNameFormat:
+          type: string
+          nullable: true
+          description: Message format
+          example: XML
+        containerType:
+          type: string
+          nullable: true
+          description: |
+            Container type for the uploaded data. Allowed values include XML, ZIP, and SVC.
+            Use null unless your subscribed format specifies a container type.
+          example: XML
+        signatureFlag:
+          type: boolean
+          description: |
+            Set to true to use default upload method (EBICS upload Method 1) and false to use manual upload method (EBICS Method 2).
+            Maps to BTU order parameter SignatureFlag (present = true).
+            signatureFlag=true: EBICS upload Method 1 (default method) — order is declared for bank-technical electronic signatures (ES) inside EBICS.
+            signatureFlag=false: EBICS Method 2 (manual method) – style upload; order is not routed to Electronic Distributed Signature (EDS) per specification;
+            business approval is outside the normal ES/EDS workflow (bank-specific).
+            Note: Which ES classes are attached (e.g. A, B, E, T) is configured separately on bank side.
+          example: true
+        signatureFlagEds:
+          type: boolean
+          description: |
+            Set to false for fully signed orders, true for partially signed orders.
+            This flag controls whether the bank forwards the order to EDS (Electronic Distributed Signature).
+            Use only when signatureFlag is true; ignored otherwise.
+            signatureFlagEds=true: Order is forwarded to EDS (case for partially signed orders)
+            a) if the submitted ES are not yet sufficient, the bank may place the order in EDS so further signers can add ES via order type HVE;
+            b) if ES are already sufficient, forwarding to EDS has no further effect.
+            signatureFlagEds=false: Order is not forwarded to EDS (normal case for fully signed orders).
+            In case of insufficient ES this normally leads to rejection instead of EDS.
+          example: false
+        fileContent:
+          type: string
+          format: byte
+          description: |
+            File payload, this field is Base64-encoded (standard Jackson binding for byte[]).
+            The decoded bytes must match the message type implied by the BTF parameters above (msgName, msgNameVersion, msgNameVariant, msgNameFormat, containerType).
+            For example, when msgName is "pain.001", msgNameVersion is "09", and msgNameVariant is "001", the payload must be the Base64 encoding of an XML document
+            that validates against the official ISO 20022 schema pain.001.001.09.xsd (Customer Credit Transfer Initiation).
+            Choose msg/container settings and bytes consistently so the bank receives the format it expects for that order.
+    BTUResponse:
+      type: object
+      properties:
+        ebicsUserId:
+          type: string
+          description: EBICS user identifier used for the request
+          example: ZKB03305
+        status:
+          type: string
+          description: High-level processing status of the BTU operation
+          example: SUCCESS
+        message:
+          type: string
+          description: Human-readable message describing the BTU processing result
+          nullable: true
+        transactionId:
+          type: string
+          nullable: true
+          description: EBICS transaction identifier returned by the bank
+        orderId:
+          type: string
+          nullable: true
+          description: EBICS order identifier associated with the BTU request (pattern like one letter followed by three alphanumeric characters)
+        receiptCode:
+          type: string
+          nullable: true
+          description: Bank receipt code confirming upload handling (currently always null)
+    Pain001ValidationErrorResponse:
+      type: object
+      description: Validation error returned for invalid pain.001 BTU requests
+      properties:
+        errorMessage:
+          type: string
+          description: Human-readable error message
+        statusCode:
+          type: string
+          description: HTTP status phrase
+          example: Bad Request
+    Pain001BTURequest:
+      type: object
+      description: BTU request for pain.001 (Customer Credit Transfer Initiation) with structured credit transfer data
+      required:
+      - creditTransfer
+      properties:
+        ebicsUserId:
+          type: string
+          description: EBICS user identifier used for authentication at the bank
+          example: ZKB03305
+        billerId:
+          type: string
+          description: Internal biller/tenant identifier used by this application
+          example: billte-ch
+        fileName:
+          type: string
+          description: Logical file name for the uploaded payload (e.g. pain XML file name)
+          example: pain.001.001.09-20260501-sepa.xml
+        serviceName:
+          type: string
+          description: BTF service name (e.g. payment or collection service family)
+          example: MCT
+        scope:
+          type: string
+          description: BTF scope value defined by the bank for this service
+          example: CH
+        serviceOption:
+          type: string
+          nullable: true
+          description: Optional BTF service option if required by the bank
+        msgName:
+          type: string
+          description: Message name of the uploaded format
+          example: pain.001
+          default: pain.001
+        msgNameVersion:
+          type: string
+          description: Message name version
+          example: '09'
+        msgNameVariant:
+          type: string
+          nullable: true
+          description: Message name variant
+          example: '001'
+        msgNameFormat:
+          type: string
+          nullable: true
+          description: Message format
+          example: XML
+        containerType:
+          type: string
+          nullable: true
+          description: Container type for the uploaded data (XML, ZIP, SVC)
+          example: XML
+        signatureFlag:
+          type: boolean
+          description: Set to true for EBICS upload Method 1 (default) and false for Method 2 (manual). Maps to BTU SignatureFlag.
+          example: true
+        signatureFlagEds:
+          type: boolean
+          description: Set to false for fully signed orders, true for partially signed orders (EDS forwarding). Use only when signatureFlag is true.
+          example: false
+        creditTransfer:
+          "$ref": "#/components/schemas/CreditTransfer"
+    Pain001BTUResponse:
+      type: object
+      description: 'pain.001 BTU response: standard BTU fields plus credit transfer with resolved identifiers'
+      required:
+      - creditTransfer
+      properties:
+        ebicsUserId:
+          type: string
+          description: EBICS user identifier used for the request
+          example: ZKB03305
+        status:
+          type: string
+          description: High-level processing status of the BTU operation
+          example: SUCCESS
+        message:
+          type: string
+          nullable: true
+          description: Human-readable message describing the BTU processing result
+        transactionId:
+          type: string
+          nullable: true
+          description: EBICS transaction identifier returned by the bank
+        orderId:
+          type: string
+          nullable: true
+          description: EBICS order identifier associated with the BTU request
+        receiptCode:
+          type: string
+          nullable: true
+          description: Bank receipt code confirming upload handling (currently always null)
+        creditTransfer:
+          "$ref": "#/components/schemas/CreditTransfer"
+    CreditTransfer:
+      type: object
+      description: 'Credit transfer initiation (payment order). pain.001.001.03, pain.001.001.09: CstmrCdtTrfInitn.'
+      required:
+      - initPartyDebtor
+      - transactionsInfo
+      - transactions
+      properties:
+        messageId:
+          type: string
+          nullable: true
+          description: Optional client-provided message identification (GrpHdr/MsgId). If omitted or blank, the server generates MSG-{yyyyMMddHHmmss} (UTC) before upload.
+          example: MSG-20260521143022
+          minLength: 1
+          maxLength: 35
+        initPartyDebtor:
+          "$ref": "#/components/schemas/Debtor"
+        transactionsInfo:
+          "$ref": "#/components/schemas/CreditTransferTransactionsInfo"
+        transactions:
+          type: array
+          minItems: 1
+          items:
+            "$ref": "#/components/schemas/CreditTransferTransaction"
+    CreditTransferTransactionsInfo:
+      type: object
+      description: 'Batch-level payment instruction data shared by all transactions. pain.001.001.03, pain.001.001.09: PmtInf.'
+      required:
+      - executionDate
+      properties:
+        executionDate:
+          type: string
+          format: date
+          description: Requested transaction execution date
+          example: '2027-06-18'
+        localInstrument:
+          type: string
+          nullable: true
+          description: Local instrument code (PmtInf/PmtTpInf/LclInstrm/Cd), e.g. INST for instant payment
+          example: INST
+        serviceLevel:
+          type: string
+          nullable: true
+          description: Service level code (PmtInf/PmtTpInf/SvcLvl/Cd), e.g. SEPA
+          example: SEPA
+        instructionPriority:
+          type: string
+          nullable: true
+          description: 'Instruction priority (PmtInf/PmtTpInf/InstrPrty): HIGH or NORM'
+          example: NORM
+    CreditTransferTransaction:
+      type: object
+      description: 'Single credit transfer within a payment instruction. pain.001.001.03, pain.001.001.09: PmtInf/CdtTrfTxInf.'
+      required:
+      - amount
+      - creditor
+      properties:
+        paymentIdentification:
+          "$ref": "#/components/schemas/PaymentIdentification"
+        amount:
+          "$ref": "#/components/schemas/Amount"
+        remittanceInformation:
+          "$ref": "#/components/schemas/RemittanceInformation"
+        creditor:
+          "$ref": "#/components/schemas/Creditor"
+    Debtor:
+      type: object
+      description: Initiating party and debtor of a credit transfer initiation.
+      required:
+      - name
+      - iban
+      - agent
+      properties:
+        name:
+          type: string
+          description: Name of the initiating party and debtor
+          example: Peter Muster
+          minLength: 1
+          maxLength: 70
+        iban:
+          type: string
+          description: IBAN of the debtor account without spaces and dashes
+          example: DE89370400440532013000
+          maxLength: 30
+        agent:
+          "$ref": "#/components/schemas/FinancialInstitutionIdentification"
+    Creditor:
+      type: object
+      description: Creditor of a credit transfer transaction.
+      required:
+      - name
+      - iban
+      properties:
+        name:
+          type: string
+          description: Name of the creditor party
+          example: Mustermann GmbH
+          minLength: 1
+          maxLength: 70
+        iban:
+          type: string
+          description: IBAN of the creditor account without spaces and dashes
+          example: CH4700762001234567890
+          maxLength: 30
+        agent:
+          "$ref": "#/components/schemas/FinancialInstitutionIdentification"
+    Amount:
+      type: object
+      description: Instructed amount of a credit transfer transaction.
+      required:
+      - currency
+      - value
+      properties:
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          example: CHF
+        value:
+          type: number
+          format: double
+          description: Instructed amount
+          example: 1200.35
+    PaymentIdentification:
+      type: object
+      description: Payment identification (PmtInf/CdtTrfTxInf/PmtId).
+      properties:
+        instructionId:
+          type: string
+          nullable: true
+          description: Optional instruction id; auto-generated if omitted
+          example: INS-20260521143022-001
+          maxLength: 35
+        endToEndId:
+          type: string
+          nullable: true
+          description: Optional end-to-end id; auto-generated if omitted
+          example: E2E-20260521143022-001
+          maxLength: 35
+        uetr:
+          type: string
+          nullable: true
+          description: Optional UETR (pain.001.001.09 only); auto-generated UUID v4 if omitted
+          example: a3b2c1d0-e5f4-4789-a012-3456789abcde
+    RemittanceInformation:
+      type: object
+      description: Remittance information (PmtInf/CdtTrfTxInf/RmtInf).
+      properties:
+        unstructuredRemittanceInformation:
+          type: string
+          nullable: true
+          description: Unstructured remittance (RmtInf/Ustrd)
+          maxLength: 140
+        structuredRemittanceInformation:
+          "$ref": "#/components/schemas/StructuredRemittanceInformation"
+    StructuredRemittanceInformation:
+      type: object
+      description: Structured remittance information (RmtInf/Strd).
+      properties:
+        creditorReference:
+          "$ref": "#/components/schemas/CreditorReference"
+    CreditorReference:
+      type: object
+      description: Creditor reference (RmtInf/Strd/CdtrRefInf).
+      properties:
+        code:
+          type: string
+          description: Creditor reference type code (ISO DocumentType3Code or proprietary, e.g. QRR)
+          example: SCOR
+        reference:
+          type: string
+          description: Creditor reference value
+          example: RF712348231
+    FinancialInstitutionIdentification:
+      type: object
+      description: Financial institution identification of a payment agent (BIC / BICFI).
+      required:
+      - bic
+      properties:
+        bic:
+          type: string
+          description: BIC of the financial institution (ISO 9362)
+          example: RAIFCH22
