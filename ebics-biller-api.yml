@@ -8,6 +8,8 @@ info:
 
     Examples and extra information - https://github.com/billte-engineering/ebill-swp-redoc.
 
+    OpenAPI specification (YAML) - https://raw.githubusercontent.com/billte-engineering/ebill-swp-redoc/refs/heads/master/ebics-biller-api.yml
+
     Supported operations include:
 
 
