@@ -2067,7 +2067,7 @@ components:
           description: "At time of submission, cannot be set to more than 3 years\
             \ in the future (1095 days). At time of submission, cannot be older than\
             \ 90 days."
-          example: 202"2-05-05
+          example: "2022-05-05"
         payableAmountCanBeModified:
           type: boolean
           description: |
