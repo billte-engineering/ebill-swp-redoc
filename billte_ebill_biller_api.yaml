@@ -1237,10 +1237,7 @@ components:
         properties:
           newStatus:
             type: string
-            description: |
-              The new status of the bill recipient subscription, currently only
-              REQUESTED and INACTIVE are used, see <<Subscriptions and
-              Subscription Cancellations>> for further information.
+            description: The new status of the bill recipient subscription.
             enum:
             - INACTIVE
             - REQUESTED
@@ -1418,7 +1415,9 @@ components:
           type: string
           minLength: 36
           maxLength: 36
-          description: 'A unique id for this eBill Direct Debit proposal. Property must not be given when creating a new object.'
+          readOnly: true
+          description: 'A unique id for this eBill Direct Debit proposal, assigned by the eBill infrastructure. Must not be given when creating a new proposal; it is returned in the response.'
+          example: 7f3a1c84-2b6d-4e59-9a07-5d8c43e21b60
         billRecipientIdentification:
           $ref: '#/components/schemas/BillRecipientIdentification'
         currencyCode:
