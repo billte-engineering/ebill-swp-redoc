@@ -251,6 +251,92 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
       x-codegen-request-body-name: body
+  /billers/ebill-debit-proposal:
+    post:
+      tags:
+      - Billers
+      summary: Propose eBill Direct Debit to the bill recipient
+      description: |
+        Submits an **eBill Direct Debit** proposal to a bill recipient (eBill
+        "Propose eBill Direct Debit to the bill recipient"). If the recipient accepts,
+        they grant a standing approval that lets future bills be collected automatically
+        via eBill Direct Debit.
+
+        Notes:
+        - Requires biller authentication (Bearer token). The biller is resolved from the
+          token, so no biller id is sent in the request body.
+        - Check eligibility first via `POST /billers/bill-recipient/search`; only propose
+          when the recipient's `ebillDebitProposalStatus` is `ALLOWED`.
+        - `id` must be omitted when creating a new proposal; it is assigned by the eBill
+          infrastructure and returned in the response.
+        - `billRecipientIdentification` must carry **exactly one** of `emailAddress`,
+          `billRecipientId` or `enterpriseIdentificationNumber`. An empty object is
+          rejected with `400` before the request leaves Billte.
+        - A proposal needs the bill recipient's permission. If they have not granted it,
+          eBill rejects the submission with `403`
+          `EBILL_DIRECT_DEBIT_PROPOSAL_NOT_ALLOWED` — see the response below.
+      operationId: createEbillDebitProposal
+      parameters:
+      - name: Authorization
+        in: header
+        description: |
+          Access-Token with the prefix "Bearer".
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: The eBill Direct Debit proposal to submit for the bill recipient.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EbillDebitProposal'
+        required: true
+      responses:
+        "200":
+          description: |
+            eBill Direct Debit proposal accepted for submission. Returns the created
+            proposal, including its eBill-assigned `id`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EbillDebitProposal'
+        "400":
+          description: |
+            The request body failed validation and was **not** forwarded to eBill. Returned when
+
+            - any of `chargebackMode`, `currencyCode` or `billRecipientIdentification` is missing,
+            - `chargebackMode` is not one of `SUPPORTED` / `NOT_SUPPORTED`,
+            - `currencyCode` is empty, or
+            - `billRecipientIdentification` carries none of the three identifiers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "403":
+          description: |
+            eBill refused the proposal. The common case is
+            `EBILL_DIRECT_DEBIT_PROPOSAL_NOT_ALLOWED` — the bill recipient has not granted
+            permission for eBill Direct Debit proposals. Check
+            `ebillDebitProposalStatus` via `POST /billers/bill-recipient/search` before
+            proposing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: EBILL_DIRECT_DEBIT_PROPOSAL_NOT_ALLOWED
+                title: Biller is not allowed to propose eBill Direct Debit to the bill recipient
+                status: 403
+                detail: The submission of an eBill Direct Debit proposal requires the permission of the bill recipient.
+        default:
+          description: |
+            Error response. The body may be a Problem object or a simple object with an `error` field.
+            See section Error Handling of the Software Partner API documentation for further details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      x-codegen-request-body-name: body
   /billers/bill-recipient-subscription-initiations-generic-url:
     post:
       tags:
